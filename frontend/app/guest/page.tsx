@@ -3,21 +3,81 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { message } from "antd";
 
 export default function GuestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [queueNumber, setQueueNumber] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [nik, setNik] = useState("");
+  const [nama, setNama] = useState("");
+  const [phone, setPhone] = useState("");
+  const [jenis, setJenis] = useState("");
+  const [isNikFound, setIsNikFound] = useState<boolean | null>(null);
+  const [isCheckingNik, setIsCheckingNik] = useState(false);
+
+  const checkNik = async () => {
+    if (!nik || nik.length < 16) return;
+    setIsCheckingNik(true);
+    try {
+      const res = await fetch(`/api/pelayanan/check?nik=${nik}`);
+      const json = await res.json();
+      if (json.success && json.found) {
+        setNama(json.data.nama || "");
+        setPhone(json.data.phone || "");
+        setIsNikFound(true);
+      } else {
+        setIsNikFound(false);
+        setNama("");
+        setPhone("");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCheckingNik(false);
+    }
+  };
+
+  const handleNikChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNik(value);
+    if (value.length < 16 && isNikFound !== null) {
+      setIsNikFound(null);
+      setNama("");
+      setPhone("");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
+    
+    const data = {
+      nik,
+      nama,
+      phone,
+      jenis,
+    };
+
+    try {
+      const res = await fetch('/api/pelayanan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      
+      if (json.success) {
+        setQueueNumber(json.queueNumber);
+        message.success("Berhasil mengambil antrean!");
+      } else {
+        message.error(json.error || 'Terjadi kesalahan pada server');
+      }
+    } catch (err) {
+      message.error('Terjadi kesalahan koneksi');
+    } finally {
       setIsSubmitting(false);
-      // Generate a random queue number e.g. A-102
-      const randomNum = Math.floor(100 + Math.random() * 900);
-      setQueueNumber(`A-${randomNum}`);
-    }, 1500);
+    }
   };
 
   return (
@@ -52,7 +112,14 @@ export default function GuestPage() {
                 <div className="text-4xl font-black text-[#DA251C] tracking-widest">{queueNumber}</div>
               </div>
 
-              <button onClick={() => setQueueNumber(null)} className="w-full bg-white border-2 border-[#DA251C] text-[#DA251C] hover:bg-red-50 font-medium py-3 rounded-lg transition-all">
+              <button onClick={() => {
+                setQueueNumber(null);
+                setNik("");
+                setNama("");
+                setPhone("");
+                setJenis("");
+                setIsNikFound(null);
+              }} className="w-full bg-white border-2 border-[#DA251C] text-[#DA251C] hover:bg-red-50 font-medium py-3 rounded-lg transition-all">
                 Ajukan Pelayanan Lain
               </button>
             </div>
@@ -69,23 +136,65 @@ export default function GuestPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label htmlFor="nik" className="block text-sm font-medium text-slate-700 mb-1">NIK <span className="text-[#DA251C]">*</span></label>
-                  <input type="text" id="nik" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all" placeholder="Masukkan 16 digit NIK" />
-                  <p className="text-xs text-slate-500 mt-1">Digunakan untuk verifikasi data.</p>
+                  <input 
+                    type="text" 
+                    id="nik" 
+                    name="nik" 
+                    value={nik}
+                    onChange={handleNikChange}
+                    onBlur={checkNik}
+                    required 
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all" 
+                    placeholder="Masukkan 16 digit NIK" 
+                  />
+                  {isCheckingNik ? (
+                    <p className="text-xs text-blue-500 mt-1">Mengecek data NIK...</p>
+                  ) : (
+                    <p className="text-xs text-slate-500 mt-1">Digunakan untuk verifikasi data.</p>
+                  )}
                 </div>
 
                 <div>
                   <label htmlFor="nama" className="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap <span className="text-[#DA251C]">*</span></label>
-                  <input type="text" id="nama" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all" placeholder="Masukkan nama lengkap Anda" />
+                  <input 
+                    type="text" 
+                    id="nama" 
+                    name="nama" 
+                    value={nama}
+                    onChange={(e) => setNama(e.target.value)}
+                    disabled={isNikFound === null || isNikFound === true}
+                    required 
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 disabled:text-slate-500" 
+                    placeholder="Masukkan nama lengkap Anda" 
+                  />
                 </div>
 
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1">Nomor HP <span className="text-[#DA251C]">*</span></label>
-                  <input type="tel" id="phone" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all" placeholder="Contoh: 08123456789" />
+                  <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={isNikFound === null || isNikFound === true}
+                    required 
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 disabled:text-slate-500" 
+                    placeholder="Contoh: 08123456789" 
+                  />
                 </div>
 
                 <div>
                   <label htmlFor="jenis" className="block text-sm font-medium text-slate-700 mb-1">Jenis Pelayanan <span className="text-[#DA251C]">*</span></label>
-                  <select id="jenis" required defaultValue="" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none">
+                  <select 
+                    id="jenis" 
+                    name="jenis" 
+                    value={jenis}
+                    onChange={(e) => setJenis(e.target.value)}
+                    disabled={isNikFound === null}
+                    required 
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                  >
                     <option value="" disabled>-- Pilih --</option>
                     <option value="slik">SLIK</option>
                     <option value="lainnya">Lainnya</option>

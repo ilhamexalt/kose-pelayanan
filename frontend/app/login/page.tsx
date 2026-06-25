@@ -3,18 +3,45 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { message } from 'antd';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      email: formData.get('email'), // refers to input id/name 'email'
+      password: formData.get('password'),
+    };
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      
+      if (json.success) {
+        // In a real application, you'd save a token or session here
+        // For simplicity, we'll store basic user info in localStorage to persist login state across reloads on the dashboard
+        localStorage.setItem('user', JSON.stringify(json.user));
+        message.success("Login berhasil!");
+        router.push('/dashboard');
+      } else {
+        message.error(json.error || 'Login gagal');
+      }
+    } catch (err) {
+      message.error('Terjadi kesalahan koneksi');
+    } finally {
       setIsLoading(false);
-      alert("Login berhasil!");
-    }, 1500);
+    }
   };
 
   return (
@@ -46,7 +73,7 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">NIP / Email</label>
-              <input type="text" id="email" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP atau Email" />
+              <input type="text" id="email" name="email" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP atau Email" />
             </div>
 
             <div>
@@ -54,7 +81,7 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-slate-700">Password</label>
                 <a href="#" className="text-xs text-slate-500 hover:text-[#DA251C] transition-colors">Lupa password?</a>
               </div>
-              <input type="password" id="password" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="••••••••" />
+              <input type="password" id="password" name="password" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="••••••••" />
             </div>
 
             <button type="submit" disabled={isLoading} className="w-full bg-[#F1B434] hover:bg-amber-500 text-slate-900 font-medium py-3 rounded-lg transition-all flex items-center justify-center mt-6">
