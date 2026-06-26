@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { message } from "antd";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function GuestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,32 +85,35 @@ export default function GuestPage() {
     <div className="flex flex-1 items-center justify-center p-6">
       <div className="w-full max-w-xl">
         <div className="mb-6 flex justify-between items-center">
-          <Link href="/" className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-[#DA251C] transition-colors">
+          <Link href="/" className="inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#DA251C] transition-colors">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Kembali
           </Link>
-          <Image
-            src="/assets/images/ojk-logo.png"
-            alt="Logo OJK"
-            width={100}
-            height={40}
-            className="object-contain"
-            style={{ width: 'auto', height: 'auto' }}
-          />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <Image
+              src="/assets/images/ojk-logo.png"
+              alt="Logo OJK"
+              width={100}
+              height={40}
+              className="object-contain bg-white/90 p-1 rounded"
+              style={{ width: 'auto', height: 'auto' }}
+            />
+          </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl">
+        <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl transition-colors duration-300">
           {queueNumber ? (
             <div className="text-center py-4">
-              <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-green-50 dark:bg-emerald-950/60 text-green-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
               </div>
-              <h1 className="text-2xl font-bold text-slate-800 mb-2">Pelayanan Berhasil Terkirim</h1>
-              <p className="text-slate-500 mb-8">Terima kasih telah menyampaikan permintaan pelayanan Anda. Silakan simpan nomor antrian di bawah ini untuk pengecekan status.</p>
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Pelayanan Berhasil Terkirim</h1>
+              <p className="text-slate-500 dark:text-slate-400 mb-8">Terima kasih telah menyampaikan permintaan pelayanan Anda. Silakan simpan nomor antrian di bawah ini untuk pengecekan status.</p>
 
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-8">
-                <p className="text-sm font-medium text-slate-500 mb-2">Nomor Antrian Anda</p>
-                <div className="text-4xl font-black text-[#DA251C] tracking-widest">{queueNumber}</div>
+              <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-6 mb-8">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Nomor Antrian Anda</p>
+                <div className="text-4xl font-black text-[#DA251C] dark:text-red-400 tracking-widest">{queueNumber}</div>
               </div>
 
               <button onClick={() => {
@@ -119,23 +123,23 @@ export default function GuestPage() {
                 setPhone("");
                 setJenis("");
                 setIsNikFound(null);
-              }} className="w-full bg-white border-2 border-[#DA251C] text-[#DA251C] hover:bg-red-50 font-medium py-3 rounded-lg transition-all">
+              }} className="w-full bg-white dark:bg-slate-800 border-2 border-[#DA251C] text-[#DA251C] dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 font-medium py-3 rounded-lg transition-all cursor-pointer">
                 Ajukan Pelayanan Lain
               </button>
             </div>
           ) : (
             <>
-              <div className="mb-8 text-center border-b border-slate-100 pb-6">
-                <div className="w-12 h-12 bg-red-50 text-[#DA251C] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="mb-8 text-center border-b border-slate-100 dark:border-slate-800 pb-6">
+                <div className="w-12 h-12 bg-red-50 dark:bg-red-950/60 text-[#DA251C] dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                 </div>
-                <h1 className="text-2xl font-bold text-slate-800 mb-2">Formulir Pelayanan</h1>
-                <p className="text-slate-500 text-sm">Silakan lengkapi data di bawah ini untuk menyampaikan permintaan pelayanan Anda.</p>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Formulir Pelayanan</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Silakan lengkapi data di bawah ini untuk menyampaikan permintaan pelayanan Anda.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="nik" className="block text-sm font-medium text-slate-700 mb-1">NIK <span className="text-[#DA251C]">*</span></label>
+                  <label htmlFor="nik" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIK <span className="text-[#DA251C]">*</span></label>
                   <input 
                     type="text" 
                     id="nik" 
@@ -144,18 +148,18 @@ export default function GuestPage() {
                     onChange={handleNikChange}
                     onBlur={checkNik}
                     required 
-                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all" 
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all" 
                     placeholder="Masukkan 16 digit NIK" 
                   />
                   {isCheckingNik ? (
-                    <p className="text-xs text-blue-500 mt-1">Mengecek data NIK...</p>
+                    <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">Mengecek data NIK...</p>
                   ) : (
-                    <p className="text-xs text-slate-500 mt-1">Digunakan untuk verifikasi data.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Digunakan untuk verifikasi data.</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="nama" className="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap <span className="text-[#DA251C]">*</span></label>
+                  <label htmlFor="nama" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap <span className="text-[#DA251C]">*</span></label>
                   <input 
                     type="text" 
                     id="nama" 
@@ -164,13 +168,13 @@ export default function GuestPage() {
                     onChange={(e) => setNama(e.target.value)}
                     disabled={isNikFound === null || isNikFound === true}
                     required 
-                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 disabled:text-slate-500" 
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500" 
                     placeholder="Masukkan nama lengkap Anda" 
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1">Nomor HP <span className="text-[#DA251C]">*</span></label>
+                  <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nomor HP <span className="text-[#DA251C]">*</span></label>
                   <input 
                     type="tel" 
                     id="phone" 
@@ -179,13 +183,13 @@ export default function GuestPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={isNikFound === null || isNikFound === true}
                     required 
-                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 disabled:text-slate-500" 
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500" 
                     placeholder="Contoh: 08123456789" 
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="jenis" className="block text-sm font-medium text-slate-700 mb-1">Jenis Pelayanan <span className="text-[#DA251C]">*</span></label>
+                  <label htmlFor="jenis" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jenis Pelayanan <span className="text-[#DA251C]">*</span></label>
                   <select 
                     id="jenis" 
                     name="jenis" 
@@ -193,7 +197,7 @@ export default function GuestPage() {
                     onChange={(e) => setJenis(e.target.value)}
                     disabled={isNikFound === null}
                     required 
-                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none disabled:bg-slate-100 disabled:text-slate-500"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
                   >
                     <option value="" disabled>-- Pilih --</option>
                     <option value="slik">SLIK</option>

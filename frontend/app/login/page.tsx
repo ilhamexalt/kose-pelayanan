@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { message } from 'antd';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -50,38 +51,39 @@ export default function LoginPage() {
       
       <div className="w-full max-w-md">
         <div className="mb-6 flex justify-between items-center">
-          <Link href="/" className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-[#F1B434] transition-colors">
+          <Link href="/" className="inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#F1B434] transition-colors">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Kembali
           </Link>
+          <ThemeToggle />
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl">
+        <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl transition-colors duration-300">
           <div className="mb-8 text-center">
             <Image 
               src="/assets/images/ojk-logo.png" 
               alt="Logo OJK" 
               width={160} 
               height={60} 
-              className="mx-auto mb-6 object-contain"
+              className="mx-auto mb-6 object-contain bg-white/90 p-1 rounded"
               style={{ width: 'auto', height: 'auto' }}
             />
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">Portal Pegawai</h1>
-            <p className="text-slate-500 text-sm">Masuk untuk melanjutkan ke dasbor internal.</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Portal Pegawai</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Masuk untuk melanjutkan ke dasbor internal.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">NIP / Email</label>
-              <input type="text" id="email" name="email" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP atau Email" />
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIP / Email</label>
+              <input type="text" id="email" name="email" required className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP atau Email" />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700">Password</label>
-                <a href="#" className="text-xs text-slate-500 hover:text-[#DA251C] transition-colors">Lupa password?</a>
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+                <a href="#" className="text-xs text-slate-500 dark:text-slate-400 hover:text-[#DA251C] dark:hover:text-amber-400 transition-colors">Lupa password?</a>
               </div>
-              <input type="password" id="password" name="password" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="••••••••" />
+              <input type="password" id="password" name="password" required className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="••••••••" />
             </div>
 
             <button type="submit" disabled={isLoading} className="w-full bg-[#F1B434] hover:bg-amber-500 text-slate-900 font-medium py-3 rounded-lg transition-all flex items-center justify-center mt-6">

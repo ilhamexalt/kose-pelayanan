@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { message, Modal } from "antd";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function PegawaiPage() {
   const router = useRouter();
@@ -232,7 +233,7 @@ export default function PegawaiPage() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16]">
         <svg className="animate-spin h-8 w-8 text-[#DA251C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -242,15 +243,15 @@ export default function PegawaiPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] transition-colors duration-300">
+      <nav className="bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-10 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2" />
+              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2 bg-white/90 p-0.5 rounded" />
               <div className="hidden md:flex items-center gap-6 ml-10">
-                <Link href="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors py-5 px-1">Antrean Aktif</Link>
-                <Link href="/history" className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors py-5 px-1">Riwayat Pelayanan</Link>
+                <Link href="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Antrean Aktif</Link>
+                <Link href="/history" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Riwayat Pelayanan</Link>
                 <Link href="/pegawai" className="text-sm font-semibold text-[#DA251C] border-b-2 border-[#DA251C] pb-5 pt-6 px-1">Data Pegawai</Link>
                 <Link href="/display" target="_blank" className="text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm ml-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
@@ -259,8 +260,9 @@ export default function PegawaiPage() {
               </div>
             </div>
             <div className="flex items-center space-x-6">
-              <span className="text-sm font-medium text-slate-600">Halo, <span className="text-slate-900">{user.nama || user.email || user.nip}</span></span>
-              <button onClick={handleLogout} className="text-sm font-semibold text-[#DA251C] hover:bg-red-50 px-3 py-1.5 rounded transition-colors cursor-pointer">
+              <ThemeToggle />
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Halo, <span className="text-slate-900 dark:text-white">{user.nama || user.email || user.nip}</span></span>
+              <button onClick={handleLogout} className="text-sm font-semibold text-[#DA251C] hover:bg-red-50 dark:hover:bg-red-950/40 px-3 py-1.5 rounded transition-colors cursor-pointer">
                 Keluar
               </button>
             </div>
@@ -271,8 +273,8 @@ export default function PegawaiPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 mb-1">Manajemen Pegawai</h1>
-            <p className="text-sm text-slate-500">Kelola daftar akun pegawai yang berhak mengakses sistem pelayanan.</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Manajemen Pegawai</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Kelola daftar akun pegawai yang berhak mengakses sistem pelayanan.</p>
           </div>
           <div className="flex gap-3">
             <button 
@@ -286,28 +288,28 @@ export default function PegawaiPage() {
         </div>
 
         {/* Import Box */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="bg-white dark:bg-[#0f172a] p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors duration-300">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/60 text-blue-500 dark:text-blue-400 rounded-xl flex items-center justify-center shrink-0">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
             </div>
             <div>
-              <h4 className="text-base font-bold text-slate-800">Import Pegawai Massal</h4>
-              <p className="text-xs text-slate-500 mt-0.5">Unggah file Excel (.xlsx) dengan kolom <code className="bg-slate-100 px-1 py-0.5 rounded text-[#DA251C]">nip</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-[#DA251C]">nama</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-[#DA251C]">email</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-[#DA251C]">password</code></p>
+              <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">Import Pegawai Massal</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unggah file Excel (.xlsx) dengan kolom <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">nip</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">nama</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">email</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">password</code></p>
             </div>
           </div>
           <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
           <button 
             onClick={handleImportClick}
             disabled={isImporting}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-lg transition-all flex items-center text-sm cursor-pointer disabled:cursor-not-allowed shrink-0"
+            className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium py-2 px-4 rounded-lg transition-all flex items-center text-sm cursor-pointer disabled:cursor-not-allowed shrink-0"
           >
             {isImporting ? 'Mengunggah...' : 'Pilih Excel'}
           </button>
         </div>
 
         {/* Table Filter */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
+        <div className="bg-white dark:bg-[#0f172a] p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 transition-colors duration-300">
           <div className="relative w-full sm:w-1/3">
             <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input 
@@ -315,53 +317,53 @@ export default function PegawaiPage() {
               placeholder="Cari NIP, Nama, atau Email..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
             />
           </div>
         </div>
 
         {/* Pegawai Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white dark:bg-[#0f172a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+              <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">No</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">NIP</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nama</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
-                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Aksi</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">No</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">NIP</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
+              <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-200 dark:divide-slate-800">
                 {filteredPegawai.length > 0 ? (
                   filteredPegawai.map((item, idx) => {
                     const isAdmin = item.nip === 'admin' || item.id === 'admin';
                     return (
-                      <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{idx + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{item.nip || item.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-slate-100">{item.nip || item.id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">
                           {item.nama}
-                          {isAdmin && <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] rounded-full font-bold">UTAMA</span>}
+                          {isAdmin && <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border dark:border-amber-800 text-[10px] rounded-full font-bold">UTAMA</span>}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{item.email || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.email || '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                           <button 
                             onClick={() => handleOpenEdit(item)} 
-                            className="text-blue-600 hover:text-blue-900 cursor-pointer"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 cursor-pointer"
                           >
                             Edit
                           </button>
                           {!isAdmin ? (
                             <button 
                               onClick={() => handleDelete(item)} 
-                              className="text-red-600 hover:text-red-900 cursor-pointer"
+                              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 cursor-pointer"
                             >
                               Hapus
                             </button>
                           ) : (
-                            <span className="text-slate-300 cursor-not-allowed">Hapus</span>
+                            <span className="text-slate-300 dark:text-slate-600 cursor-not-allowed">Hapus</span>
                           )}
                         </td>
                       </tr>
@@ -370,7 +372,7 @@ export default function PegawaiPage() {
                 ) : (
                   <tr>
                     <td colSpan={5} className="px-6 py-16 text-center">
-                      <p className="text-base font-medium text-slate-600">Tidak ada data pegawai</p>
+                      <p className="text-base font-medium text-slate-600 dark:text-slate-300">Tidak ada data pegawai</p>
                     </td>
                   </tr>
                 )}
@@ -383,47 +385,47 @@ export default function PegawaiPage() {
       {/* Modal Tambah Manual */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">Tambah Pegawai Baru</h2>
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Tambah Pegawai Baru</h2>
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">NIP *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">NIP *</label>
                 <input 
                   type="text" required
                   value={createForm.nip} onChange={e => setCreateForm({...createForm, nip: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                   placeholder="Contoh: 12345678"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">Nama Lengkap *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap *</label>
                 <input 
                   type="text" required
                   value={createForm.nama} onChange={e => setCreateForm({...createForm, nama: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                   placeholder="Nama Pegawai"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">Email</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Email</label>
                 <input 
                   type="email"
                   value={createForm.email} onChange={e => setCreateForm({...createForm, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                   placeholder="email@ojk.go.id"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">Password *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Password *</label>
                 <input 
                   type="password" required
                   value={createForm.password} onChange={e => setCreateForm({...createForm, password: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                   placeholder="Password Login"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
-                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
                 <button type="submit" disabled={isSubmittingCreate} className="px-4 py-2 bg-[#DA251C] hover:bg-red-700 text-white rounded-lg text-sm font-medium cursor-pointer disabled:opacity-50">{isSubmittingCreate ? 'Menyimpan...' : 'Simpan'}</button>
               </div>
             </form>
@@ -434,37 +436,37 @@ export default function PegawaiPage() {
       {/* Modal Edit */}
       {selectedEditUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-1">Edit Pegawai</h2>
-            <p className="text-xs text-slate-400 mb-4">NIP: <span className="font-bold text-slate-700">{selectedEditUser.nip || selectedEditUser.id}</span></p>
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">Edit Pegawai</h2>
+            <p className="text-xs text-slate-400 mb-4">NIP: <span className="font-bold text-slate-700 dark:text-slate-200">{selectedEditUser.nip || selectedEditUser.id}</span></p>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">Nama Lengkap *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap *</label>
                 <input 
                   type="text" required
                   value={editForm.nama} onChange={e => setEditForm({...editForm, nama: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">Email</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Email</label>
                 <input 
                   type="email"
                   value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">Ubah Password</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Ubah Password</label>
                 <input 
                   type="password"
                   value={editForm.password} onChange={e => setEditForm({...editForm, password: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                   placeholder="Biarkan kosong jika tidak diubah"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
-                <button type="button" onClick={() => setSelectedEditUser(null)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" onClick={() => setSelectedEditUser(null)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
                 <button type="submit" disabled={isSubmittingEdit} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium cursor-pointer disabled:opacity-50">{isSubmittingEdit ? 'Menyimpan...' : 'Update'}</button>
               </div>
             </form>
