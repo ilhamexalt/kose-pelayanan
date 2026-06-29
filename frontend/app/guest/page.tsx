@@ -52,7 +52,7 @@ export default function GuestPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     const data = {
       nik,
       nama,
@@ -67,7 +67,7 @@ export default function GuestPage() {
         body: JSON.stringify(data),
       });
       const json = await res.json();
-      
+
       if (json.success) {
         setQueueNumber(json.queueNumber);
         message.success("Berhasil mengambil antrean!");
@@ -140,16 +140,16 @@ export default function GuestPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label htmlFor="nik" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIK <span className="text-[#DA251C]">*</span></label>
-                  <input 
-                    type="text" 
-                    id="nik" 
-                    name="nik" 
+                  <input
+                    type="text"
+                    id="nik"
+                    name="nik"
                     value={nik}
                     onChange={handleNikChange}
                     onBlur={checkNik}
-                    required 
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all" 
-                    placeholder="Masukkan 16 digit NIK" 
+                    required
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
+                    placeholder="Masukkan 16 digit NIK"
                   />
                   {isCheckingNik ? (
                     <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">Mengecek data NIK...</p>
@@ -160,47 +160,49 @@ export default function GuestPage() {
 
                 <div>
                   <label htmlFor="nama" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap <span className="text-[#DA251C]">*</span></label>
-                  <input 
-                    type="text" 
-                    id="nama" 
-                    name="nama" 
+                  <input
+                    type="text"
+                    id="nama"
+                    name="nama"
                     value={nama}
                     onChange={(e) => setNama(e.target.value)}
                     disabled={isNikFound === null || isNikFound === true}
-                    required 
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500" 
-                    placeholder="Masukkan nama lengkap Anda" 
+                    required
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
+                    placeholder="Masukkan nama lengkap Anda"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nomor HP <span className="text-[#DA251C]">*</span></label>
-                  <input 
-                    type="tel" 
-                    id="phone" 
-                    name="phone" 
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={isNikFound === null || isNikFound === true}
-                    required 
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500" 
-                    placeholder="Contoh: 08123456789" 
+                    required
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
+                    placeholder="Contoh: 08123456789"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="jenis" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jenis Pelayanan <span className="text-[#DA251C]">*</span></label>
-                  <select 
-                    id="jenis" 
-                    name="jenis" 
+                  <select
+                    id="jenis"
+                    name="jenis"
                     value={jenis}
                     onChange={(e) => setJenis(e.target.value)}
                     disabled={isNikFound === null}
-                    required 
+                    required
                     className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
                   >
                     <option value="" disabled>-- Pilih --</option>
                     <option value="slik">SLIK</option>
+                    <option value="pengaduan">Pengaduan</option>
+                    <option value="umum">Kunjungan Umum/Kedinasan</option>
                     <option value="lainnya">Lainnya</option>
                   </select>
                 </div>
