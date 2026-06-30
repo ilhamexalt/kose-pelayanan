@@ -8,7 +8,7 @@ export default function Footer() {
           &copy; {new Date().getFullYear()} Otoritas Jasa Keuangan. Hak Cipta Dilindungi.
         </div>
         <div className="flex space-x-6 text-sm text-slate-500 dark:text-slate-400 font-medium items-center">
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
           <span className="flex items-center gap-1">
             Made with <span className="text-[#DA251C]">❤️</span> PCT3
           </span>

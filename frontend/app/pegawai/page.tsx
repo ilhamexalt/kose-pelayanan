@@ -8,6 +8,8 @@ import { message, Modal } from "antd";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function PegawaiPage() {
+  const [messageApi, messageHolder] = message.useMessage();
+  const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [pegawaiList, setPegawaiList] = useState<any[]>([]);
@@ -26,6 +28,8 @@ export default function PegawaiPage() {
   const [selectedEditUser, setSelectedEditUser] = useState<any>(null);
   const [editForm, setEditForm] = useState({ nama: '', email: '', password: '' });
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -59,11 +63,11 @@ export default function PegawaiPage() {
       if (json.success) {
         setPegawaiList(json.data);
       } else {
-        message.error(json.error || 'Gagal mengambil data pegawai');
+        messageApi.error(json.error || 'Gagal mengambil data pegawai');
       }
     } catch (error) {
       console.error("Failed to fetch pegawai", error);
-      message.error("Terjadi kesalahan koneksi");
+      messageApi.error("Terjadi kesalahan koneksi");
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +103,7 @@ export default function PegawaiPage() {
       })).filter(u => u.nip && u.password);
 
       if (usersToImport.length === 0) {
-        message.warning("Tidak ada data valid yang ditemukan di file Excel. Pastikan terdapat kolom nip dan password.");
+        messageApi.warning("Tidak ada data valid yang ditemukan di file Excel. Pastikan terdapat kolom nip dan password.");
         setIsImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
@@ -113,14 +117,14 @@ export default function PegawaiPage() {
       const json = await res.json();
 
       if (json.success) {
-        message.success(json.message);
+        messageApi.success(json.message);
         fetchPegawai();
       } else {
-        message.error("Gagal import: " + json.error);
+        messageApi.error("Gagal import: " + json.error);
       }
     } catch (error) {
       console.error("Error reading excel file", error);
-      message.error("Terjadi kesalahan saat membaca file Excel.");
+      messageApi.error("Terjadi kesalahan saat membaca file Excel.");
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) {
@@ -141,15 +145,15 @@ export default function PegawaiPage() {
       });
       const json = await res.json();
       if (json.success) {
-        message.success("Pegawai berhasil ditambahkan");
+        messageApi.success("Pegawai berhasil ditambahkan");
         setIsCreateModalOpen(false);
         setCreateForm({ nip: '', nama: '', email: '', password: '' });
         fetchPegawai();
       } else {
-        message.error(json.error || "Gagal menambahkan pegawai");
+        messageApi.error(json.error || "Gagal menambahkan pegawai");
       }
     } catch (err) {
-      message.error("Terjadi kesalahan koneksi");
+      messageApi.error("Terjadi kesalahan koneksi");
     } finally {
       setIsSubmittingCreate(false);
     }
@@ -178,14 +182,14 @@ export default function PegawaiPage() {
       });
       const json = await res.json();
       if (json.success) {
-        message.success("Data pegawai berhasil diperbarui");
+        messageApi.success("Data pegawai berhasil diperbarui");
         setSelectedEditUser(null);
         fetchPegawai();
       } else {
-        message.error(json.error || "Gagal memperbarui pegawai");
+        messageApi.error(json.error || "Gagal memperbarui pegawai");
       }
     } catch (err) {
-      message.error("Terjadi kesalahan koneksi");
+      messageApi.error("Terjadi kesalahan koneksi");
     } finally {
       setIsSubmittingEdit(false);
     }
@@ -194,11 +198,11 @@ export default function PegawaiPage() {
   // Delete Logic
   const handleDelete = (userItem: any) => {
     if (userItem.nip === 'admin' || userItem.id === 'admin') {
-      message.error("Akun administrator utama tidak boleh dihapus!");
+      messageApi.error("Akun administrator utama tidak boleh dihapus!");
       return;
     }
 
-    Modal.confirm({
+    modalApi.confirm({
       title: 'Konfirmasi Hapus',
       content: `Apakah Anda yakin ingin menghapus pegawai ${userItem.nama} (${userItem.nip})?`,
       okText: 'Ya, Hapus',
@@ -212,13 +216,13 @@ export default function PegawaiPage() {
           });
           const json = await res.json();
           if (json.success) {
-            message.success("Pegawai berhasil dihapus");
+            messageApi.success("Pegawai berhasil dihapus");
             fetchPegawai();
           } else {
-            message.error(json.error || "Gagal menghapus pegawai");
+            messageApi.error(json.error || "Gagal menghapus pegawai");
           }
         } catch (err) {
-          message.error("Terjadi kesalahan koneksi");
+          messageApi.error("Terjadi kesalahan koneksi");
         }
       }
     });
@@ -244,6 +248,8 @@ export default function PegawaiPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] transition-colors duration-300">
+      {messageHolder}
+      {modalHolder}
       <nav className="bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-10 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -253,7 +259,7 @@ export default function PegawaiPage() {
                 <Link href="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Antrean Aktif</Link>
                 <Link href="/history" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Riwayat Pelayanan</Link>
                 <Link href="/pegawai" className="text-sm font-semibold text-[#DA251C] border-b-2 border-[#DA251C] pb-5 pt-6 px-1">Data Pegawai</Link>
-                <Link href="/display" target="_blank" className="text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm ml-2">
+                <Link href="/antrean" target="_blank" className="text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm ml-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                   Layar TV Antrean
                 </Link>
@@ -417,12 +423,26 @@ export default function PegawaiPage() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Password *</label>
-                <input 
-                  type="password" required
-                  value={createForm.password} onChange={e => setCreateForm({...createForm, password: e.target.value})}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Password Login"
-                />
+                <div className="relative">
+                  <input 
+                    type={showCreatePassword ? "text" : "password"} required
+                    value={createForm.password} onChange={e => setCreateForm({...createForm, password: e.target.value})}
+                    className="w-full px-3 py-2 pr-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Password Login"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCreatePassword(!showCreatePassword)}
+                    className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                    title={showCreatePassword ? "Sembunyikan password" : "Tampilkan password"}
+                  >
+                    {showCreatePassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
@@ -458,12 +478,26 @@ export default function PegawaiPage() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Ubah Password</label>
-                <input 
-                  type="password"
-                  value={editForm.password} onChange={e => setEditForm({...editForm, password: e.target.value})}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Biarkan kosong jika tidak diubah"
-                />
+                <div className="relative">
+                  <input 
+                    type={showEditPassword ? "text" : "password"}
+                    value={editForm.password} onChange={e => setEditForm({...editForm, password: e.target.value})}
+                    className="w-full px-3 py-2 pr-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Biarkan kosong jika tidak diubah"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword(!showEditPassword)}
+                    className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                    title={showEditPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  >
+                    {showEditPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={() => setSelectedEditUser(null)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>

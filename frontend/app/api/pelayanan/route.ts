@@ -5,10 +5,27 @@ import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit } f
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { nik, nama, phone, jenis } = data;
+    const { 
+      nik, nama, phone, jenis, 
+      instansi, keperluan, bertemu, keterangan, 
+      jenisDebitur, slikNikNpwp, email,
+      pengaduanNik, klasifikasi, sektor, perusahaan, produk, permasalahan, ringkasan 
+    } = data;
 
     if (!nik || !nama || !phone || !jenis) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
+    }
+
+    if (jenis === 'umum' && (!instansi || !keperluan || !bertemu || !keterangan)) {
+      return NextResponse.json({ error: 'Formulir Registrasi Tamu tidak lengkap' }, { status: 400 });
+    }
+
+    if (jenis === 'slik' && (!jenisDebitur || !slikNikNpwp || !email)) {
+      return NextResponse.json({ error: 'Formulir Pelayanan SLIK tidak lengkap' }, { status: 400 });
+    }
+
+    if (jenis === 'pengaduan' && (!pengaduanNik || !klasifikasi || !sektor || !perusahaan || !produk || !permasalahan || !ringkasan)) {
+      return NextResponse.json({ error: 'Formulir Pelayanan Pengaduan tidak lengkap' }, { status: 400 });
     }
 
     const pelayananRef = collection(db, 'pelayanan');
@@ -29,7 +46,7 @@ export async function POST(request: Request) {
     
     const queueNumber = `A-${nextNum.toString().padStart(3, '0')}`;
 
-    await addDoc(pelayananRef, {
+    const payload: any = {
       nik,
       nama,
       phone,
@@ -37,7 +54,32 @@ export async function POST(request: Request) {
       queueNumber,
       status: 'Antre',
       createdAt: serverTimestamp(),
-    });
+    };
+
+    if (jenis === 'umum') {
+      payload.instansi = instansi;
+      payload.keperluan = keperluan;
+      payload.bertemu = bertemu;
+      payload.keterangan = keterangan;
+    }
+
+    if (jenis === 'slik') {
+      payload.jenisDebitur = jenisDebitur;
+      payload.slikNikNpwp = slikNikNpwp;
+      payload.email = email;
+    }
+
+    if (jenis === 'pengaduan') {
+      payload.pengaduanNik = pengaduanNik;
+      payload.klasifikasi = klasifikasi;
+      payload.sektor = Array.isArray(sektor) ? sektor.join(', ') : (sektor || '');
+      payload.perusahaan = perusahaan;
+      payload.produk = produk;
+      payload.permasalahan = permasalahan;
+      payload.ringkasan = ringkasan;
+    }
+
+    await addDoc(pelayananRef, payload);
 
     return NextResponse.json({ success: true, queueNumber });
   } catch (error: any) {

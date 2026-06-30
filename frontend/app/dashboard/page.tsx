@@ -10,6 +10,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function DashboardPage() {
+  const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [pelayananList, setPelayananList] = useState<any[]>([]);
@@ -51,15 +52,15 @@ export default function DashboardPage() {
           status: newStatus, 
           processedBy: newStatus === 'Antre' ? null : bodyPayload.processedBy 
         }));
-        message.success(`Status antrean diperbarui menjadi ${newStatus}`);
+        messageApi.success(`Status antrean diperbarui menjadi ${newStatus}`);
         if (newStatus === 'Selesai' || newStatus === 'Batal') {
           setSelectedPelayanan(null);
         }
       } else {
-        message.error(json.error || 'Gagal update status');
+        messageApi.error(json.error || 'Gagal update status');
       }
     } catch (err) {
-      message.error('Terjadi kesalahan koneksi');
+      messageApi.error('Terjadi kesalahan koneksi');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -168,6 +169,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] transition-colors duration-300">
+      {contextHolder}
       <nav className="bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-10 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -179,7 +181,7 @@ export default function DashboardPage() {
                 {String(user?.nip || '').toLowerCase() === 'admin' && (
                   <Link href="/pegawai" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Data Pegawai</Link>
                 )}
-                <Link href="/display" target="_blank" className="text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm ml-2">
+                <Link href="/antrean" target="_blank" className="text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm ml-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                   Layar TV Antrean
                 </Link>
@@ -234,6 +236,8 @@ export default function DashboardPage() {
             >
               <option value="">Semua</option>
               <option value="slik">SLIK</option>
+              <option value="pengaduan">Pengaduan</option>
+              <option value="umum">Kunjungan Umum/Kedinasan</option>
               <option value="lainnya">Lainnya</option>
             </select>
           </div>
@@ -272,7 +276,7 @@ export default function DashboardPage() {
                   filteredAndSortedList.map((item) => {
                     const handleRowClick = () => {
                       if (hasActiveProcessing && activeProcessingItem.id !== item.id) {
-                        message.warning(`Anda sedang memproses antrean ${activeProcessingItem.queueNumber}. Selesaikan terlebih dahulu sebelum membuka antrean lain.`);
+                        messageApi.warning(`Anda sedang memproses antrean ${activeProcessingItem.queueNumber}. Selesaikan terlebih dahulu sebelum membuka antrean lain.`);
                         return;
                       }
                       setSelectedPelayanan(item);
@@ -289,7 +293,7 @@ export default function DashboardPage() {
                         {item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID') : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">{item.nama}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">{item.jenis}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">{item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                         {item.processedBy ? item.processedBy.nama : '-'}
                       </td>
@@ -369,8 +373,88 @@ export default function DashboardPage() {
               
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Jenis Pelayanan</p>
-                <p className="font-medium text-slate-900 dark:text-slate-100 capitalize">{selectedPelayanan.jenis}</p>
+                <p className="font-medium text-slate-900 dark:text-slate-100 capitalize">{selectedPelayanan.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : selectedPelayanan.jenis === 'slik' ? 'SLIK' : selectedPelayanan.jenis === 'pengaduan' ? 'Pengaduan' : selectedPelayanan.jenis}</p>
               </div>
+
+              {selectedPelayanan.jenis === 'slik' && (
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-3">
+                  <h3 className="text-xs font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                    Pelayanan SLIK
+                  </h3>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Jenis Debitur</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.jenisDebitur || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">NIK / NPWP Debitur</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.slikNikNpwp || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Email Aktif</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.email || '-'}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedPelayanan.jenis === 'umum' && (
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-3">
+                  <h3 className="text-xs font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                    Registrasi Tamu (Kunjungan Umum/Kedinasan)
+                  </h3>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Nama Instansi / Perusahaan</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.instansi || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Keperluan</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.keperluan || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Bertemu dengan Pegawai</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.bertemu || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Keterangan (Jumlah Orang)</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.keterangan || '-'}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedPelayanan.jenis === 'pengaduan' && (
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-3">
+                  <h3 className="text-xs font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                    Pelayanan Pengaduan
+                  </h3>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">NIK Pengaduan</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.pengaduanNik || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Klasifikasi Layanan</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.klasifikasi || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Sektor</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.sektor || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Perusahaan yang Diadukan</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.perusahaan || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Jenis Produk</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.produk || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Jenis Permasalahan</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.permasalahan || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Ringkasan Pengaduan</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm whitespace-pre-line">{selectedPelayanan.ringkasan || '-'}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 block">Ubah Status</label>
