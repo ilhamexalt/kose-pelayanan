@@ -5,7 +5,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 export default function Home() {
   return (
     <div className="flex flex-col flex-1 items-center justify-center p-4 sm:p-6 relative w-full h-full">
-      <div className="flex items-center gap-2 absolute top-4 right-6 z-20">
+      <div className="flex items-center gap-4 absolute top-4 right-6 z-20">
         <Link href="/login" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#F1B434] transition-colors">Login</Link>
         <ThemeToggle />
       </div>
@@ -17,7 +17,16 @@ export default function Home() {
             alt="Logo OJK"
             width={160}
             height={58}
-            className="mb-4 p-1.5"
+            className="mb-4 p-1.5 dark:hidden"
+            style={{ width: 'auto', height: 'auto' }}
+            priority
+          />
+          <Image
+            src="/assets/images/logo-ojk-putih.png"
+            alt="Logo OJK"
+            width={160}
+            height={58}
+            className="mb-4 p-1.5 hidden dark:block"
             style={{ width: 'auto', height: 'auto' }}
             priority
           />

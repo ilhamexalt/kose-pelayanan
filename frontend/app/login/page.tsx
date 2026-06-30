@@ -68,7 +68,15 @@ export default function LoginPage() {
               alt="Logo OJK"
               width={160}
               height={60}
-              className="mx-auto mb-6 object-contain bg-white/90 p-1 rounded"
+              className="mx-auto mb-6 object-contain p-1 rounded dark:hidden"
+              style={{ width: 'auto', height: 'auto' }}
+            />
+            <Image
+              src="/assets/images/logo-ojk-putih.png"
+              alt="Logo OJK"
+              width={160}
+              height={60}
+              className="mx-auto mb-6 object-contain p-1 rounded hidden dark:block"
               style={{ width: 'auto', height: 'auto' }}
             />
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Portal Pegawai</h1>

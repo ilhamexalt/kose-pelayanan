@@ -13,12 +13,12 @@ export default function HistoryPage() {
   const [user, setUser] = useState<any>(null);
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterJenis, setFilterJenis] = useState('');
 
-  const [selectedPelayanan, setSelectedPelayanan] = useState<any>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -137,7 +137,8 @@ export default function HistoryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2 bg-white/90 p-0.5 rounded" />
+              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2 dark:hidden" />
+              <img src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" className="h-9 w-auto mr-2 hidden dark:block" />
               <div className="hidden md:flex items-center gap-6 ml-10">
                 <Link href="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Antrean Aktif</Link>
                 <Link href="/history" className="text-sm font-semibold text-[#DA251C] border-b-2 border-[#DA251C] pb-5 pt-6 px-1">Riwayat Pelayanan</Link>
@@ -150,15 +151,68 @@ export default function HistoryPage() {
                 </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-3 sm:space-x-6">
               <ThemeToggle />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Halo, <span className="text-slate-900 dark:text-white">{user.nama || user.email || user.nip}</span></span>
+              <span className="hidden sm:inline text-sm font-medium text-slate-600 dark:text-slate-300">Halo, <span className="text-slate-900 dark:text-white font-semibold">{user.nama || user.email || user.nip}</span></span>
               <button onClick={handleLogout} className="text-sm font-semibold text-[#DA251C] hover:bg-red-50 dark:hover:bg-red-950/40 px-3 py-1.5 rounded transition-colors cursor-pointer">
                 Keluar
+              </button>
+
+              {/* Hamburger Button for Mobile */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Toggle Menu"
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                )}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4 pt-3 pb-4 space-y-2 shadow-lg animate-fadeIn">
+            <div className="sm:hidden px-3 py-2 text-xs font-semibold text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-2">
+              Halo, <span className="text-slate-800 dark:text-slate-100">{user.nama || user.email || user.nip}</span>
+            </div>
+            <Link 
+              href="/dashboard" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Antrean Aktif
+            </Link>
+            <Link 
+              href="/history" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold bg-red-50 dark:bg-red-950/40 text-[#DA251C] dark:text-red-400"
+            >
+              Riwayat Pelayanan
+            </Link>
+            {String(user?.nip || '').toLowerCase() === 'admin' && (
+              <Link 
+                href="/pegawai" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                Data Pegawai
+              </Link>
+            )}
+            <Link 
+              href="/antrean" 
+              target="_blank"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800"
+            >
+              📺 Layar TV Antrean
+            </Link>
+          </div>
+        )}
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -247,7 +301,7 @@ export default function HistoryPage() {
                   filteredAndSortedList.map((item) => (
                     <tr 
                       key={item.id} 
-                      onClick={() => setSelectedPelayanan(item)}
+                      onClick={() => window.open(`/dashboard/detail/${item.id}`, '_blank')}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-[#DA251C] dark:text-red-400">{item.queueNumber}</td>
@@ -282,137 +336,6 @@ export default function HistoryPage() {
           </div>
         </div>
       </main>
-
-      {selectedPelayanan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 transition-colors duration-300">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Detail Riwayat</h2>
-              <button onClick={() => setSelectedPelayanan(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">No Antrean</p>
-                  <p className="text-2xl font-black text-[#DA251C] dark:text-red-400">{selectedPelayanan.queueNumber}</p>
-                </div>
-                <div className="text-right">
-                  <span className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full border ${getStatusColor(selectedPelayanan.status || 'Antre')}`}>
-                    {selectedPelayanan.status || 'Antre'}
-                  </span>
-                  {selectedPelayanan.processedBy && (
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Oleh: {selectedPelayanan.processedBy.nama}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">NIK</p>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">{selectedPelayanan.nik}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">No. HP</p>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">{selectedPelayanan.phone || '-'}</p>
-                </div>
-              </div>
-              
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama Lengkap</p>
-                <p className="font-medium text-slate-900 dark:text-slate-100">{selectedPelayanan.nama}</p>
-              </div>
-              
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Jenis Pelayanan</p>
-                <p className="font-medium text-slate-900 dark:text-slate-100 capitalize">{selectedPelayanan.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : selectedPelayanan.jenis === 'slik' ? 'SLIK' : selectedPelayanan.jenis === 'pengaduan' ? 'Pengaduan' : selectedPelayanan.jenis}</p>
-              </div>
-
-              {selectedPelayanan.jenis === 'slik' && (
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-3 mt-3">
-                  <h3 className="text-xs font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                    Pelayanan SLIK
-                  </h3>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Jenis Debitur</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.jenisDebitur || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">NIK / NPWP Debitur</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.slikNikNpwp || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Email Aktif</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.email || '-'}</p>
-                  </div>
-                </div>
-              )}
-
-              {selectedPelayanan.jenis === 'pengaduan' && (
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-3 mt-3">
-                  <h3 className="text-xs font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                    Pelayanan Pengaduan
-                  </h3>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">NIK Pengaduan</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.pengaduanNik || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Klasifikasi Layanan</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.klasifikasi || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Sektor</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.sektor || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Perusahaan yang Diadukan</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.perusahaan || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Jenis Produk</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.produk || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Jenis Permasalahan</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.permasalahan || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Ringkasan Pengaduan</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm whitespace-pre-line">{selectedPelayanan.ringkasan || '-'}</p>
-                  </div>
-                </div>
-              )}
-
-              {selectedPelayanan.jenis === 'umum' && (
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-3 mt-3">
-                  <h3 className="text-xs font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                    Registrasi Tamu (Kunjungan Umum/Kedinasan)
-                  </h3>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Nama Instansi / Perusahaan</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.instansi || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Keperluan</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.keperluan || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Bertemu dengan Pegawai</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.bertemu || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Keterangan (Jumlah Orang)</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.keterangan || '-'}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

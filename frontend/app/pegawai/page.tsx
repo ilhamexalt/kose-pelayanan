@@ -18,6 +18,7 @@ export default function PegawaiPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Modal Create
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -254,7 +255,8 @@ export default function PegawaiPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2 bg-white/90 p-0.5 rounded" />
+              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2 dark:hidden" />
+              <img src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" className="h-9 w-auto mr-2 hidden dark:block" />
               <div className="hidden md:flex items-center gap-6 ml-10">
                 <Link href="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Antrean Aktif</Link>
                 <Link href="/history" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Riwayat Pelayanan</Link>
@@ -265,15 +267,66 @@ export default function PegawaiPage() {
                 </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-3 sm:space-x-6">
               <ThemeToggle />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Halo, <span className="text-slate-900 dark:text-white">{user.nama || user.email || user.nip}</span></span>
+              <span className="hidden sm:inline text-sm font-medium text-slate-600 dark:text-slate-300">Halo, <span className="text-slate-900 dark:text-white font-semibold">{user.nama || user.email || user.nip}</span></span>
               <button onClick={handleLogout} className="text-sm font-semibold text-[#DA251C] hover:bg-red-50 dark:hover:bg-red-950/40 px-3 py-1.5 rounded transition-colors cursor-pointer">
                 Keluar
+              </button>
+
+              {/* Hamburger Button for Mobile */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Toggle Menu"
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                )}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4 pt-3 pb-4 space-y-2 shadow-lg animate-fadeIn">
+            <div className="sm:hidden px-3 py-2 text-xs font-semibold text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-2">
+              Halo, <span className="text-slate-800 dark:text-slate-100">{user.nama || user.email || user.nip}</span>
+            </div>
+            <Link 
+              href="/dashboard" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Antrean Aktif
+            </Link>
+            <Link 
+              href="/history" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Riwayat Pelayanan
+            </Link>
+            <Link 
+              href="/pegawai" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold bg-red-50 dark:bg-red-950/40 text-[#DA251C] dark:text-red-400"
+            >
+              Data Pegawai
+            </Link>
+            <Link 
+              href="/antrean" 
+              target="_blank"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800"
+            >
+              📺 Layar TV Antrean
+            </Link>
+          </div>
+        )}
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

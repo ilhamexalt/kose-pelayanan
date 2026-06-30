@@ -17,8 +17,13 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterJenis, setFilterJenis] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -42,6 +47,12 @@ export default function DashboardPage() {
       const numB = parseInt((b.queueNumber || '').replace(/\D/g, ''), 10) || 0;
       return sortOrder === 'asc' ? numA - numB : numB - numA;
     });
+
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / itemsPerPage));
+  const paginatedList = filteredAndSortedList.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const isMyProcessing = (p: any) => {
     if (!p || !p.processedBy || !user) return false;
@@ -123,7 +134,8 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2 bg-white/90 p-0.5 rounded" />
+              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2 dark:hidden" />
+              <img src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" className="h-9 w-auto mr-2 hidden dark:block" />
               <div className="hidden md:flex items-center gap-6 ml-10">
                 <Link href="/dashboard" className="text-sm font-semibold text-[#DA251C] border-b-2 border-[#DA251C] pb-5 pt-6 px-1">Antrean Aktif</Link>
                 <Link href="/history" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Riwayat Pelayanan</Link>
@@ -136,15 +148,68 @@ export default function DashboardPage() {
                 </Link>
               </div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-3 sm:space-x-6">
               <ThemeToggle />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Halo, <span className="text-slate-900 dark:text-white">{user.nama || user.email || user.nip}</span></span>
+              <span className="hidden sm:inline text-sm font-medium text-slate-600 dark:text-slate-300">Halo, <span className="text-slate-900 dark:text-white font-semibold">{user.nama || user.email || user.nip}</span></span>
               <button onClick={handleLogout} className="text-sm font-semibold text-[#DA251C] hover:bg-red-50 dark:hover:bg-red-950/40 px-3 py-1.5 rounded transition-colors cursor-pointer">
                 Keluar
+              </button>
+
+              {/* Hamburger Button for Mobile */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Toggle Menu"
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                )}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4 pt-3 pb-4 space-y-2 shadow-lg animate-fadeIn">
+            <div className="sm:hidden px-3 py-2 text-xs font-semibold text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-2">
+              Halo, <span className="text-slate-800 dark:text-slate-100">{user.nama || user.email || user.nip}</span>
+            </div>
+            <Link 
+              href="/dashboard" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold bg-red-50 dark:bg-red-950/40 text-[#DA251C] dark:text-red-400"
+            >
+              Antrean Aktif
+            </Link>
+            <Link 
+              href="/history" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Riwayat Pelayanan
+            </Link>
+            {String(user?.nip || '').toLowerCase() === 'admin' && (
+              <Link 
+                href="/pegawai" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                Data Pegawai
+              </Link>
+            )}
+            <Link 
+              href="/antrean" 
+              target="_blank"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800"
+            >
+              📺 Layar TV Antrean
+            </Link>
+          </div>
+        )}
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -165,23 +230,56 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0f172a] p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between transition-colors duration-300">
-          <div className="relative w-full sm:w-1/3">
-            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-            <input 
-              type="text" 
-              placeholder="Cari nama nasabah..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
-            />
+        <div className="bg-white dark:bg-[#0f172a] p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between transition-colors duration-300">
+          <div className="flex w-full md:w-1/2 gap-2">
+            <div className="relative flex-1">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input 
+                type="text" 
+                placeholder="Cari nama atau NIK nasabah..." 
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchQuery(searchInput);
+                    setCurrentPage(1);
+                  }
+                }}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+              />
+            </div>
+            <button
+              onClick={() => {
+                setSearchQuery(searchInput);
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2 bg-[#DA251C] hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer flex items-center gap-1 shadow-sm shrink-0"
+            >
+              Cari
+            </button>
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchInput('');
+                  setSearchQuery('');
+                  setCurrentPage(1);
+                }}
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm transition-colors cursor-pointer shrink-0"
+                title="Reset Cari"
+              >
+                ✕
+              </button>
+            )}
           </div>
-          <div className="w-full sm:w-auto flex items-center gap-2">
-            <label className="text-sm text-slate-600 dark:text-slate-300 font-medium">Jenis Pelayanan:</label>
+          <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-2">
+            <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Jenis Pelayanan:</label>
             <select 
               value={filterJenis}
-              onChange={(e) => setFilterJenis(e.target.value)}
-              className="border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+              onChange={(e) => {
+                setFilterJenis(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full sm:w-auto"
             >
               <option value="">Semua</option>
               <option value="slik">SLIK</option>
@@ -200,7 +298,10 @@ export default function DashboardPage() {
                   <th 
                     scope="col" 
                     className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors group"
-                    onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                    onClick={() => {
+                      setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+                      setCurrentPage(1);
+                    }}
                   >
                     <div className="flex items-center">
                       No Antrean
@@ -221,8 +322,8 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-200 dark:divide-slate-800">
-                {filteredAndSortedList.length > 0 ? (
-                  filteredAndSortedList.map((item) => {
+                {paginatedList.length > 0 ? (
+                  paginatedList.map((item) => {
                     const handleRowClick = () => {
                       if (hasActiveProcessing && activeProcessingItem.id !== item.id) {
                         messageApi.warning(`Anda sedang memproses antrean ${activeProcessingItem.queueNumber}. Selesaikan terlebih dahulu sebelum membuka antrean lain.`);
@@ -268,6 +369,47 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {filteredAndSortedList.length > 0 && (
+            <div className="bg-slate-50 dark:bg-slate-800/40 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors duration-300">
+              <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                Menampilkan <span className="font-semibold text-slate-800 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</span> hingga <span className="font-semibold text-slate-800 dark:text-slate-200">{Math.min(currentPage * itemsPerPage, filteredAndSortedList.length)}</span> dari <span className="font-semibold text-slate-800 dark:text-slate-200">{filteredAndSortedList.length}</span> data
+              </div>
+
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                >
+                  Sebelumnya
+                </button>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center transition-colors cursor-pointer ${
+                      currentPage === page
+                        ? 'bg-[#DA251C] text-white shadow-sm'
+                        : 'border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

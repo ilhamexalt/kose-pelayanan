@@ -176,7 +176,15 @@ export default function GuestPage() {
               alt="Logo OJK"
               width={100}
               height={40}
-              className="object-contain bg-white/90 p-1 rounded"
+              className="object-contain p-1 rounded dark:hidden"
+              style={{ width: 'auto', height: 'auto' }}
+            />
+            <Image
+              src="/assets/images/logo-ojk-putih.png"
+              alt="Logo OJK"
+              width={100}
+              height={40}
+              className="object-contain p-1 rounded hidden dark:block"
               style={{ width: 'auto', height: 'auto' }}
             />
           </div>
