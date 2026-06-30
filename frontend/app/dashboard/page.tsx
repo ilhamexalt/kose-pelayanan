@@ -76,11 +76,6 @@ export default function DashboardPage() {
           ...doc.data()
         }));
         setPelayananList(list);
-        setSelectedPelayanan((prev: any) => {
-          if (!prev) return null;
-          const updated = list.find((item: any) => item.id === prev.id);
-          return updated ? { ...prev, ...updated } : prev;
-        });
         setIsLoading(false);
       }, (error) => {
         console.error("Realtime fetch error:", error);
