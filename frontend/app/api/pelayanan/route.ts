@@ -16,35 +16,60 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
+    if (!/^\d{16}$/.test(nik)) {
+      return NextResponse.json({ error: 'NIK utama harus berupa 16 digit angka' }, { status: 400 });
+    }
+
     if (jenis === 'umum' && (!instansi || !keperluan || !bertemu || !keterangan)) {
       return NextResponse.json({ error: 'Formulir Registrasi Tamu tidak lengkap' }, { status: 400 });
     }
 
-    if (jenis === 'slik' && (!jenisDebitur || !slikNikNpwp || !email)) {
-      return NextResponse.json({ error: 'Formulir Pelayanan SLIK tidak lengkap' }, { status: 400 });
+    if (jenis === 'slik') {
+      if (!jenisDebitur || !slikNikNpwp || !email) {
+        return NextResponse.json({ error: 'Formulir Pelayanan SLIK tidak lengkap' }, { status: 400 });
+      }
+      if (jenisDebitur !== 'Badan Usaha' && !/^\d{16}$/.test(slikNikNpwp)) {
+        return NextResponse.json({ error: 'NIK Debitur SLIK harus berupa 16 digit angka' }, { status: 400 });
+      }
+      if (jenisDebitur === 'Badan Usaha' && !/^\d{15,16}$/.test(slikNikNpwp)) {
+        return NextResponse.json({ error: 'NPWP Badan Usaha harus berupa 15 atau 16 digit angka' }, { status: 400 });
+      }
     }
 
-    if (jenis === 'pengaduan' && (!pengaduanNik || !klasifikasi || !sektor || !perusahaan || !produk || !permasalahan || !ringkasan)) {
-      return NextResponse.json({ error: 'Formulir Pelayanan Pengaduan tidak lengkap' }, { status: 400 });
+    if (jenis === 'pengaduan') {
+      if (!pengaduanNik || !klasifikasi || !sektor || !perusahaan || !produk || !permasalahan || !ringkasan) {
+        return NextResponse.json({ error: 'Formulir Pelayanan Pengaduan tidak lengkap' }, { status: 400 });
+      }
+      if (!/^\d{16}$/.test(pengaduanNik)) {
+        return NextResponse.json({ error: 'NIK Pengaduan harus berupa 16 digit angka' }, { status: 400 });
+      }
     }
 
     const pelayananRef = collection(db, 'pelayanan');
     
-    // Get the latest queue number
-    const qLatest = query(pelayananRef, orderBy('createdAt', 'desc'), limit(1));
-    const snapshot = await getDocs(qLatest);
-    let nextNum = 1;
-    if (!snapshot.empty) {
-      const latestData = snapshot.docs[0].data();
-      if (latestData.queueNumber && latestData.queueNumber.startsWith('A-')) {
-        const currentNum = parseInt(latestData.queueNumber.split('-')[1], 10);
-        if (!isNaN(currentNum)) {
-          nextNum = currentNum + 1;
+    let prefix = 'A';
+    if (jenis === 'slik') prefix = 'A';
+    else if (jenis === 'pengaduan') prefix = 'B';
+    else if (jenis === 'umum') prefix = 'C';
+
+    const snapshot = await getDocs(pelayananRef);
+    let maxNum = 0;
+    snapshot.forEach((doc) => {
+      const d = doc.data();
+      if (d.queueNumber && typeof d.queueNumber === 'string') {
+        const qn = d.queueNumber.trim().toUpperCase();
+        if (qn.startsWith(`${prefix}-`) || (qn.startsWith(prefix) && /^[A-Z]\d+$/.test(qn))) {
+          const numStr = qn.replace(/^[A-Z]-?/, '');
+          const numPart = parseInt(numStr, 10);
+          if (!isNaN(numPart) && numPart > maxNum) {
+            maxNum = numPart;
+          }
         }
       }
-    }
-    
-    const queueNumber = `A-${nextNum.toString().padStart(3, '0')}`;
+    });
+
+    const nextNum = maxNum + 1;
+    const queueNumber = `${prefix}-${nextNum.toString().padStart(3, '0')}`;
 
     const payload: any = {
       nik,

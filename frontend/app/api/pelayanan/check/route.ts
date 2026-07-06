@@ -7,8 +7,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const nik = searchParams.get('nik');
 
-    if (!nik) {
-      return NextResponse.json({ error: 'NIK diperlukan' }, { status: 400 });
+    if (!nik || !/^\d{16}$/.test(nik)) {
+      return NextResponse.json({ error: 'NIK harus terdiri dari 16 digit angka' }, { status: 400 });
     }
 
     const pelayananRef = collection(db, 'pelayanan');

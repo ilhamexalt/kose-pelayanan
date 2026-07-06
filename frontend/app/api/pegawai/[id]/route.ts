@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { hashPassword } from '@/lib/password';
 
 export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -16,11 +17,17 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     const updateData: any = {};
     if (body.nama !== undefined) updateData.nama = body.nama;
     if (body.email !== undefined) updateData.email = body.email;
-    if (body.password !== undefined && body.password !== '') updateData.password = body.password;
+    if (body.username !== undefined) updateData.username = body.username;
+    if (body.role !== undefined) updateData.role = body.role;
+    if (body.nip !== undefined) updateData.nip = Number(body.nip) || body.nip;
+    if (body.password !== undefined && body.password !== '') updateData.password = hashPassword(String(body.password));
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ success: false, error: 'Tidak ada data yang diubah' }, { status: 400 });
     }
+
+    updateData.updated_at = new Date().toISOString();
+    updateData.updated_by = String(adminHeader || 'admin');
 
     const userRef = doc(db, 'users', id);
     await updateDoc(userRef, updateData);

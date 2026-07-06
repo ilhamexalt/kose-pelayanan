@@ -6,6 +6,7 @@ import Link from "next/link";
 import * as XLSX from "xlsx";
 import { message } from "antd";
 import ThemeToggle from "@/components/ThemeToggle";
+import CustomSelect from "@/components/CustomSelect";
 
 export default function HistoryPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -16,8 +17,12 @@ export default function HistoryPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterJenis, setFilterJenis] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
 
   const getStatusColor = (status: string) => {
@@ -27,6 +32,20 @@ export default function HistoryPage() {
       case 'Batal': return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950/80 dark:text-red-300 dark:border-red-800';
       default: return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800';
     }
+  };
+
+  const formatDateTime = (val: any) => {
+    if (!val) return '-';
+    let d: Date;
+    if (val.toDate && typeof val.toDate === 'function') {
+      d = val.toDate();
+    } else if (val.seconds !== undefined) {
+      d = new Date(val.seconds * 1000);
+    } else {
+      d = new Date(val);
+    }
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleString('id-ID').replace(/\./g, ':');
   };
 
   const filteredAndSortedList = pelayananList
@@ -43,12 +62,23 @@ export default function HistoryPage() {
       return sortOrder === 'asc' ? numA - numB : numB - numA;
     });
 
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / itemsPerPage));
+  const paginatedList = filteredAndSortedList.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (!storedUser) {
       router.push('/login');
     } else {
-      setUser(JSON.parse(storedUser));
+      const parsed = JSON.parse(storedUser);
+      if (parsed.update_password === false) {
+        router.push('/update-password');
+        return;
+      }
+      setUser(parsed);
       fetchPelayanan();
     }
   }, []);
@@ -81,7 +111,7 @@ export default function HistoryPage() {
     const dataToExport = filteredAndSortedList.map((item, index) => ({
       'No': index + 1,
       'No Antrean': item.queueNumber,
-      'Waktu': item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID') : '-',
+      'Waktu': formatDateTime(item.createdAt),
       'Nama Nasabah': item.nama,
       'NIK': item.nik,
       'No HP': item.phone || '-',
@@ -241,30 +271,64 @@ export default function HistoryPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0f172a] p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between transition-colors duration-300">
-          <div className="relative w-full sm:w-1/3">
-            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-            <input 
-              type="text" 
-              placeholder="Cari nama atau NIK..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
-            />
-          </div>
-          <div className="w-full sm:w-auto flex items-center gap-2">
-            <label className="text-sm text-slate-600 dark:text-slate-300 font-medium">Jenis Pelayanan:</label>
-            <select 
-              value={filterJenis}
-              onChange={(e) => setFilterJenis(e.target.value)}
-              className="border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+        <div className="bg-white dark:bg-[#0f172a] p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between transition-colors duration-300">
+          <div className="flex w-full md:w-1/2 gap-2">
+            <div className="relative flex-1">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input 
+                type="text" 
+                placeholder="Cari nama atau NIK nasabah..." 
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setSearchQuery(searchInput);
+                    setCurrentPage(1);
+                  }
+                }}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+              />
+            </div>
+            <button
+              onClick={() => {
+                setSearchQuery(searchInput);
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2 bg-[#DA251C] hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer flex items-center gap-1 shadow-sm shrink-0"
             >
-              <option value="">Semua</option>
-              <option value="slik">SLIK</option>
-              <option value="pengaduan">Pengaduan</option>
-              <option value="umum">Kunjungan Umum/Kedinasan</option>
-              <option value="lainnya">Lainnya</option>
-            </select>
+              Cari
+            </button>
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchInput('');
+                  setSearchQuery('');
+                  setCurrentPage(1);
+                }}
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm transition-colors cursor-pointer shrink-0"
+                title="Reset Cari"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-2">
+            <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Jenis Pelayanan:</label>
+            <div className="w-full sm:w-60">
+              <CustomSelect
+                value={filterJenis}
+                onChange={(val) => {
+                  setFilterJenis(val);
+                  setCurrentPage(1);
+                }}
+                options={[
+                  { value: "", label: "Semua" },
+                  { value: "slik", label: "SLIK" },
+                  { value: "pengaduan", label: "Pengaduan" },
+                  { value: "umum", label: "Kunjungan Umum/Kedinasan" },
+                ]}
+              />
+            </div>
           </div>
         </div>
 
@@ -276,7 +340,10 @@ export default function HistoryPage() {
                   <th 
                     scope="col" 
                     className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors group"
-                    onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                    onClick={() => {
+                      setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+                      setCurrentPage(1);
+                    }}
                   >
                     <div className="flex items-center">
                       No Antrean
@@ -297,8 +364,8 @@ export default function HistoryPage() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-200 dark:divide-slate-800">
-                {filteredAndSortedList.length > 0 ? (
-                  filteredAndSortedList.map((item) => (
+                {paginatedList.length > 0 ? (
+                  paginatedList.map((item) => (
                     <tr 
                       key={item.id} 
                       onClick={() => window.open(`/dashboard/detail/${item.id}`, '_blank')}
@@ -306,7 +373,7 @@ export default function HistoryPage() {
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-[#DA251C] dark:text-red-400">{item.queueNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                        {item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID') : '-'}
+                        {formatDateTime(item.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">{item.nama}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">{item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}</td>
@@ -334,6 +401,47 @@ export default function HistoryPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {filteredAndSortedList.length > 0 && (
+            <div className="bg-slate-50 dark:bg-slate-800/40 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors duration-300">
+              <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                Menampilkan <span className="font-semibold text-slate-800 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</span> hingga <span className="font-semibold text-slate-800 dark:text-slate-200">{Math.min(currentPage * itemsPerPage, filteredAndSortedList.length)}</span> dari <span className="font-semibold text-slate-800 dark:text-slate-200">{filteredAndSortedList.length}</span> data
+              </div>
+
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                >
+                  Sebelumnya
+                </button>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center transition-colors cursor-pointer ${
+                      currentPage === page
+                        ? 'bg-[#DA251C] text-white shadow-sm'
+                        : 'border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

@@ -38,6 +38,10 @@ export default function PegawaiPage() {
       router.push('/login');
     } else {
       const parsedUser = JSON.parse(storedUser);
+      if (parsedUser.update_password === false) {
+        router.push('/update-password');
+        return;
+      }
       if (String(parsedUser?.nip || '').toLowerCase() !== 'admin') {
         router.push('/dashboard');
         return;
@@ -97,14 +101,16 @@ export default function PegawaiPage() {
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
       const usersToImport = jsonData.map((row: any) => ({
-        nip: row.nip || row.NIP || row.Nip,
-        nama: row.nama || row.Nama || row.NAMA,
-        email: row.email || row.Email || row.EMAIL,
-        password: row.password || row.Password || row.PASSWORD,
-      })).filter(u => u.nip && u.password);
+        nip: row.nip ?? row.NIP ?? row.Nip,
+        nama: row.nama ?? row.Nama ?? row.NAMA ?? row.name ?? row.Name,
+        email: row.email ?? row.Email ?? row.EMAIL ?? '',
+        username: row.username ?? row.Username ?? row.USERNAME ?? row.nip ?? row.NIP,
+        password: row.password ?? row.Password ?? row.PASSWORD,
+        role: row.role ?? row.Role ?? row.ROLE ?? 'Pegawai',
+      })).filter(u => u.nip !== undefined && u.nama && u.password);
 
       if (usersToImport.length === 0) {
-        messageApi.warning("Tidak ada data valid yang ditemukan di file Excel. Pastikan terdapat kolom nip dan password.");
+        messageApi.warning("Tidak ada data valid yang ditemukan di file Excel. Pastikan terdapat kolom nip, nama, dan password.");
         setIsImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;

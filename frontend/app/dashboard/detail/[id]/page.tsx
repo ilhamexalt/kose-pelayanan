@@ -67,6 +67,20 @@ export default function DetailPelayananPage() {
     }
   };
 
+  const formatDateTime = (val: any) => {
+    if (!val) return '-';
+    let d: Date;
+    if (val.toDate && typeof val.toDate === 'function') {
+      d = val.toDate();
+    } else if (val.seconds !== undefined) {
+      d = new Date(val.seconds * 1000);
+    } else {
+      d = new Date(val);
+    }
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleString('id-ID').replace(/\./g, ':');
+  };
+
   const handleUpdateStatus = async (statusId: string, newStatus: string) => {
     setIsUpdatingStatus(true);
     
@@ -177,7 +191,7 @@ export default function DetailPelayananPage() {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nomor Antrean</p>
               <p className="text-3xl font-black text-[#DA251C] dark:text-red-400">{selectedPelayanan.queueNumber}</p>
               <p className="text-xs text-slate-400 mt-1">
-                Waktu Daftar: {selectedPelayanan.createdAt ? new Date(selectedPelayanan.createdAt).toLocaleString('id-ID') : '-'}
+                Waktu Daftar: {formatDateTime(selectedPelayanan.createdAt)}
               </p>
             </div>
             <div className="text-left sm:text-right">

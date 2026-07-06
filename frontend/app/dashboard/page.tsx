@@ -8,6 +8,7 @@ import { message } from "antd";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import ThemeToggle from "@/components/ThemeToggle";
+import CustomSelect from "@/components/CustomSelect";
 
 export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -32,6 +33,20 @@ export default function DashboardPage() {
       case 'Batal': return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950/80 dark:text-red-300 dark:border-red-800';
       default: return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800';
     }
+  };
+
+  const formatDateTime = (val: any) => {
+    if (!val) return '-';
+    let d: Date;
+    if (val.toDate && typeof val.toDate === 'function') {
+      d = val.toDate();
+    } else if (val.seconds !== undefined) {
+      d = new Date(val.seconds * 1000);
+    } else {
+      d = new Date(val);
+    }
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleString('id-ID').replace(/\./g, ':');
   };
 
   const filteredAndSortedList = pelayananList
@@ -79,7 +94,12 @@ export default function DashboardPage() {
     if (!storedUser) {
       router.push('/login');
     } else {
-      setUser(JSON.parse(storedUser));
+      const parsed = JSON.parse(storedUser);
+      if (parsed.update_password === false) {
+        router.push('/update-password');
+        return;
+      }
+      setUser(parsed);
       
       const unsubscribe = onSnapshot(collection(db, 'pelayanan'), (snapshot) => {
         const list = snapshot.docs.map(doc => ({
@@ -273,20 +293,21 @@ export default function DashboardPage() {
           </div>
           <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-2">
             <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Jenis Pelayanan:</label>
-            <select 
-              value={filterJenis}
-              onChange={(e) => {
-                setFilterJenis(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full sm:w-auto"
-            >
-              <option value="">Semua</option>
-              <option value="slik">SLIK</option>
-              <option value="pengaduan">Pengaduan</option>
-              <option value="umum">Kunjungan Umum/Kedinasan</option>
-              <option value="lainnya">Lainnya</option>
-            </select>
+            <div className="w-full sm:w-60">
+              <CustomSelect
+                value={filterJenis}
+                onChange={(val) => {
+                  setFilterJenis(val);
+                  setCurrentPage(1);
+                }}
+                options={[
+                  { value: "", label: "Semua" },
+                  { value: "slik", label: "SLIK" },
+                  { value: "pengaduan", label: "Pengaduan" },
+                  { value: "umum", label: "Kunjungan Umum/Kedinasan" },
+                ]}
+              />
+            </div>
           </div>
         </div>
 
@@ -340,7 +361,7 @@ export default function DashboardPage() {
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-[#DA251C] dark:text-red-400">{item.queueNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                        {item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID') : '-'}
+                        {formatDateTime(item.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">{item.nama}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">{item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}</td>

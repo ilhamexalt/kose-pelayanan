@@ -1,48 +1,64 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { verifyPassword } from '@/lib/password';
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { email, password } = data; // 'email' field here acts as either nip or email
+    const identifier = String(data.identifier || data.email || data.username || data.nip || '').trim();
+    const password = String(data.password || '');
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'NIP/Email dan Password wajib diisi' }, { status: 400 });
+    if (!identifier || !password) {
+      return NextResponse.json({ error: 'NIP / Username / Email dan Password wajib diisi' }, { status: 400 });
     }
 
     let userFound: any = null;
 
-    // Coba cari berdasarkan NIP (berasumsi NIP dijadikan document ID saat import)
-    const userDocRef = doc(db, 'users', String(email));
+    const userDocRef = doc(db, 'users', identifier);
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists()) {
       userFound = { id: userDocSnap.id, ...userDocSnap.data() };
     } else {
-      // Jika tidak ada di doc ID, cari berdasarkan field email
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', email));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(usersRef);
       
-      if (!querySnapshot.empty) {
-        const firstDoc = querySnapshot.docs[0];
-        userFound = { id: firstDoc.id, ...firstDoc.data() };
+      const numId = Number(identifier);
+      const matchedDoc = querySnapshot.docs.find((d) => {
+        const u = d.data();
+        return (
+          String(u.username || '').toLowerCase() === identifier.toLowerCase() ||
+          String(u.email || '').toLowerCase() === identifier.toLowerCase() ||
+          String(u.nip || '') === identifier ||
+          (!isNaN(numId) && u.nip === numId)
+        );
+      });
+
+      if (matchedDoc) {
+        userFound = { id: matchedDoc.id, ...matchedDoc.data() };
       }
     }
 
     if (userFound) {
-      if (userFound.password === password) {
-        // Autentikasi berhasil
+      if (verifyPassword(password, userFound.password)) {
         return NextResponse.json({ 
           success: true, 
-          user: { nip: userFound.nip, nama: userFound.nama, email: userFound.email } 
+          user: { 
+            id: userFound.id || String(userFound.nip),
+            nip: userFound.nip, 
+            nama: userFound.nama, 
+            email: userFound.email || '',
+            username: userFound.username || String(userFound.nip),
+            role: userFound.role || 'Pegawai',
+            update_password: Boolean(userFound.update_password)
+          } 
         });
       } else {
         return NextResponse.json({ error: 'Password salah' }, { status: 401 });
       }
     } else {
-      return NextResponse.json({ error: 'Data Pegawai tidak ditemukan' }, { status: 404 });
+      return NextResponse.json({ error: 'Akun (NIP / Username / Email) tidak ditemukan' }, { status: 404 });
     }
   } catch (error: any) {
     console.error('Error during login:', error);

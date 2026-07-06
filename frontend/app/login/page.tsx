@@ -18,8 +18,9 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    const identifier = formData.get('email') || formData.get('identifier');
     const data = {
-      email: formData.get('email'), // refers to input id/name 'email'
+      identifier: identifier,
       password: formData.get('password'),
     };
 
@@ -32,11 +33,14 @@ export default function LoginPage() {
       const json = await res.json();
 
       if (json.success) {
-        // In a real application, you'd save a token or session here
-        // For simplicity, we'll store basic user info in localStorage to persist login state across reloads on the dashboard
         localStorage.setItem('user', JSON.stringify(json.user));
-        messageApi.success("Login berhasil!");
-        router.push('/dashboard');
+        if (json.user.update_password === false) {
+          messageApi.warning("Keamanan Akun: Anda wajib memperbarui password terlebih dahulu.");
+          router.push('/update-password');
+        } else {
+          messageApi.success("Login berhasil!");
+          router.push('/dashboard');
+        }
       } else {
         messageApi.error(json.error || 'Login gagal');
       }
@@ -58,7 +62,6 @@ export default function LoginPage() {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Kembali
           </Link>
-          {/* <ThemeToggle /> */}
         </div>
 
         <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl transition-colors duration-300">
@@ -80,13 +83,13 @@ export default function LoginPage() {
               style={{ width: 'auto', height: 'auto' }}
             />
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Portal Pegawai</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Masuk untuk melanjutkan ke dasbor internal.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Masuk menggunakan NIP, Username, atau Email Anda.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIP / Email</label>
-              <input type="text" id="email" name="email" required className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP atau Email" />
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIP / Username / Email</label>
+              <input type="text" id="email" name="email" required className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP, Username, atau Email" />
             </div>
 
             <div>

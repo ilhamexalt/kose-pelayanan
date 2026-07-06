@@ -8,14 +8,14 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
 
   return (
     <button
+      disabled
       onClick={toggleTheme}
       title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
       aria-label="Toggle theme"
-      className={`relative inline-flex items-center justify-center p-2 rounded-full border transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#DA251C] shadow-sm hover:shadow ${
-        theme === "dark"
-          ? "bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 hover:border-slate-600 hover:scale-105"
-          : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-amber-500 hover:scale-105"
-      } ${className}`}
+      className={`relative inline-flex items-center justify-center p-2 rounded-full border transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#DA251C] shadow-sm hover:shadow ${theme === "dark"
+        ? "bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 hover:border-slate-600 hover:scale-105"
+        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-amber-500 hover:scale-105"
+        } ${className}`}
     >
       {theme === "dark" ? (
         <svg className="w-5 h-5 transition-transform duration-300 transform rotate-0 hover:rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">

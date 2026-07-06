@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { message } from "antd";
 import ThemeToggle from "@/components/ThemeToggle";
+import CustomSelect from "@/components/CustomSelect";
 
 export default function GuestPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -45,8 +46,8 @@ export default function GuestPage() {
 
   const checkNik = async () => {
     if (!nik) return;
-    if (nik.length < 16) {
-      messageApi.warning("NIK kurang dari 16 digit! Harap masukkan 16 digit NIK.");
+    if (!/^\d{16}$/.test(nik)) {
+      messageApi.warning("NIK harus berupa 16 digit angka (tidak boleh ada huruf)!");
       return;
     }
     setIsCheckingNik(true);
@@ -74,7 +75,7 @@ export default function GuestPage() {
   };
 
   const handleNikChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value.replace(/\D/g, '').slice(0, 16);
     setNik(value);
     if (value.length < 16 && isNikFound !== null) {
       setIsNikFound(null);
@@ -87,8 +88,8 @@ export default function GuestPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (nik.length < 16) {
-      messageApi.warning("NIK kurang dari 16 digit! Harap masukkan 16 digit NIK.");
+    if (!/^\d{16}$/.test(nik)) {
+      messageApi.warning("NIK utama harus berupa 16 digit angka (tidak boleh ada huruf)!");
       setIsSubmitting(false);
       return;
     }
@@ -108,14 +109,24 @@ export default function GuestPage() {
     }
 
     if (jenis === "slik") {
+      if (jenisDebitur !== "Badan Usaha" && !/^\d{16}$/.test(slikNikNpwp)) {
+        messageApi.warning("NIK Debitur SLIK harus berupa 16 digit angka!");
+        setIsSubmitting(false);
+        return;
+      }
+      if (jenisDebitur === "Badan Usaha" && !/^\d{15,16}$/.test(slikNikNpwp)) {
+        messageApi.warning("NPWP Badan Usaha harus berupa 15 atau 16 digit angka!");
+        setIsSubmitting(false);
+        return;
+      }
       data.jenisDebitur = jenisDebitur;
       data.slikNikNpwp = slikNikNpwp;
       data.email = email;
     }
 
     if (jenis === "pengaduan") {
-      if (pengaduanNik.length < 16) {
-        messageApi.warning("NIK Pengaduan kurang dari 16 digit! Harap masukkan 16 digit NIK.");
+      if (!/^\d{16}$/.test(pengaduanNik)) {
+        messageApi.warning("NIK Pengaduan harus berupa 16 digit angka (tidak boleh ada huruf)!");
         setIsSubmitting(false);
         return;
       }
@@ -312,21 +323,18 @@ export default function GuestPage() {
 
                 <div>
                   <label htmlFor="jenis" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jenis Pelayanan <span className="text-[#DA251C]">*</span></label>
-                  <select
+                  <CustomSelect
                     id="jenis"
-                    name="jenis"
                     value={jenis}
-                    onChange={(e) => setJenis(e.target.value)}
+                    onChange={(val) => setJenis(val)}
                     disabled={isNikFound === null}
-                    required
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
-                  >
-                    <option value="" disabled>-- Pilih --</option>
-                    <option value="slik">SLIK</option>
-                    <option value="pengaduan">Pengaduan</option>
-                    <option value="umum">Kunjungan Umum/Kedinasan</option>
-                    <option value="lainnya">Lainnya</option>
-                  </select>
+                    placeholder="-- Pilih Jenis Pelayanan --"
+                    options={[
+                      { value: "slik", label: "SLIK" },
+                      { value: "pengaduan", label: "Pengaduan" },
+                      { value: "umum", label: "Kunjungan Umum/Kedinasan" },
+                    ]}
+                  />
                 </div>
 
                 {jenis === "umum" && (
@@ -360,20 +368,18 @@ export default function GuestPage() {
                       <label htmlFor="keperluan" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         Keperluan <span className="text-[#DA251C]">*</span>
                       </label>
-                      <select
+                      <CustomSelect
                         id="keperluan"
-                        name="keperluan"
                         value={keperluan}
-                        onChange={(e) => setKeperluan(e.target.value)}
-                        required={jenis === "umum"}
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none"
-                      >
-                        <option value="" disabled>-- Pilih Keperluan --</option>
-                        <option value="Undangan Rapat / Meeting">Undangan Rapat / Meeting</option>
-                        <option value="PKK/Fit & Propper">PKK/Fit & Propper</option>
-                        <option value="Penawaran">Penawaran</option>
-                        <option value="Other:">Other:</option>
-                      </select>
+                        onChange={(val) => setKeperluan(val)}
+                        placeholder="-- Pilih Keperluan --"
+                        options={[
+                          { value: "Undangan Rapat / Meeting", label: "Undangan Rapat / Meeting" },
+                          { value: "PKK/Fit & Propper", label: "PKK/Fit & Propper" },
+                          { value: "Penawaran", label: "Penawaran" },
+                          { value: "Other:", label: "Other:" },
+                        ]}
+                      />
                     </div>
 
                     {keperluan === "Other:" && (
@@ -478,20 +484,18 @@ export default function GuestPage() {
                       <label htmlFor="jenisDebitur" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         1. Jenis Debitur <span className="text-[#DA251C]">*</span>
                       </label>
-                      <select
+                      <CustomSelect
                         id="jenisDebitur"
-                        name="jenisDebitur"
                         value={jenisDebitur}
-                        onChange={(e) => setJenisDebitur(e.target.value)}
-                        required={jenis === "slik"}
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none"
-                      >
-                        <option value="" disabled>-- Pilih Jenis Debitur --</option>
-                        <option value="Perseorangan">Perseorangan</option>
-                        <option value="Perseorangan Dikuasakan">Perseorangan Dikuasakan</option>
-                        <option value="Badan Usaha">Badan Usaha</option>
-                        <option value="Debitur Meninggal Dunia">Debitur Meninggal Dunia</option>
-                      </select>
+                        onChange={(val) => setJenisDebitur(val)}
+                        placeholder="-- Pilih Jenis Debitur --"
+                        options={[
+                          { value: "Perseorangan", label: "Perseorangan" },
+                          { value: "Perseorangan Dikuasakan", label: "Perseorangan Dikuasakan" },
+                          { value: "Badan Usaha", label: "Badan Usaha" },
+                          { value: "Debitur Meninggal Dunia", label: "Debitur Meninggal Dunia" },
+                        ]}
+                      />
                     </div>
 
                     <div>
@@ -503,7 +507,8 @@ export default function GuestPage() {
                         id="slikNikNpwp"
                         name="slikNikNpwp"
                         value={slikNikNpwp}
-                        onChange={(e) => setSlikNikNpwp(e.target.value)}
+                        onChange={(e) => setSlikNikNpwp(e.target.value.replace(/\D/g, '').slice(0, 16))}
+                        maxLength={16}
                         required={jenis === "slik"}
                         className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
                         placeholder="Masukkan NIK atau NPWP"
@@ -548,7 +553,8 @@ export default function GuestPage() {
                         id="pengaduanNik"
                         name="pengaduanNik"
                         value={pengaduanNik}
-                        onChange={(e) => setPengaduanNik(e.target.value)}
+                        onChange={(e) => setPengaduanNik(e.target.value.replace(/\D/g, '').slice(0, 16))}
+                        maxLength={16}
                         required={jenis === "pengaduan"}
                         className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
                         placeholder="Masukkan 16 digit NIK"
@@ -559,19 +565,17 @@ export default function GuestPage() {
                       <label htmlFor="klasifikasi" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         Klasifikasi Layanan <span className="text-[#DA251C]">*</span>
                       </label>
-                      <select
+                      <CustomSelect
                         id="klasifikasi"
-                        name="klasifikasi"
                         value={klasifikasi}
-                        onChange={(e) => setKlasifikasi(e.target.value)}
-                        required={jenis === "pengaduan"}
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all appearance-none"
-                      >
-                        <option value="" disabled>-- Pilih Klasifikasi --</option>
-                        <option value="Pemberian Informasi / Pertanyaan">Pemberian Informasi / Pertanyaan</option>
-                        <option value="Penerimaan Informasi">Penerimaan Informasi</option>
-                        <option value="Konsultasi Pengaduan">Konsultasi Pengaduan</option>
-                      </select>
+                        onChange={(val) => setKlasifikasi(val)}
+                        placeholder="-- Pilih Klasifikasi --"
+                        options={[
+                          { value: "Pemberian Informasi / Pertanyaan", label: "Pemberian Informasi / Pertanyaan" },
+                          { value: "Penerimaan Informasi", label: "Penerimaan Informasi" },
+                          { value: "Konsultasi Pengaduan", label: "Konsultasi Pengaduan" },
+                        ]}
+                      />
                     </div>
 
                     <div>

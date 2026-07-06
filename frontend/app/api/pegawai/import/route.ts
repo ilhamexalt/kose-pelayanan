@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { hashPassword } from '@/lib/password';
 
 export async function POST(request: Request) {
   try {
@@ -15,14 +16,25 @@ export async function POST(request: Request) {
     }
 
     let count = 0;
+    const now = new Date().toISOString();
+    const adminUser = String(adminHeader || 'admin');
+
     for (const user of data) {
-      if (user.nip && user.password) {
+      if (user.nip && user.nama && user.password) {
+        const nipNumber = Number(user.nip) || 0;
         const userRef = doc(db, 'users', String(user.nip));
         await setDoc(userRef, {
-          nip: String(user.nip),
-          nama: user.nama || '',
-          email: user.email || '',
-          password: String(user.password)
+          nip: nipNumber,
+          nama: String(user.nama).trim(),
+          email: user.email ? String(user.email).trim() : '',
+          username: user.username ? String(user.username).trim() : String(user.nip),
+          password: hashPassword(String(user.password)),
+          role: user.role ? String(user.role).trim() : 'Pegawai',
+          update_password: false,
+          created_at: now,
+          created_by: adminUser,
+          updated_at: now,
+          updated_by: adminUser
         });
         count++;
       }

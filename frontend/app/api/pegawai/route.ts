@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
+import { hashPassword } from '@/lib/password';
 
 export async function GET(request: Request) {
   try {
@@ -44,11 +45,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Pegawai dengan NIP tersebut sudah terdaftar' }, { status: 409 });
     }
 
+    const now = new Date().toISOString();
+    const adminUser = String(adminHeader || 'admin');
+    const nipNumber = Number(nip) || 0;
+
     await setDoc(userRef, {
-      nip: String(nip),
-      nama: String(nama),
-      email: String(email || ''),
-      password: String(password)
+      nip: nipNumber,
+      nama: String(nama).trim(),
+      email: email ? String(email).trim() : '',
+      username: body.username ? String(body.username).trim() : String(nip),
+      password: hashPassword(String(password)),
+      role: body.role ? String(body.role).trim() : 'Pegawai',
+      update_password: false,
+      created_at: now,
+      created_by: adminUser,
+      updated_at: now,
+      updated_by: adminUser
     });
 
     return NextResponse.json({ success: true, message: 'Pegawai berhasil ditambahkan' });
