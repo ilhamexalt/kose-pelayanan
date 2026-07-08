@@ -20,17 +20,18 @@ export async function POST(request: Request) {
     const adminUser = String(adminHeader || 'admin');
 
     for (const user of data) {
-      if (user.nip && user.nama && user.password) {
-        const nipNumber = Number(user.nip) || 0;
-        const userRef = doc(db, 'users', String(user.nip));
+      if (user.nama && user.username && user.password && user.role) {
+        const nipVal = user.nip !== undefined && user.nip !== null && user.nip !== '' ? Number(user.nip) : null;
+        const docId = nipVal !== null ? String(nipVal) : `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        const userRef = doc(db, 'users', docId);
         await setDoc(userRef, {
-          nip: nipNumber,
+          nip: nipVal,
           nama: String(user.nama).trim(),
           email: user.email ? String(user.email).trim() : '',
-          username: user.username ? String(user.username).trim() : String(user.nip),
+          username: String(user.username).trim(),
           password: hashPassword(String(user.password)),
-          role: user.role ? String(user.role).trim() : 'Pegawai',
-          update_password: false,
+          role: String(user.role).trim(),
+          update_password: user.update_password !== undefined ? Boolean(user.update_password) : false,
           created_at: now,
           created_by: adminUser,
           updated_at: now,

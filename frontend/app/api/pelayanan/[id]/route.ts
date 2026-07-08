@@ -8,10 +8,10 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     const id = params.id;
 
     const data = await request.json();
-    const { status, processedBy } = data;
+    const { status, processedBy, catatan } = data;
 
-    if (!status) {
-      return NextResponse.json({ error: 'Status tidak boleh kosong' }, { status: 400 });
+    if (!status && catatan === undefined) {
+      return NextResponse.json({ error: 'Data update tidak boleh kosong' }, { status: 400 });
     }
 
     const pelayananRef = doc(db, 'pelayanan', id);
@@ -24,7 +24,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     const currentData = docSnap.data();
 
     // Race condition guard: If someone else is already processing this item
-    if (currentData.status === 'Diproses' && status === 'Diproses') {
+    if (status && currentData.status === 'Diproses' && status === 'Diproses') {
       const existingNip = currentData.processedBy?.nip;
       const incomingNip = processedBy?.nip;
       if (existingNip && incomingNip && existingNip !== incomingNip) {
@@ -36,14 +36,16 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     }
 
     // Also prevent modifying items that are locked by someone else
-    if (currentData.processedBy && processedBy && currentData.processedBy.nip !== processedBy.nip && currentData.status === 'Diproses') {
+    if (status && currentData.processedBy && processedBy && currentData.processedBy.nip !== processedBy.nip && currentData.status === 'Diproses') {
       return NextResponse.json({ 
         success: false, 
         error: `Akses ditolak! Antrean sedang diproses oleh ${currentData.processedBy?.nama}` 
       }, { status: 403 });
     }
 
-    const updateData: any = { status };
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (catatan !== undefined) updateData.catatan = catatan;
 
     if (status === 'Antre') {
       updateData.processedBy = deleteField();

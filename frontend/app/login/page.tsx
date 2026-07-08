@@ -95,7 +95,6 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
-                <a href="#" className="text-xs text-slate-500 dark:text-slate-400 hover:text-[#DA251C] dark:hover:text-amber-400 transition-colors">Lupa password?</a>
               </div>
               <div className="relative">
                 <input
@@ -106,6 +105,7 @@ export default function LoginPage() {
                   className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 pr-11 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all"
                   placeholder="••••••••"
                 />
+                <Link href="#" className="text-xs text-slate-500 dark:text-slate-400 hover:text-[#DA251C] dark:hover:text-amber-400 transition-colors">Lupa password?</Link>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}

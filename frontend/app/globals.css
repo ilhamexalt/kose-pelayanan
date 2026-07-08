@@ -7,6 +7,10 @@
   --foreground: #0f172a;
 }
 
+html {
+  font-size: 12px;
+}
+
 .dark {
   --background: #090d16;
   --foreground: #f8fafc;

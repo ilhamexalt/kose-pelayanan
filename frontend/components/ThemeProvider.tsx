@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { ConfigProvider, theme as antdTheme } from "antd";
+import { StyleProvider } from "@ant-design/cssinjs";
 
 interface ThemeContextType {
   theme: "light" | "dark";
@@ -53,6 +54,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
           algorithm: mounted && theme === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
           token: {
             colorPrimary: "#DA251C",
+            fontSize: 12,
           },
         }}
       >

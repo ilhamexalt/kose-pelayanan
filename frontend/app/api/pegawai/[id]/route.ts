@@ -53,7 +53,17 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
       return NextResponse.json({ success: false, error: 'Akun admin utama tidak boleh dihapus!' }, { status: 403 });
     }
 
+    const { getDoc } = await import('firebase/firestore');
     const userRef = doc(db, 'users', id);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      if (String(userData.role).toLowerCase() === 'admin' || userData.nip === 'admin') {
+        return NextResponse.json({ success: false, error: 'Akun dengan role admin tidak boleh dihapus!' }, { status: 403 });
+      }
+    }
+
     await deleteDoc(userRef);
 
     return NextResponse.json({ success: true, message: 'Pegawai berhasil dihapus' });

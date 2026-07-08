@@ -38,6 +38,13 @@ export default function UpdatePasswordPage() {
       return;
     }
 
+    const hasLetter = /[a-zA-Z]/.test(newPassword);
+    const hasNumber = /\d/.test(newPassword);
+    if (!hasLetter || !hasNumber) {
+      messageApi.warning("Password baru harus mengandung kombinasi huruf dan angka.");
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       messageApi.error("Konfirmasi password tidak cocok dengan password baru.");
       return;
@@ -129,7 +136,7 @@ export default function UpdatePasswordPage() {
                   required
                   minLength={6}
                   className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 pr-11 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all text-sm"
-                  placeholder="Minimal 6 karakter"
+                  placeholder="Minimal 6 karakter, paduan huruf & angka"
                 />
                 <button
                   type="button"

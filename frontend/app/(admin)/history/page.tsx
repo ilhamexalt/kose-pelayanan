@@ -5,16 +5,51 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { message } from "antd";
-import ThemeToggle from "@/components/ThemeToggle";
+
 import CustomSelect from "@/components/CustomSelect";
 
 export default function HistoryPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const isAdmin = user && (String(user.nip).toLowerCase() === 'admin' || String(user.role).toLowerCase() === 'admin');
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [selectedDetail, setSelectedDetail] = useState<any>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  const handleUpdateStatus = async (statusId: string, newStatus: string) => {
+    setIsUpdatingStatus(true);
+    
+    const bodyPayload: any = { status: newStatus };
+    if (newStatus !== 'Antre' && user) {
+      bodyPayload.processedBy = { 
+        nip: user.nip || user.email || 'unknown', 
+        nama: user.nama || user.email || 'Unknown User' 
+      };
+    }
+
+    try {
+      const res = await fetch(`/api/pelayanan/${statusId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyPayload),
+      });
+      const json = await res.json();
+      if (json.success) {
+        messageApi.success(`Status antrean diperbarui menjadi ${newStatus}`);
+        setSelectedDetail((prev: any) => prev ? { ...prev, status: newStatus, processedBy: bodyPayload.processedBy || prev.processedBy } : null);
+        fetchPelayanan();
+      } else {
+        messageApi.error(json.error || 'Gagal update status');
+      }
+    } catch (err) {
+      messageApi.error('Terjadi kesalahan koneksi');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchInput, setSearchInput] = useState('');
@@ -97,10 +132,7 @@ export default function HistoryPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    router.push('/login');
-  };
+
 
   const handleExportExcel = () => {
     if (filteredAndSortedList.length === 0) {
@@ -161,91 +193,9 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] transition-colors duration-300">
+    <>
       {contextHolder}
-      <nav className="bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-10 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto mr-2 dark:hidden" />
-              <img src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" className="h-9 w-auto mr-2 hidden dark:block" />
-              <div className="hidden md:flex items-center gap-6 ml-10">
-                <Link href="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Antrean Aktif</Link>
-                <Link href="/history" className="text-sm font-semibold text-[#DA251C] border-b-2 border-[#DA251C] pb-5 pt-6 px-1">Riwayat Pelayanan</Link>
-                {String(user?.nip || '').toLowerCase() === 'admin' && (
-                  <Link href="/pegawai" className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors py-5 px-1">Data Pegawai</Link>
-                )}
-                <Link href="/antrean" target="_blank" className="text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm ml-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                  Layar TV Antrean
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 sm:space-x-6">
-              <ThemeToggle />
-              <span className="hidden sm:inline text-sm font-medium text-slate-600 dark:text-slate-300">Halo, <span className="text-slate-900 dark:text-white font-semibold">{user.nama || user.email || user.nip}</span></span>
-              <button onClick={handleLogout} className="text-sm font-semibold text-[#DA251C] hover:bg-red-50 dark:hover:bg-red-950/40 px-3 py-1.5 rounded transition-colors cursor-pointer">
-                Keluar
-              </button>
-
-              {/* Hamburger Button for Mobile */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Toggle Menu"
-              >
-                {isMobileMenuOpen ? (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                ) : (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Dropdown Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] px-4 pt-3 pb-4 space-y-2 shadow-lg animate-fadeIn">
-            <div className="sm:hidden px-3 py-2 text-xs font-semibold text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-2">
-              Halo, <span className="text-slate-800 dark:text-slate-100">{user.nama || user.email || user.nip}</span>
-            </div>
-            <Link 
-              href="/dashboard" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-            >
-              Antrean Aktif
-            </Link>
-            <Link 
-              href="/history" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-sm font-semibold bg-red-50 dark:bg-red-950/40 text-[#DA251C] dark:text-red-400"
-            >
-              Riwayat Pelayanan
-            </Link>
-            {String(user?.nip || '').toLowerCase() === 'admin' && (
-              <Link 
-                href="/pegawai" 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                Data Pegawai
-              </Link>
-            )}
-            <Link 
-              href="/antrean" 
-              target="_blank"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800"
-            >
-              📺 Layar TV Antrean
-            </Link>
-          </div>
-        )}
-      </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Riwayat Pelayanan Selesai</h1>
@@ -368,8 +318,7 @@ export default function HistoryPage() {
                   paginatedList.map((item) => (
                     <tr 
                       key={item.id} 
-                      onClick={() => window.open(`/dashboard/detail/${item.id}`, '_blank')}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-[#DA251C] dark:text-red-400">{item.queueNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
@@ -381,9 +330,14 @@ export default function HistoryPage() {
                         {item.processedBy ? item.processedBy.nama : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(item.status || 'Antre')}`}>
+                        <button 
+                          onClick={() => setSelectedDetail(item)}
+                          className={`px-3 py-1.5 inline-flex items-center gap-1.5 text-xs font-bold rounded-full border transition-all cursor-pointer shadow-sm hover:shadow active:scale-95 ${getStatusColor(item.status || 'Antre')} hover:opacity-80`}
+                          title="Lihat Detail & Ubah Status"
+                        >
                           {item.status || 'Antre'}
-                        </span>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -444,6 +398,201 @@ export default function HistoryPage() {
           )}
         </div>
       </main>
-    </div>
+
+      {/* Modal Detail & Ubah Status */}
+      {selectedDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Detail Pelayanan</h2>
+                <span className="text-sm font-black text-[#DA251C] dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-lg border border-red-100 dark:border-red-900/50">
+                  {selectedDetail.queueNumber}
+                </span>
+              </div>
+              <button onClick={() => setSelectedDetail(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-slate-100 dark:border-slate-800 gap-4">
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nomor Antrean</p>
+                  <p className="text-2xl font-black text-[#DA251C] dark:text-red-400">{selectedDetail.queueNumber}</p>
+                  <p className="text-xs text-slate-400 mt-1">Waktu Daftar: {formatDateTime(selectedDetail.createdAt)}</p>
+                </div>
+                <div className="text-left sm:text-right">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Status Saat Ini</p>
+                  <span className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full border ${getStatusColor(selectedDetail.status || 'Antre')}`}>
+                    {selectedDetail.status || 'Antre'}
+                  </span>
+                  {selectedDetail.processedBy && selectedDetail.status !== 'Antre' && (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Diproses Oleh: {selectedDetail.processedBy.nama}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-3">Informasi Pemohon</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">NIK</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nik}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">No. HP / WhatsApp</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.phone || '-'}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama Lengkap</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nama}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Jenis Pelayanan</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm capitalize">
+                      {selectedDetail.jenis === 'umum' ? 'Kunjungan Umum / Kedinasan' : selectedDetail.jenis === 'slik' ? 'Layanan SLIK' : selectedDetail.jenis === 'pengaduan' ? 'Layanan Pengaduan' : selectedDetail.jenis}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedDetail.jenis === 'slik' && (
+                <div className="bg-amber-50/50 dark:bg-slate-800/60 p-4 rounded-xl border border-amber-200/60 dark:border-slate-700 space-y-3">
+                  <h3 className="text-[11px] font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider">Detail Permohonan SLIK</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Jenis Debitur</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.jenisDebitur || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">NIK / NPWP Debitur</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.slikNikNpwp || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedDetail.jenis === 'umum' && (
+                <div className="bg-amber-50/50 dark:bg-slate-800/60 p-4 rounded-xl border border-amber-200/60 dark:border-slate-700 space-y-3">
+                  <h3 className="text-[11px] font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider">Detail Kunjungan Umum/Kedinasan</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama Instansi</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.instansi || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Bertemu dengan</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.bertemu || '-'}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Keperluan</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.keperluan || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedDetail.jenis === 'pengaduan' && (
+                <div className="bg-amber-50/50 dark:bg-slate-800/60 p-4 rounded-xl border border-amber-200/60 dark:border-slate-700 space-y-3">
+                  <h3 className="text-[11px] font-bold text-[#DA251C] dark:text-red-400 uppercase tracking-wider">Detail Pelayanan Pengaduan</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Klasifikasi Layanan</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.klasifikasi || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Sektor</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.sektor || '-'}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Ringkasan Pengaduan</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.ringkasan || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                {selectedDetail.status === 'Selesai' ? (
+                  <>
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-3">Catatan Pelayanan</h3>
+                    <div className="flex flex-col gap-3">
+                      <textarea
+                        rows={3}
+                        placeholder="Tambahkan catatan jika ada..."
+                        value={selectedDetail.catatan || ''}
+                        onChange={(e) => setSelectedDetail({...selectedDetail, catatan: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          disabled={isUpdatingStatus}
+                          onClick={async () => {
+                            setIsUpdatingStatus(true);
+                            try {
+                              const res = await fetch(`/api/pelayanan/${selectedDetail.id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ catatan: selectedDetail.catatan || '' }),
+                              });
+                              const json = await res.json();
+                              if (json.success) {
+                                messageApi.success('Catatan berhasil disimpan');
+                                fetchPelayanan();
+                              } else {
+                                messageApi.error(json.error || 'Gagal menyimpan catatan');
+                              }
+                            } catch (err) {
+                              messageApi.error('Terjadi kesalahan koneksi');
+                            } finally {
+                              setIsUpdatingStatus(false);
+                            }
+                          }}
+                          className="bg-[#DA251C] hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {isUpdatingStatus ? 'Menyimpan...' : 'Simpan Catatan'}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-3">Tindakan & Ubah Status</h3>
+                    
+                    <div className="flex gap-2 flex-wrap">
+                      {['Antre', 'Diproses', 'Selesai', 'Batal'].map(status => {
+                        const isThisStatusActive = selectedDetail.status === status || (!selectedDetail.status && status === 'Antre');
+                        let isDisabled = isUpdatingStatus;
+                        
+                        if (selectedDetail.status === 'Selesai' && (status === 'Antre' || status === 'Diproses')) {
+                          isDisabled = true;
+                        }
+
+                        return (
+                          <button
+                            key={status}
+                            disabled={isDisabled}
+                            onClick={() => handleUpdateStatus(selectedDetail.id, status)}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${
+                              isThisStatusActive
+                                ? 'bg-[#DA251C] text-white shadow-md'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            {status}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
