@@ -79,11 +79,14 @@ export default function PermissionPage() {
       const resMenu = await fetch('/api/menu');
       const jsonMenu = await resMenu.json();
       if (jsonMenu.success) {
-        // Sort menus to group children under parents
-        const sortedMenus = jsonMenu.data.sort((a: Menu, b: Menu) => {
-           if (a.parent_id && !b.parent_id) return 1;
-           if (!a.parent_id && b.parent_id) return -1;
-           return a.nama.localeCompare(b.nama);
+        // Sort menus to group children immediately under their parents
+        const parents = jsonMenu.data.filter((m: Menu) => !m.parent_id).sort((a: Menu, b: Menu) => (a.urutan || 0) - (b.urutan || 0) || a.nama.localeCompare(b.nama));
+        const children = jsonMenu.data.filter((m: Menu) => m.parent_id).sort((a: Menu, b: Menu) => (a.urutan || 0) - (b.urutan || 0) || a.nama.localeCompare(b.nama));
+        
+        const sortedMenus: Menu[] = [];
+        parents.forEach(p => {
+          sortedMenus.push(p);
+          sortedMenus.push(...children.filter(c => c.parent_id === p.id));
         });
         setMenus(sortedMenus);
       }
