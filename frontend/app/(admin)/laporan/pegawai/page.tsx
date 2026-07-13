@@ -15,7 +15,7 @@ export default function LaporanPegawaiPage() {
 
   // Gunakan hooks permission khusus laporan, atau pakai /pegawai jika menginduk kesana
   // Di sini saya pakai '/laporan' agar seragam dengan laporan lainnya.
-  const { isReady, read } = usePermissions('/laporan');
+  const { isReady, read } = usePermissions('/laporan/pegawai');
 
   const [pegawaiList, setPegawaiList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

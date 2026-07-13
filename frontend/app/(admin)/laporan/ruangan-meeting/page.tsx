@@ -14,7 +14,7 @@ export default function LaporanRuanganMeetingPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   
-  const { isReady } = usePermissions('/laporan');
+  const { isReady } = usePermissions('/laporan/ruangan-meeting');
 
   const [meetingList, setMeetingList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

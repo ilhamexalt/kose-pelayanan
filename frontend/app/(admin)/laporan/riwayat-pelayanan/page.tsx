@@ -14,7 +14,7 @@ export default function LaporanRiwayatPelayananPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   
-  const { isReady } = usePermissions('/laporan');
+  const { isReady } = usePermissions('/laporan/riwayat-pelayanan');
 
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
