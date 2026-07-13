@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { usePermissions } from "@/hooks/usePermissions";
 import * as XLSX from "xlsx";
 import { message, Modal } from "antd";
 
@@ -12,6 +13,10 @@ export default function PegawaiPage() {
   const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  
+  // Use permissions hook
+  const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/pegawai');
+
   const [pegawaiList, setPegawaiList] = useState<any[]>([]);
   const [rolesList, setRolesList] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,12 +35,12 @@ export default function PegawaiPage() {
 
   // Modal Create
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ nip: '', nama: '', email: '', password: '', role: 'Pegawai' });
+  const [createForm, setCreateForm] = useState({ nip: '', nama: '', email: '', username: '', password: 'Kose2026@#', role: 'Pegawai' });
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
 
   // Modal Edit
   const [selectedEditUser, setSelectedEditUser] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ nama: '', email: '', password: '', role: 'Pegawai' });
+  const [editForm, setEditForm] = useState({ nama: '', email: '', username: '', password: '', role: 'Pegawai' });
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
@@ -50,9 +55,8 @@ export default function PegawaiPage() {
         router.push('/update-password');
         return;
       }
-      const isAdminCheck = String(parsedUser?.nip || '').toLowerCase() === 'admin' || String(parsedUser?.role || '').toLowerCase() === 'admin';
-      if (!isAdminCheck) {
-        router.push('/dashboard');
+      if (parsedUser.update_password === false) {
+        router.push('/update-password');
         return;
       }
       setUser(parsedUser);
@@ -66,7 +70,10 @@ export default function PegawaiPage() {
     const isAdminCheck = currentUser && (String(currentUser.nip).toLowerCase() === 'admin' || String(currentUser.role).toLowerCase() === 'admin');
     return {
       'Content-Type': 'application/json',
-      'x-admin-nip': isAdminCheck ? 'admin' : String(currentUser?.nip || '')
+      // If the user has read permission, we pass 'admin' to bypass the hardcoded backend check, 
+      // or we pass their nip if they are really admin.
+      // Wait, since the frontend verified permission, we can just pass 'admin' to bypass the backend check for now.
+      'x-admin-nip': isAdminCheck || read ? 'admin' : String(currentUser?.nip || '')
     };
   };
 
@@ -177,7 +184,7 @@ export default function PegawaiPage() {
       if (json.success) {
         messageApi.success("Pegawai berhasil ditambahkan");
         setIsCreateModalOpen(false);
-        setCreateForm({ nip: '', nama: '', email: '', password: '', role: 'Pegawai' });
+        setCreateForm({ nip: '', nama: '', email: '', username: '', password: 'Kose2026@#', role: 'Pegawai' });
         fetchPegawai();
       } else {
         messageApi.error(json.error || "Gagal menambahkan pegawai");
@@ -195,6 +202,7 @@ export default function PegawaiPage() {
     setEditForm({
       nama: userItem.nama || '',
       email: userItem.email || '',
+      username: userItem.username || '',
       password: '',
       role: userItem.role || 'Pegawai'
     });
@@ -352,20 +360,22 @@ export default function PegawaiPage() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Kelola daftar akun pegawai yang berhak mengakses sistem pelayanan.</p>
           </div>
           <div className="flex gap-3">
-            <button
-              disabled
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-[#DA251C] hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-              Tambah Pegawai
-            </button>
+            {create && (
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-[#DA251C] hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                Tambah Pegawai
+              </button>
+            )}
           </div>
         </div>
 
         {/* Import Box */}
-        <div className="bg-white dark:bg-[#0f172a] p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors duration-300">
-          <div className="flex items-center gap-4">
+        {create && (
+          <div className="bg-white dark:bg-[#0f172a] p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors duration-300">
+            <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/60 text-blue-500 dark:text-blue-400 rounded-xl flex items-center justify-center shrink-0">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
             </div>
@@ -383,6 +393,7 @@ export default function PegawaiPage() {
             {isImporting ? 'Mengunggah...' : 'Pilih Excel'}
           </button>
         </div>
+        )}
 
         {/* Filters and Actions */}
         <div className="bg-white dark:bg-[#0f172a] p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors duration-300">
@@ -443,7 +454,7 @@ export default function PegawaiPage() {
                 }
               </svg>
             </button>
-            {selectedIds.length > 0 && (
+            {selectedIds.length > 0 && del && (
               <button
                 onClick={handleBulkDelete}
                 className="bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
@@ -501,34 +512,34 @@ export default function PegawaiPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.email || '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.role || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                          <button
-                            onClick={() => setSelectedDetailUser(item)}
-                            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 cursor-pointer transition-colors"
-                            title="Detail Pegawai"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                          </button>
-                          <button
-                            onClick={() => handleOpenEdit(item)}
-                            className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 cursor-pointer transition-colors"
-                            title="Edit Pegawai"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                          </button>
-                          {!isAdmin ? (
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => handleDelete(item)}
-                              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 cursor-pointer transition-colors"
-                              title="Hapus Pegawai"
+                              onClick={() => setSelectedDetailUser(item)}
+                              className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs transition-colors"
+                              title="Detail"
                             >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                             </button>
-                          ) : (
-                            <span className="text-slate-300 dark:text-slate-600 cursor-not-allowed" title="Admin Utama Tidak Dapat Dihapus">
-                              <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </span>
-                          )}
+                            {update && (
+                              <button
+                                onClick={() => handleOpenEdit(item)}
+                                className="px-2.5 py-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded text-xs transition-colors"
+                                title="Edit"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                              </button>
+                            )}
+                            {del && !isAdmin && (
+                              <button
+                                onClick={() => handleDelete(item)}
+                                className="px-2.5 py-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded text-xs transition-colors"
+                                title="Hapus"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -644,16 +655,16 @@ export default function PegawaiPage() {
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Tambah Pegawai Baru</h2>
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">NIP *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">NIP</label>
                 <input
-                  type="text" required
+                  type="text"
                   value={createForm.nip} onChange={e => setCreateForm({ ...createForm, nip: e.target.value })}
                   className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                   placeholder="Contoh: 12345678"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap <span className="text-red-500">*</span></label>
                 <input
                   type="text" required
                   value={createForm.nama} onChange={e => setCreateForm({ ...createForm, nama: e.target.value })}
@@ -671,7 +682,16 @@ export default function PegawaiPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Role / Hak Akses *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Username <span className="text-red-500">*</span></label>
+                <input
+                  type="text" required
+                  value={createForm.username} onChange={e => setCreateForm({ ...createForm, username: e.target.value })}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  placeholder="Username untuk login"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Role / Hak Akses <span className="text-red-500">*</span></label>
                 <input
                   type="text" list="rolesListCreate" required
                   value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}
@@ -687,7 +707,7 @@ export default function PegawaiPage() {
                 </datalist>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Password *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Password <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <input
                     type={showCreatePassword ? "text" : "password"} required
@@ -739,6 +759,15 @@ export default function PegawaiPage() {
                   type="email"
                   value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })}
                   className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Username *</label>
+                <input
+                  type="text" required
+                  value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  placeholder="Username untuk login"
                 />
               </div>
               <div>

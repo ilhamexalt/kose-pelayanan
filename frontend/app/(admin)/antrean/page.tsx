@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { message } from "antd";
+import { usePermissions } from "@/hooks/usePermissions";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 
@@ -14,7 +15,7 @@ export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const isAdmin = user && (String(user.nip).toLowerCase() === 'admin' || String(user.role).toLowerCase() === 'admin');
+  const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/antrean');
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDetail, setSelectedDetail] = useState<any>(null);
@@ -326,19 +327,34 @@ export default function DashboardPage() {
                           {item.processedBy ? item.processedBy.nama : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (hasActiveProcessing && activeProcessingItem?.id !== item.id) {
-                                messageApi.warning(`Anda sedang memproses antrean ${activeProcessingItem?.queueNumber}. Selesaikan terlebih dahulu sebelum membuka antrean lain.`);
-                                return;
-                              }
-                              setSelectedDetail(item);
-                            }}
-                            className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border cursor-pointer hover:opacity-80 transition-opacity ${getStatusColor(item.status || 'Antre')}`}
-                          >
-                            {item.status || 'Antre'}
-                          </button>
+                          <div className="flex gap-2">
+                            {(isAdmin || update) && (
+                              <button
+                                onClick={() => {
+                                  if (hasActiveProcessing && activeProcessingItem?.id !== item.id) {
+                                    messageApi.warning(`Anda sedang memproses antrean ${activeProcessingItem?.queueNumber}. Selesaikan terlebih dahulu sebelum membuka antrean lain.`);
+                                    return;
+                                  }
+                                  setSelectedDetail(item);
+                                }}
+                                className={`px-3 py-1.5 inline-flex items-center gap-1.5 text-xs font-bold rounded-full border transition-all cursor-pointer shadow-sm hover:shadow active:scale-95 ${getStatusColor(item.status || 'Antre')} hover:opacity-80`}
+                                title="Proses / Panggil"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                Panggil
+                              </button>
+                            )}
+                            {(!isAdmin && !update) && (
+                              <button
+                                onClick={() => setSelectedDetail(item)}
+                                className={`px-3 py-1.5 inline-flex items-center gap-1.5 text-xs font-bold rounded-full border transition-all cursor-pointer shadow-sm hover:shadow active:scale-95 ${getStatusColor(item.status || 'Antre')} hover:opacity-80`}
+                                title="Lihat Detail"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                Detail
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -402,8 +418,14 @@ export default function DashboardPage() {
 
       {/* Modal Detail & Ubah Status */}
       {selectedDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto"
+          onClick={() => setSelectedDetail(null)}
+        >
+          <div 
+            className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Detail Pelayanan</h2>
@@ -565,7 +587,7 @@ export default function DashboardPage() {
               )}
 
 
-              {selectedDetail.status === 'Diproses' && (
+              {selectedDetail.status === 'Diproses' && (isAdmin || update) && (
                 <div className="mb-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
@@ -592,66 +614,59 @@ export default function DashboardPage() {
                       />
                     </div>
                   </div>
-
-                  <div className="flex justify-end pt-2">
-                    <button
-                      onClick={() => handleUpdateStatus(selectedDetail.id, 'Diproses', true)}
-                      disabled={isUpdatingStatus}
-                      className="bg-[#DA251C] hover:bg-red-700 text-white px-6 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      Simpan Data
-                    </button>
-                  </div>
                 </div>
               )}
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-3">Tindakan & Ubah Status</h3>
-
-                {(() => {
-                  const isCurrentActive = activeProcessingItem && activeProcessingItem.id === selectedDetail.id;
-                  const isStatusLockedByOther = selectedDetail.status === 'Diproses' &&
-                    selectedDetail.processedBy &&
-                    !isMyProcessing(selectedDetail);
-
-                  return (
+              {/* Aksi hanya jika punya update permission atau admin */}
+              {(isAdmin || update) ? (
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <button onClick={() => setSelectedDetail(null)} className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow cursor-pointer">
+                    Batal
+                  </button>
+                  {selectedDetail.status === 'Antre' && (
+                    <button
+                      disabled={isUpdatingStatus}
+                      onClick={() => handleUpdateStatus(selectedDetail.id, 'Diproses')}
+                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer"
+                    >
+                      {isUpdatingStatus ? 'Memproses...' : 'Mulai Proses'}
+                    </button>
+                  )}
+                  {selectedDetail.status === 'Diproses' && (
                     <>
-                      {isStatusLockedByOther && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 mb-3 font-medium">
-                          ⚠️ Antrean ini sedang diproses oleh pegawai lain ({selectedDetail.processedBy?.nama}).
-                        </div>
-                      )}
-
-                      <div className="flex gap-2 flex-wrap">
-                        {['Antre', 'Diproses', 'Selesai', 'Batal'].map(status => {
-                          const isThisStatusActive = selectedDetail.status === status || (!selectedDetail.status && status === 'Antre');
-                          const isCannotGoBackToAntre = status === 'Antre' && selectedDetail.status !== 'Antre' && !!selectedDetail.status;
-                          const isSelesaiDisabled = status === 'Selesai' && 
-                            selectedDetail.jenis?.toLowerCase() === 'slik' && 
-                            !selectedDetail.nomorRegister?.trim();
-                          
-                          const isDisabled = isUpdatingStatus || isStatusLockedByOther || isCannotGoBackToAntre || isSelesaiDisabled;
-
-                          return (
-                            <button
-                              key={status}
-                              disabled={isDisabled}
-                              onClick={() => handleUpdateStatus(selectedDetail.id, status)}
-                              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${isThisStatusActive
-                                ? 'bg-[#DA251C] text-white shadow-md'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                                }`}
-                            >
-                              {status}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <button
+                        disabled={isUpdatingStatus}
+                        onClick={() => handleUpdateStatus(selectedDetail.id, 'Diproses', true)}
+                        className="px-5 py-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl text-sm font-bold transition-all disabled:opacity-50 cursor-pointer border border-blue-200 dark:border-blue-800/50"
+                      >
+                        {isUpdatingStatus ? 'Menyimpan...' : 'Simpan Data'}
+                      </button>
+                      <button
+                        disabled={isUpdatingStatus || (selectedDetail.jenis?.toLowerCase() === 'slik' && !selectedDetail.nomorRegister?.trim())}
+                        onClick={() => handleUpdateStatus(selectedDetail.id, 'Selesai')}
+                        className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer"
+                      >
+                        {isUpdatingStatus ? 'Memproses...' : 'Selesai'}
+                      </button>
                     </>
-                  );
-                })()}
-              </div>
+                  )}
+                  {(selectedDetail.status === 'Diproses' || selectedDetail.status === 'Antre') && (
+                    <button
+                      disabled={isUpdatingStatus}
+                      onClick={() => handleUpdateStatus(selectedDetail.id, 'Batal')}
+                      className="px-5 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl text-sm font-bold transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      Batalkan
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <button onClick={() => setSelectedDetail(null)} className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow cursor-pointer">
+                    Tutup
+                  </button>
+                </div>
+              )}
 
             </div>
           </div>

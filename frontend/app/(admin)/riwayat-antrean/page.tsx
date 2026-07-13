@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { message } from "antd";
+import { usePermissions } from "@/hooks/usePermissions";
 
 import CustomSelect from "@/components/CustomSelect";
 
@@ -12,7 +13,7 @@ export default function HistoryPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const isAdmin = user && (String(user.nip).toLowerCase() === 'admin' || String(user.role).toLowerCase() === 'admin');
+  const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/riwayat-antrean');
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -419,8 +420,14 @@ export default function HistoryPage() {
 
       {/* Modal Detail & Ubah Status */}
       {selectedDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto"
+          onClick={() => setSelectedDetail(null)}
+        >
+          <div 
+            className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Detail Pelayanan</h2>
@@ -598,7 +605,7 @@ export default function HistoryPage() {
                       </div>
                     )}
                   </>
-                ) : (
+                ) : (isAdmin || update) ? (
                   <>
                     <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-3">Tindakan & Ubah Status</h3>
 
@@ -651,7 +658,7 @@ export default function HistoryPage() {
                       })}
                     </div>
                   </>
-                )}
+                ) : null}
               </div>
 
             </div>

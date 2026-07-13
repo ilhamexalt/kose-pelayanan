@@ -1,99 +1,56 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import * as XLSX from "xlsx";
-import { message } from "antd";
+import { message, Modal } from "antd";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
+import dayjs from "dayjs";
+import 'dayjs/locale/id';
 
-import CustomSelect from "@/components/CustomSelect";
+interface Pelayanan {
+  id: string;
+  status: string;
+  createdAt: number;
+}
+
+interface Peserta {
+  jabatan: string;
+  jumlah: number;
+}
+
+interface Meeting {
+  id: string;
+  ruangan: string;
+  waktuMulai: string;
+  waktuSelesai: string;
+  tanggal: string;
+  pesertaInternal: Peserta[];
+  pesertaEksternal: Peserta[];
+  instansi?: string;
+  keterangan?: string;
+}
 
 export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const isAdmin = user && (String(user.nip).toLowerCase() === 'admin' || String(user.role).toLowerCase() === 'admin');
-  const [pelayananList, setPelayananList] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  const [pelayananList, setPelayananList] = useState<Pelayanan[]>([]);
+  const [meetingList, setMeetingList] = useState<Meeting[]>([]);
+  
+  const [isLoadingPelayanan, setIsLoadingPelayanan] = useState(true);
+  const [isLoadingMeeting, setIsLoadingMeeting] = useState(true);
 
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterJenis, setFilterJenis] = useState('');
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Diproses': return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800';
-      case 'Selesai': return 'bg-green-100 text-green-800 border-green-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800';
-      case 'Batal': return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950/80 dark:text-red-300 dark:border-red-800';
-      default: return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800';
-    }
-  };
-
-  const formatDateTime = (val: any) => {
-    if (!val) return '-';
-    let d: Date;
-    if (val.toDate && typeof val.toDate === 'function') {
-      d = val.toDate();
-    } else if (val.seconds !== undefined) {
-      d = new Date(val.seconds * 1000);
-    } else {
-      d = new Date(val);
-    }
-    if (isNaN(d.getTime())) return '-';
-    return d.toLocaleString('id-ID').replace(/\./g, ':');
-  };
-
-  const filteredAndSortedList = pelayananList
-    .filter(p => p.status === 'Antre' || p.status === 'Diproses')
-    .filter(p => {
-      const matchesSearch = (p.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.nik || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesJenis = filterJenis ? p.jenis === filterJenis : true;
-      return matchesSearch && matchesJenis;
-    })
-    .sort((a, b) => {
-      const qnA = a.queueNumber_raw || a.queueNumber || '';
-      const qnB = b.queueNumber_raw || b.queueNumber || '';
-      const numA = parseInt(qnA.replace(/\D/g, ''), 10) || 0;
-      const numB = parseInt(qnB.replace(/\D/g, ''), 10) || 0;
-      return sortOrder === 'asc' ? numA - numB : numB - numA;
-    });
-
-  const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / itemsPerPage));
-  const paginatedList = filteredAndSortedList.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const isAdminOrPramusaji = user && (
+    String(user.nip).toLowerCase() === 'admin' || 
+    String(user.role).toLowerCase() === 'admin' ||
+    String(user.role).toLowerCase() === 'pramusaji'
   );
 
-  const isMyProcessing = (p: any) => {
-    if (!p || !p.processedBy || !user) return false;
-    const pNip = String(p.processedBy.nip || '');
-    const pNama = String(p.processedBy.nama || '');
-
-    if (user.nip && pNip === String(user.nip)) return true;
-    if (user.email && pNip === String(user.email)) return true;
-    if (user.nama && pNama === String(user.nama)) return true;
-
-    // Fallback
-    const fallbackId = String(user.nip || user.email || '');
-    if (pNip === fallbackId) return true;
-
-    return false;
-  };
-
-  const activeProcessingItem = pelayananList.find(p => p.status === 'Diproses' && isMyProcessing(p));
-  const hasActiveProcessing = !!activeProcessingItem;
-
   useEffect(() => {
-    // Basic auth check
     const storedUser = localStorage.getItem('user');
     if (!storedUser) {
       router.push('/login');
@@ -104,6 +61,8 @@ export default function DashboardPage() {
         return;
       }
       setUser(parsed);
+
+      fetchMeeting();
 
       const unsubscribe = onSnapshot(collection(db, 'pelayanan'), () => {
         fetchPelayanan();
@@ -126,13 +85,25 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Failed to fetch pelayanan", error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingPelayanan(false);
     }
   };
 
+  const fetchMeeting = async () => {
+    try {
+      const res = await fetch('/api/meeting');
+      const json = await res.json();
+      if (json.success) {
+        setMeetingList(json.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch meeting", error);
+    } finally {
+      setIsLoadingMeeting(false);
+    }
+  };
 
-
-  if (isLoading || !user) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16]">
         <svg className="animate-spin h-8 w-8 text-[#DA251C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -143,22 +114,283 @@ export default function DashboardPage() {
     );
   }
 
+  const todayStr = dayjs().format('YYYY-MM-DD');
+  
+  // Hitung Data Antrean Hari Ini
+  const todayPelayanan = pelayananList.filter(p => {
+    const pDate = dayjs(p.createdAt).format('YYYY-MM-DD');
+    return pDate === todayStr;
+  });
+
+  const antreCount = todayPelayanan.filter(p => p.status === 'Antre' || !p.status).length;
+  const prosesCount = todayPelayanan.filter(p => p.status === 'Diproses').length;
+  const selesaiCount = todayPelayanan.filter(p => p.status === 'Selesai').length;
+  const totalAntrean = todayPelayanan.length;
+
+  // Hitung Data Meeting Hari Ini
+  const todayMeeting = meetingList
+    .filter(m => m.tanggal === todayStr)
+    .sort((a, b) => a.waktuMulai.localeCompare(b.waktuMulai));
+
+  const calculateTotalPeserta = (internal: Peserta[], eksternal: Peserta[]) => {
+    const intTotal = (internal || []).reduce((acc, curr) => acc + (Number(curr.jumlah) || 0), 0);
+    const eksTotal = (eksternal || []).reduce((acc, curr) => acc + (Number(curr.jumlah) || 0), 0);
+    return intTotal + eksTotal;
+  };
+
   return (
     <>
       {contextHolder}
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col flex-1 items-center justify-center min-h-[70vh]">
-        <div className="relative w-full max-w-2xl aspect-[2/1]">
-          {/* We assume ojkway.png is placed in public/assets/images/ */}
-          {/* <Image
-            src="/assets/images/ojk-banten-logo.png"
-            alt="OJK Way"
-            fill
-            sizes="(max-width: 768px) 100vw, 800px"
-            priority
-            className="object-contain filter drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]"
-          /> */}
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-[70vh] space-y-8 font-sans">
+        
+        {/* Header */}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
+            Dashboard Summary
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Ringkasan antrean dan jadwal ruangan untuk hari ini: {dayjs().locale('id').format('dddd, DD MMMM YYYY')}
+          </p>
         </div>
+
+        {/* Blok 1: Antrean */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-5 h-5 text-[#DA251C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Total Antrean Hari Ini</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            {/* Total Card */}
+            <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-transform hover:-translate-y-1 group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <svg className="w-16 h-16 text-slate-800 dark:text-slate-100" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
+              </div>
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Total Layanan</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-4xl font-bold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : totalAntrean}</h3>
+                <span className="text-sm font-medium text-slate-500">orang</span>
+              </div>
+            </div>
+
+            {/* Antre Card */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/40 dark:to-slate-900 rounded-2xl p-6 border border-amber-200/60 dark:border-amber-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-transform hover:-translate-y-1 group">
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                <svg className="w-16 h-16 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-2">Sedang Antre</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-4xl font-bold text-amber-600 dark:text-amber-400">{isLoadingPelayanan ? '-' : antreCount}</h3>
+                <span className="text-sm font-medium text-amber-700/60 dark:text-amber-500/60">menunggu</span>
+              </div>
+            </div>
+
+            {/* Proses Card */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/40 dark:to-slate-900 rounded-2xl p-6 border border-blue-200/60 dark:border-blue-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-transform hover:-translate-y-1 group">
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                <svg className="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              </div>
+              <p className="text-sm font-semibold text-blue-700 dark:text-blue-500 uppercase tracking-wider mb-2">Diproses</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-4xl font-bold text-blue-600 dark:text-blue-400">{isLoadingPelayanan ? '-' : prosesCount}</h3>
+                <span className="text-sm font-medium text-blue-700/60 dark:text-blue-500/60">sedang dilayani</span>
+              </div>
+            </div>
+
+            {/* Selesai Card */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/40 dark:to-slate-900 rounded-2xl p-6 border border-emerald-200/60 dark:border-emerald-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-transform hover:-translate-y-1 group">
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                <svg className="w-16 h-16 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-500 uppercase tracking-wider mb-2">Selesai</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">{isLoadingPelayanan ? '-' : selesaiCount}</h3>
+                <span className="text-sm font-medium text-emerald-700/60 dark:text-emerald-500/60">tuntas</span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* Blok 2: Jadwal Ruang Meeting */}
+        <section className="space-y-4 pt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-5 h-5 text-[#DA251C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Jadwal Ruang Meeting Hari Ini</h2>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] overflow-visible">
+            {isLoadingMeeting ? (
+              <div className="p-12 flex flex-col items-center justify-center text-slate-400">
+                 <svg className="animate-spin h-8 w-8 text-[#DA251C] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p>Memuat jadwal ruangan...</p>
+              </div>
+            ) : todayMeeting.length === 0 ? (
+              <div className="p-12 flex flex-col items-center justify-center text-slate-400 text-center">
+                <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <p className="text-lg font-medium text-slate-600 dark:text-slate-300">Tidak ada jadwal meeting hari ini</p>
+                <p className="text-sm mt-1">Ruangan sedang kosong, Anda bisa menjadwalkan meeting baru.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-b border-slate-100 dark:border-slate-800/50">
+                {todayMeeting.map((meeting, index) => {
+                  const totalPeserta = calculateTotalPeserta(meeting.pesertaInternal, meeting.pesertaEksternal);
+                  const isPast = meeting.waktuSelesai && meeting.waktuSelesai < dayjs().format('HH:mm');
+                  const isOngoing = meeting.waktuMulai <= dayjs().format('HH:mm') && meeting.waktuSelesai >= dayjs().format('HH:mm');
+                  
+                  return (
+                    <div 
+                      key={meeting.id} 
+                      className={`p-6 border-slate-100 dark:border-slate-800/50 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50
+                        ${index % 3 !== 2 ? 'lg:border-r' : ''} 
+                        ${index % 2 !== 1 ? 'md:border-r lg:border-r-0' : ''}
+                        border-b
+                      `}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                           <div className="p-2.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl text-[#DA251C] dark:text-rose-400">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                           </div>
+                           <div>
+                              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{meeting.ruangan}</h3>
+                              <p className="text-xs text-slate-500 font-medium mt-0.5">Instansi: <span className="font-semibold text-slate-700 dark:text-slate-300">{meeting.instansi || '-'}</span></p>
+                           </div>
+                        </div>
+                        {isOngoing ? (
+                          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/50 shadow-sm animate-pulse">
+                            Sedang Berlangsung
+                          </span>
+                        ) : isPast ? (
+                           <span className="px-3 py-1.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-slate-200 dark:border-slate-700 shadow-sm">
+                            Selesai
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-blue-200 dark:border-blue-800/50 shadow-sm">
+                            Akan Datang
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                        <svg className="w-5 h-5 text-[#DA251C]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>{meeting.waktuMulai} - {meeting.waktuSelesai}</span>
+                      </div>
+
+                      <div className="flex items-start gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        </div>
+                        <div className="flex-1 group/tooltip relative">
+                           <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                             Total <span className="font-bold text-[#DA251C] dark:text-red-400">{totalPeserta}</span> Peserta
+                           </p>
+                           <p className="text-xs text-slate-500 mt-1 cursor-help underline decoration-dashed decoration-slate-300 underline-offset-2 w-max hover:text-slate-800 transition-colors">
+                             Lihat Rincian
+                           </p>
+
+                           {/* Tooltip Content - Hover Effect */}
+                           <div className="absolute left-0 bottom-full mb-3 w-64 p-4 bg-slate-800 dark:bg-slate-700 text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 translate-y-2 group-hover/tooltip:translate-y-0 pointer-events-none border border-slate-700">
+                             <div className="mb-3 pb-3 border-b border-slate-600">
+                               <p className="font-bold text-slate-200 mb-2">Peserta Internal:</p>
+                               {meeting.pesertaInternal && meeting.pesertaInternal.length > 0 ? (
+                                 <ul className="list-disc pl-4 space-y-1">
+                                   {meeting.pesertaInternal.map((p, i) => (
+                                     <li key={i}><span className="text-slate-300">{p.jabatan}</span> ({p.jumlah} org)</li>
+                                   ))}
+                                 </ul>
+                               ) : <p className="text-slate-400 italic">Tidak ada</p>}
+                             </div>
+                             <div>
+                               <p className="font-bold text-slate-200 mb-2">Peserta Eksternal:</p>
+                               {meeting.pesertaEksternal && meeting.pesertaEksternal.length > 0 ? (
+                                 <ul className="list-disc pl-4 space-y-1">
+                                   {meeting.pesertaEksternal.map((p, i) => (
+                                     <li key={i}><span className="text-slate-300">{p.jabatan}</span> ({p.jumlah} org)</li>
+                                   ))}
+                                 </ul>
+                               ) : <p className="text-slate-400 italic">Tidak ada</p>}
+                             </div>
+                             <div className="absolute w-3 h-3 bg-slate-800 dark:bg-slate-700 rotate-45 -bottom-1.5 left-6 border-b border-r border-slate-700"></div>
+                           </div>
+                        </div>
+                      </div>
+
+                      {/* Tombol Detail Konsumsi untuk Pramusaji / Admin */}
+                      {isAdminOrPramusaji && (
+                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                          <button 
+                            onClick={() => setSelectedMeeting(meeting)}
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#DA251C] bg-rose-50 hover:bg-rose-100 dark:text-rose-400 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 rounded-lg transition-colors border border-rose-100 dark:border-rose-900/50"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                            Detail Konsumsi & Catatan
+                          </button>
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
       </main>
+
+      {/* Modal Detail Meeting */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+            <svg className="w-5 h-5 text-[#DA251C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+            Detail Kebutuhan Meeting
+          </div>
+        }
+        open={!!selectedMeeting}
+        onCancel={() => setSelectedMeeting(null)}
+        footer={
+          <button 
+            onClick={() => setSelectedMeeting(null)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
+          >
+            Tutup
+          </button>
+        }
+        centered
+        width={500}
+      >
+        {selectedMeeting && (
+          <div className="mt-4 space-y-4 font-sans text-slate-700 dark:text-slate-300">
+            
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">{selectedMeeting.ruangan}</h4>
+              <p className="text-sm"><span className="font-semibold">Instansi:</span> {selectedMeeting.instansi || '-'}</p>
+              <p className="text-sm"><span className="font-semibold">Waktu:</span> {selectedMeeting.waktuMulai} - {selectedMeeting.waktuSelesai}</p>
+              <p className="text-sm"><span className="font-semibold">Total Peserta:</span> {calculateTotalPeserta(selectedMeeting.pesertaInternal, selectedMeeting.pesertaEksternal)} orang</p>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2 border-b pb-1 dark:border-slate-700">Keterangan / Kebutuhan Konsumsi</h4>
+              <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/30">
+                {selectedMeeting.keterangan ? (
+                  <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                    {selectedMeeting.keterangan}
+                  </p>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">Tidak ada catatan atau keterangan konsumsi.</p>
+                )}
+              </div>
+            </div>
+
+          </div>
+        )}
+      </Modal>
+
     </>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 export default function DisplayScreenPage() {
     const [pelayananList, setPelayananList] = useState<any[]>([]);
@@ -12,7 +12,12 @@ export default function DisplayScreenPage() {
         setCurrentTime(new Date());
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
 
-        const unsubscribe = onSnapshot(collection(db, 'pelayanan'), (snapshot) => {
+        const q = query(
+            collection(db, 'pelayanan'),
+            where('status', 'in', ['Antre', 'Diproses'])
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const list = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -130,7 +135,7 @@ export default function DisplayScreenPage() {
                                             </div>
                                             <div className="truncate">
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Petugas Layanan</span>
-                                                <span className="text-base font-bold text-white truncate block">
+                                                <span className="text-base font-bold text-white truncate block capitalize">
                                                     {item.processedBy?.nama || item.processedBy?.nip || 'Petugas'}
                                                 </span>
                                             </div>
@@ -202,8 +207,8 @@ export default function DisplayScreenPage() {
                 <div className="bg-white text-[#DA251C] font-black px-4 py-1 rounded uppercase tracking-wider text-xs shrink-0 mr-4 shadow">
                     INFO LAYANAN
                 </div>
-                <div className="overflow-hidden whitespace-nowrap w-full relative flex items-center">
-                    <div className="inline-block animate-[marquee_25s_linear_infinite] text-sm font-semibold tracking-wide">
+                <div className="overflow-hidden whitespace-nowrap w-full relative">
+                    <div className="inline-block animate-[marquee_25s_linear_infinite] text-sm font-semibold tracking-wide shrink-0 pl-[100%]">
                         Selamat Datang di Portal Pelayanan Konsumen Otoritas Jasa Keuangan (OJK). • Silakan mengambil nomor antrean pada mesin Kiosk yang tersedia. • Pastikan seluruh dokumen kelengkapan Anda telah disiapkan sebelum menuju meja layanan. • Pelayanan ini tidak dipungut biaya (GRATIS).
                     </div>
                 </div>
@@ -211,7 +216,7 @@ export default function DisplayScreenPage() {
 
             <style jsx global>{`
         @keyframes marquee {
-          0% { transform: translateX(100%); }
+          0% { transform: translateX(0); }
           100% { transform: translateX(-100%); }
         }
       `}</style>

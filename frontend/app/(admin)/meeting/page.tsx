@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { DatePicker, Select, Button, Table, Tag, Space, Popconfirm, message } from "antd";
 import dayjs, { Dayjs } from "dayjs";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Meeting {
   id: string;
@@ -21,6 +22,7 @@ interface Meeting {
 export default function MeetingPage() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
+  const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/meeting');
 
   const fetchMeetings = async () => {
     setLoading(true);
@@ -158,27 +160,31 @@ export default function MeetingPage() {
       align: 'right' as const,
       render: (_: any, record: any) => (
         <Space size="small">
-          <Link href={`/meeting/edit/${record.id}`}>
-            <Button
-              type="text"
-              icon={<svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>}
-              title="Edit"
-            />
-          </Link>
-          <Popconfirm
-            title="Hapus Jadwal"
-            description="Apakah Anda yakin ingin menghapus jadwal ini?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Ya"
-            cancelText="Tidak"
-          >
-            <Button
-              type="text"
-              danger
-              icon={<svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>}
-              title="Hapus"
-            />
-          </Popconfirm>
+          {(isAdmin || update) && (
+            <Link href={`/meeting/edit/${record.id}`}>
+              <Button
+                type="text"
+                icon={<svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>}
+                title="Edit"
+              />
+            </Link>
+          )}
+          {(isAdmin || del) && (
+            <Popconfirm
+              title="Hapus Jadwal"
+              description="Apakah Anda yakin ingin menghapus jadwal ini?"
+              onConfirm={() => handleDelete(record.id)}
+              okText="Ya"
+              cancelText="Tidak"
+            >
+              <Button
+                type="text"
+                danger
+                icon={<svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>}
+                title="Hapus"
+              />
+            </Popconfirm>
+          )}
         </Space>
       )
     }
@@ -190,7 +196,7 @@ export default function MeetingPage() {
         {/* Header Section */}
         <div className="flex flex-col mb-6 gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
-            Jadwal Meeting Hari ini,
+            Jadwal Meeting,
           </h1>
 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -228,11 +234,13 @@ export default function MeetingPage() {
               />
             </div>
 
-            <Link href="/meeting/create">
-              <Button type="primary" size="medium" style={{ backgroundColor: "#DA251C" }}>
-                COMPOSE
-              </Button>
-            </Link>
+            {(isAdmin || create) && (
+              <Link href="/meeting/create">
+                <Button type="primary" size="medium" style={{ backgroundColor: "#DA251C" }}>
+                  COMPOSE
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

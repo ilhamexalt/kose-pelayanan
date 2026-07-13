@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { message, Modal } from "antd";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Menu {
   id: string;
@@ -34,6 +35,8 @@ export default function PermissionPage() {
   const [distinctUserRoles, setDistinctUserRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/permission');
+
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -51,10 +54,9 @@ export default function PermissionPage() {
     }
     
     const parsed = JSON.parse(storedUser);
-    const isAdmin = parsed && (String(parsed.nip).toLowerCase() === 'admin' || String(parsed.role).toLowerCase() === 'admin');
     
-    if (!isAdmin) {
-      router.push('/dashboard');
+    if (parsed.update_password === false) {
+      router.push('/update-password');
       return;
     }
     
@@ -67,7 +69,7 @@ export default function PermissionPage() {
     const isAdminCheck = currentUser && (String(currentUser.nip).toLowerCase() === 'admin' || String(currentUser.role).toLowerCase() === 'admin');
     return {
       'Content-Type': 'application/json',
-      'x-admin-nip': isAdminCheck ? 'admin' : String(currentUser?.nip || '')
+      'x-admin-nip': isAdminCheck || read ? 'admin' : String(currentUser?.nip || '')
     };
   };
 
@@ -112,20 +114,21 @@ export default function PermissionPage() {
     }
   };
 
-  const handleOpenModal = (roleItem?: RolePermission) => {
-    if (roleItem) {
-      if (roleItem.role.toLowerCase() === 'admin') {
-        messageApi.error("Role UTAMA (Admin) tidak dapat dimodifikasi");
-        return;
-      }
-      setIsEditMode(true);
-      setFormRole(roleItem.role);
-      setFormPermissions(roleItem.menu_permissions || {});
-    } else {
-      setIsEditMode(false);
-      setFormRole("");
-      setFormPermissions({});
+  const openCreateModal = () => {
+    setIsEditMode(false);
+    setFormRole("");
+    setFormPermissions({});
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (roleItem: RolePermission) => {
+    if (roleItem.role.toLowerCase() === 'admin') {
+      messageApi.error("Role UTAMA (Admin) tidak dapat dimodifikasi");
+      return;
     }
+    setIsEditMode(true);
+    setFormRole(roleItem.role);
+    setFormPermissions(roleItem.menu_permissions || {});
     setIsModalOpen(true);
   };
 
@@ -231,13 +234,17 @@ export default function PermissionPage() {
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Manajemen Hak Akses (Role)</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">Atur pemetaan akses (Create, Read, Update, Delete) untuk masing-masing tipe pengguna.</p>
           </div>
-          <button 
-            onClick={() => handleOpenModal()}
-            className="bg-[#DA251C] hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-            Tambah Role Baru
-          </button>
+          <div className="flex gap-3">
+            {(isAdmin || create) && (
+              <button
+                onClick={openCreateModal}
+                className="bg-[#DA251C] hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                Tambah Hak Akses
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="bg-white dark:bg-[#0f172a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors duration-300">
@@ -282,22 +289,26 @@ export default function PermissionPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-3">
-                          <button 
-                            onClick={() => handleOpenModal(r)}
-                            disabled={isAdminRole}
-                            className={`flex items-center text-slate-400 transition-colors ${isAdminRole ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer'}`}
-                            title="Edit"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(r)}
-                            disabled={isAdminRole}
-                            className={`flex items-center text-slate-400 transition-colors ${isAdminRole ? 'opacity-30 cursor-not-allowed' : 'hover:text-red-600 dark:hover:text-red-400 cursor-pointer'}`}
-                            title="Hapus"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
+                          {(isAdmin || update) && (
+                            <button 
+                              onClick={() => openEditModal(r)}
+                              disabled={isAdminRole}
+                              className={`flex items-center text-slate-400 transition-colors ${isAdminRole ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer'}`}
+                              title="Edit"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            </button>
+                          )}
+                          {(isAdmin || del) && (
+                            <button 
+                              onClick={() => handleDelete(r)}
+                              disabled={isAdminRole}
+                              className={`flex items-center text-slate-400 transition-colors ${isAdminRole ? 'opacity-30 cursor-not-allowed' : 'hover:text-red-600 dark:hover:text-red-400 cursor-pointer'}`}
+                              title="Hapus"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

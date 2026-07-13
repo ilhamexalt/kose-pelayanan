@@ -34,6 +34,8 @@ export default function LoginPage() {
       const json = await res.json();
 
       if (json.success) {
+        localStorage.removeItem('cached_menus');
+        localStorage.removeItem('cached_permissions');
         localStorage.setItem('user', JSON.stringify(json.user));
         if (json.user.update_password === false) {
           messageApi.warning("Keamanan Akun: Anda wajib memperbarui password terlebih dahulu.");

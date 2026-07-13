@@ -17,6 +17,7 @@ export default function DetailPelayananPage() {
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [inputRegister, setInputRegister] = useState<string>('');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -51,6 +52,12 @@ export default function DetailPelayananPage() {
   }, [router]);
 
   const selectedPelayanan = pelayananList.find(p => p.id === id);
+
+  useEffect(() => {
+    if (selectedPelayanan && selectedPelayanan.nomorRegister !== undefined) {
+      setInputRegister(selectedPelayanan.nomorRegister);
+    }
+  }, [selectedPelayanan?.nomorRegister]);
 
   const isMyProcessing = (p: any) => {
     if (!p || !p.processedBy || !user) return false;
@@ -101,8 +108,8 @@ export default function DetailPelayananPage() {
       };
     }
     
-    if (selectedPelayanan?.nomorRegister !== undefined && (newStatus === 'Diproses' || newStatus === 'Selesai')) {
-      bodyPayload.nomorRegister = selectedPelayanan.nomorRegister;
+    if (inputRegister !== undefined && inputRegister !== '' && (newStatus === 'Diproses' || newStatus === 'Selesai')) {
+      bodyPayload.nomorRegister = inputRegister;
     }
 
     try {
@@ -404,8 +411,8 @@ export default function DetailPelayananPage() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    value={selectedPelayanan.nomorRegister || ''}
-                    onChange={(e) => setSelectedPelayanan({ ...selectedPelayanan, nomorRegister: e.target.value })}
+                    value={inputRegister}
+                    onChange={(e) => setInputRegister(e.target.value)}
                     placeholder="Masukkan nomor register (opsional)..."
                     className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C]"
                   />

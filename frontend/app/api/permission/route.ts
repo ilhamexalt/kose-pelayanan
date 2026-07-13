@@ -9,10 +9,12 @@ export async function GET(request: Request) {
 
     // Jika request membawa parameter role, berarti untuk kebutuhan validasi akses (bisa diakses non-admin)
     if (roleParam) {
-      const roleRef = doc(db, 'permissions', roleParam);
-      const roleSnap = await getDoc(roleRef);
-      if (roleSnap.exists()) {
-        return NextResponse.json({ success: true, data: { id: roleSnap.id, ...roleSnap.data() } });
+      const permsRef = collection(db, 'permissions');
+      const snapshot = await getDocs(permsRef);
+      const matchedDoc = snapshot.docs.find(d => d.id.toLowerCase() === roleParam.toLowerCase());
+      
+      if (matchedDoc) {
+        return NextResponse.json({ success: true, data: { id: matchedDoc.id, ...matchedDoc.data() } });
       }
       return NextResponse.json({ success: true, data: null });
     }

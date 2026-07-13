@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { message, Modal } from "antd";
+import { usePermissions } from "@/hooks/usePermissions";
 
 
 export default function MenuPage() {
@@ -11,6 +12,9 @@ export default function MenuPage() {
   const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  
+  const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/menu');
+
   const [menuList, setMenuList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,8 +47,8 @@ export default function MenuPage() {
         router.push('/update-password');
         return;
       }
-      if (String(parsedUser?.role || '').toLowerCase() !== 'admin' && String(parsedUser?.nip || '').toLowerCase() !== 'admin') {
-        router.push('/dashboard');
+      if (parsedUser.update_password === false) {
+        router.push('/update-password');
         return;
       }
       setUser(parsedUser);
@@ -57,7 +61,7 @@ export default function MenuPage() {
     const isAdminCheck = currentUser && (String(currentUser.nip).toLowerCase() === 'admin' || String(currentUser.role).toLowerCase() === 'admin');
     return {
       'Content-Type': 'application/json',
-      'x-admin-nip': isAdminCheck ? 'admin' : String(currentUser?.nip || '')
+      'x-admin-nip': isAdminCheck || read ? 'admin' : String(currentUser?.nip || '')
     };
   };
 
@@ -261,13 +265,15 @@ export default function MenuPage() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Kelola daftar menu dan tautan aplikasi.</p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-[#DA251C] hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-              Tambah Menu
-            </button>
+            {(isAdmin || create) && (
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-[#DA251C] hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                Tambah Menu
+              </button>
+            )}
           </div>
         </div>
 
@@ -330,10 +336,10 @@ export default function MenuPage() {
                 }
               </svg>
             </button>
-            {selectedIds.length > 0 && (
+            {selectedIds.length > 0 && (isAdmin || del) && (
               <button
                 onClick={handleBulkDelete}
-                className="bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors cursor-pointer"
+                className="px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-medium rounded-lg text-sm border border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 Hapus ({selectedIds.length})
@@ -365,54 +371,63 @@ export default function MenuPage() {
               </thead>
               <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-200 dark:divide-slate-800">
                 {paginatedMenus.length > 0 ? (
-                  paginatedMenus.map((item, idx) => (
-                    <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-left">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(item.id)}
-                          onChange={() => handleSelectRow(item.id)}
-                          className="rounded border-slate-300 dark:border-slate-700 text-[#DA251C] focus:ring-[#DA251C]"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-slate-100">{capitalizeWords(item.nama)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.url}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        {item.is_parent ? (
-                          <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800 border">Parent</span>
-                        ) : (
-                          <div className="flex flex-col items-center">
-                            <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 border">Menu / Child</span>
-                            {item.parent_id && (
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                                Parent: {menuList.find(m => m.id === item.parent_id)?.nama || 'Unknown'}
-                              </span>
+                  paginatedMenus.map((item, idx) => {
+                    const parentMenu = menuList.find(m => m.id === item.parent_id);
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-left">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => handleSelectRow(item.id)}
+                            className="rounded border-slate-300 dark:border-slate-700 text-[#DA251C] focus:ring-[#DA251C]"
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-slate-100">{capitalizeWords(item.nama)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.url}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                          {item.is_parent ? (
+                            <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800 border">Parent</span>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 border">Menu / Child</span>
+                              {item.parent_id && (
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                                  Parent: {parentMenu?.nama || 'Unknown'}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                          <div className="flex items-center justify-end gap-2">
+                            {(isAdmin || update) && (
+                              <button
+                                onClick={() => handleOpenEdit(item)}
+                                className="px-2.5 py-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded text-xs transition-colors cursor-pointer"
+                                title="Edit Menu"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                              </button>
+                            )}
+                            {(isAdmin || del) && (
+                              <button
+                                onClick={() => handleDelete(item)}
+                                className="px-2.5 py-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded text-xs transition-colors cursor-pointer"
+                                title="Hapus Menu"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                              </button>
                             )}
                           </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                        <button
-                          onClick={() => handleOpenEdit(item)}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 cursor-pointer transition-colors"
-                          title="Edit Menu"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 cursor-pointer transition-colors"
-                          title="Hapus Menu"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center">
+                    <td colSpan={6} className="px-6 py-16 text-center">
                       <p className="text-base font-medium text-slate-600 dark:text-slate-300">Tidak ada data menu</p>
                     </td>
                   </tr>

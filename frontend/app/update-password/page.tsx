@@ -99,7 +99,7 @@ export default function UpdatePasswordPage() {
             <Image
               src="/assets/images/ojk-banten-logo.png"
               alt="Logo OJK"
-              width={160}
+              width={100}
               height={60}
               className="mx-auto mb-6 object-contain p-1 rounded dark:hidden"
               style={{ width: "auto", height: "auto" }}
@@ -107,7 +107,7 @@ export default function UpdatePasswordPage() {
             <Image
               src="/assets/images/logo-ojk-putih.png"
               alt="Logo OJK"
-              width={160}
+              width={100}
               height={60}
               className="mx-auto mb-6 object-contain p-1 rounded hidden dark:block"
               style={{ width: "auto", height: "auto" }}

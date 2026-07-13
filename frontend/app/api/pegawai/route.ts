@@ -32,13 +32,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { nip, nama, email, password } = body;
+    const { nip, nama, email, username, password } = body;
 
-    if (!nip || !password || !nama) {
-      return NextResponse.json({ success: false, error: 'NIP, Nama, dan Password wajib diisi' }, { status: 400 });
+    if (!password || !nama || !username) {
+      return NextResponse.json({ success: false, error: 'Nama, Username, dan Password wajib diisi' }, { status: 400 });
     }
 
-    const userRef = doc(db, 'users', String(nip));
+    const nipVal = nip !== undefined && nip !== null && nip !== '' ? Number(nip) : null;
+    const docId = nipVal !== null ? String(nipVal) : `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    const userRef = doc(db, 'users', docId);
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
@@ -47,13 +50,11 @@ export async function POST(request: Request) {
 
     const now = new Date().toISOString();
     const adminUser = String(adminHeader || 'admin');
-    const nipNumber = Number(nip) || 0;
-
     await setDoc(userRef, {
-      nip: nipNumber,
+      nip: nipVal,
       nama: String(nama).trim(),
       email: email ? String(email).trim() : '',
-      username: body.username ? String(body.username).trim() : String(nip),
+      username: username ? String(username).trim() : String(nipVal || ''),
       password: hashPassword(String(password)),
       role: body.role ? String(body.role).trim() : 'Pegawai',
       update_password: false,

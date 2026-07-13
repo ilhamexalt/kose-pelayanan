@@ -207,32 +207,34 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                     </span>
                     <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''} ${!isDesktopOpen ? 'md:hidden' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
-                  {isExpanded && (
-                    <div className="pl-6 mt-1 space-y-1">
-                      {menu.children.map(child => {
-                        const isChildActive = pathname === child.url;
+                  <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0'}`}>
+                    <div className="overflow-hidden">
+                      <div className="pl-6 space-y-1">
+                        {menu.children.map(child => {
+                          const isChildActive = pathname === child.url;
 
-                        if (!isAdmin) {
-                          const childPerm = userPermissions[child.id];
-                          if (!childPerm || childPerm.read !== true) return null;
-                        }
+                          if (!isAdmin) {
+                            const childPerm = userPermissions[child.id];
+                            if (!childPerm || childPerm.read !== true) return null;
+                          }
 
-                        return (
-                          <Link
-                            key={child.id}
-                            href={child.url}
-                            onClick={() => setIsMobileOpen(false)}
-                            className={`block px-3 py-2 rounded-lg text-sm transition-colors ${!isDesktopOpen ? 'md:hidden' : ''} ${isChildActive
-                              ? 'font-semibold text-[#DA251C] dark:text-red-400 bg-red-50 dark:bg-red-950/40 relative before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-[#DA251C] before:rounded-full'
-                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                              }`}
-                          >
-                            <div className="pl-2 whitespace-nowrap">{child.nama}</div>
-                          </Link>
-                        );
-                      })}
+                          return (
+                            <Link
+                              key={child.id}
+                              href={child.url}
+                              onClick={() => setIsMobileOpen(false)}
+                              className={`block px-3 py-2 rounded-lg text-sm transition-colors ${!isDesktopOpen ? 'md:hidden' : ''} ${isChildActive
+                                ? 'font-semibold text-[#DA251C] dark:text-red-400 bg-red-50 dark:bg-red-950/40 relative before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-[#DA251C] before:rounded-full'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                }`}
+                            >
+                              <div className="pl-2 whitespace-nowrap">{child.nama}</div>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             }
