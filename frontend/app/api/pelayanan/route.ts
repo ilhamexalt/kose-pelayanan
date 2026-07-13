@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
+import { encrypt, maskData } from '@/lib/crypto';
 
 export async function POST(request: Request) {
   try {
@@ -72,11 +73,15 @@ export async function POST(request: Request) {
     const queueNumber = `${prefix}-${nextNum.toString().padStart(3, '0')}`;
 
     const payload: any = {
-      nik,
+      nik: maskData(nik, 'nik'),
+      nik_encrypted: encrypt(nik),
       nama,
-      phone,
+      phone: maskData(phone, 'phone'),
+      phone_encrypted: encrypt(phone),
       jenis,
-      queueNumber,
+      queueNumber: maskData(queueNumber, 'register'),
+      queueNumber_encrypted: encrypt(queueNumber),
+      queueNumber_raw: queueNumber, // keeping raw for logic if needed, but masking display
       status: 'Antre',
       createdAt: serverTimestamp(),
     };
@@ -106,7 +111,7 @@ export async function POST(request: Request) {
 
     await addDoc(pelayananRef, payload);
 
-    return NextResponse.json({ success: true, queueNumber });
+    return NextResponse.json({ success: true, queueNumber: queueNumber });
   } catch (error: any) {
     console.error('Error submitting pelayanan:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

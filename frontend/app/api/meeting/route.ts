@@ -1,0 +1,89 @@
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, where } from 'firebase/firestore';
+
+export async function POST(request: Request) {
+  try {
+    const data = await request.json();
+    const { 
+      ruang, tanggal, waktuMulai, waktuSelesai, instansi, 
+      pesertaInternal, pesertaEksternal, keterangan 
+    } = data;
+
+    if (!ruang || !tanggal || !waktuMulai || !waktuSelesai || !instansi) {
+      return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
+    }
+
+    const meetingRef = collection(db, 'meeting');
+
+    // Cek bentrok jadwal
+    const qConflict = query(
+      meetingRef, 
+      where('ruangan', '==', ruang),
+      where('tanggal', '==', tanggal)
+    );
+    
+    const snapshot = await getDocs(qConflict);
+    let conflict = null;
+    
+    snapshot.forEach((doc) => {
+      const d = doc.data();
+      // Logic overlap
+      if (
+        (waktuMulai >= d.waktuMulai && waktuMulai < d.waktuSelesai) ||
+        (waktuSelesai > d.waktuMulai && waktuSelesai <= d.waktuSelesai) ||
+        (waktuMulai <= d.waktuMulai && waktuSelesai >= d.waktuSelesai)
+      ) {
+        conflict = d;
+      }
+    });
+
+    if (conflict) {
+      return NextResponse.json({ 
+        error: 'Conflict', 
+        message: `Ruangan ${ruang} pada jam ${(conflict as any).waktuMulai} - ${(conflict as any).waktuSelesai} sudah diisi oleh ${(conflict as any).instansi}.` 
+      }, { status: 409 });
+    }
+
+    const payload = {
+      ruangan: ruang,
+      tanggal,
+      waktuMulai,
+      waktuSelesai,
+      instansi,
+      pesertaInternal: pesertaInternal || [],
+      pesertaEksternal: pesertaEksternal || [],
+      keterangan: keterangan || '',
+      createdAt: serverTimestamp(),
+    };
+
+    await addDoc(meetingRef, payload);
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error submitting meeting:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const meetingRef = collection(db, 'meeting');
+    const q = query(meetingRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+
+    const dataArray = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : null
+      };
+    });
+      
+    return NextResponse.json({ success: true, data: dataArray });
+  } catch (error: any) {
+    console.error('Error fetching meetings:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

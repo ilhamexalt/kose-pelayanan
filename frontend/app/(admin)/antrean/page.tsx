@@ -134,7 +134,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleUpdateStatus = async (statusId: string, newStatus: string) => {
+  const handleUpdateStatus = async (statusId: string, newStatus: string, isSaveRegister: boolean = false) => {
     setIsUpdatingStatus(true);
 
     const bodyPayload: any = { status: newStatus };
@@ -145,6 +145,13 @@ export default function DashboardPage() {
       };
     }
 
+    if (selectedDetail?.nomorRegister !== undefined && (newStatus === 'Diproses' || newStatus === 'Selesai')) {
+      bodyPayload.nomorRegister = selectedDetail.nomorRegister;
+    }
+    if (selectedDetail?.catatan !== undefined && (newStatus === 'Diproses' || newStatus === 'Selesai')) {
+      bodyPayload.catatan = selectedDetail.catatan;
+    }
+
     try {
       const res = await fetch(`/api/pelayanan/${statusId}`, {
         method: 'PATCH',
@@ -153,7 +160,11 @@ export default function DashboardPage() {
       });
       const json = await res.json();
       if (json.success) {
-        messageApi.success(`Status antrean diperbarui menjadi ${newStatus}`);
+        if (isSaveRegister) {
+          messageApi.success('Data berhasil disimpan');
+        } else {
+          messageApi.success(`Status antrean diperbarui menjadi ${newStatus}`);
+        }
         if (newStatus === 'Selesai' || newStatus === 'Batal') {
           setSelectedDetail(null);
         } else {
@@ -501,7 +512,49 @@ export default function DashboardPage() {
                 </div>
               )}
 
+
+              {selectedDetail.status === 'Diproses' && (
+                <div className="mb-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                      Nomor Register {selectedDetail.jenis?.toLowerCase() === 'slik' && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedDetail.nomorRegister || ''}
+                      onChange={(e) => setSelectedDetail({ ...selectedDetail, nomorRegister: e.target.value })}
+                      placeholder="Masukkan nomor register"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C] mb-4"
+                    />
+
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                      Catatan Pelayanan
+                    </label>
+                    <div className="flex flex-col gap-2">
+                      <textarea
+                        rows={3}
+                        placeholder="Tambahkan catatan jika ada..."
+                        value={selectedDetail.catatan || ''}
+                        onChange={(e) => setSelectedDetail({...selectedDetail, catatan: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={() => handleUpdateStatus(selectedDetail.id, 'Diproses', true)}
+                      disabled={isUpdatingStatus}
+                      className="bg-[#DA251C] hover:bg-red-700 text-white px-6 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      Simpan Data
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-3">Tindakan & Ubah Status</h3>
 
                 {(() => {
@@ -522,7 +575,11 @@ export default function DashboardPage() {
                         {['Antre', 'Diproses', 'Selesai', 'Batal'].map(status => {
                           const isThisStatusActive = selectedDetail.status === status || (!selectedDetail.status && status === 'Antre');
                           const isCannotGoBackToAntre = status === 'Antre' && selectedDetail.status !== 'Antre' && !!selectedDetail.status;
-                          const isDisabled = isUpdatingStatus || isStatusLockedByOther || isCannotGoBackToAntre;
+                          const isSelesaiDisabled = status === 'Selesai' && 
+                            selectedDetail.jenis?.toLowerCase() === 'slik' && 
+                            !selectedDetail.nomorRegister?.trim();
+                          
+                          const isDisabled = isUpdatingStatus || isStatusLockedByOther || isCannotGoBackToAntre || isSelesaiDisabled;
 
                           return (
                             <button

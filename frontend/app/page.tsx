@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import ThemeToggle from '@/components/ThemeToggle';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center p-4 sm:p-6 relative w-full h-full">
+    <>
+      <div className="flex flex-col flex-1 items-center justify-center p-4 sm:p-6 relative w-full h-full">
       <div className="flex items-center gap-4 absolute top-4 right-6 z-20">
         <Link href="/login" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#F1B434] transition-colors">Login</Link>
         <ThemeToggle />
@@ -13,7 +15,7 @@ export default function Home() {
       <div className="relative z-10 w-full max-w-5xl my-auto">
         <div className="text-center mb-6 sm:mb-8 flex flex-col items-center">
           <Image
-            src="/assets/images/ojk-logo.png"
+            src="/assets/images/ojk-banten-logo.png"
             alt="Logo OJK"
             width={160}
             height={58}
@@ -65,5 +67,7 @@ export default function Home() {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }

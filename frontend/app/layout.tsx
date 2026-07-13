@@ -36,7 +36,6 @@ export default function RootLayout({
           <main className="flex-1 flex flex-col">
             {children}
           </main>
-          <Footer />
         </ThemeProvider>
       </body>
     </html>

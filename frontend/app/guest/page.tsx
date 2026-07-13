@@ -6,6 +6,7 @@ import Image from "next/image";
 import { message } from "antd";
 import ThemeToggle from "@/components/ThemeToggle";
 import CustomSelect from "@/components/CustomSelect";
+import Footer from '@/components/Footer';
 
 export default function GuestPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -35,6 +36,8 @@ export default function GuestPage() {
   const [pernyataan, setPernyataan] = useState(false);
   const [isNikFound, setIsNikFound] = useState<boolean | null>(null);
   const [isCheckingNik, setIsCheckingNik] = useState(false);
+  const [useMainNikSlik, setUseMainNikSlik] = useState(false);
+  const [useMainNikPengaduan, setUseMainNikPengaduan] = useState(false);
 
   const handleSektorChange = (val: string, checked: boolean) => {
     if (checked) {
@@ -172,6 +175,7 @@ export default function GuestPage() {
   };
 
   return (
+    <>
     <div className="flex flex-1 items-center justify-center p-6">
       {contextHolder}
       <div className="w-full max-w-xl">
@@ -183,7 +187,7 @@ export default function GuestPage() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <Image
-              src="/assets/images/ojk-logo.png"
+              src="/assets/images/ojk-banten-logo.png"
               alt="Logo OJK"
               width={100}
               height={40}
@@ -502,6 +506,14 @@ export default function GuestPage() {
                       <label htmlFor="slikNikNpwp" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         2. NIK (Nomor Induk Kependudukan) / NPWP (Apabila Badan Usaha) <span className="text-[#DA251C]">*</span>
                       </label>
+                      <div className="flex items-center gap-2 mb-2">
+                        <input type="checkbox" id="useMainNikSlik" checked={useMainNikSlik} onChange={(e) => {
+                          setUseMainNikSlik(e.target.checked);
+                          if (e.target.checked) setSlikNikNpwp(nik);
+                          else setSlikNikNpwp("");
+                        }} className="rounded border-slate-300 text-[#DA251C] focus:ring-[#DA251C] w-4 h-4 cursor-pointer" />
+                        <label htmlFor="useMainNikSlik" className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer">Sama dengan NIK utama</label>
+                      </div>
                       <input
                         type="text"
                         id="slikNikNpwp"
@@ -548,6 +560,14 @@ export default function GuestPage() {
                       <label htmlFor="pengaduanNik" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         NIK (Nomor Induk Kependudukan) <span className="text-[#DA251C]">*</span>
                       </label>
+                      <div className="flex items-center gap-2 mb-2">
+                        <input type="checkbox" id="useMainNikPengaduan" checked={useMainNikPengaduan} onChange={(e) => {
+                          setUseMainNikPengaduan(e.target.checked);
+                          if (e.target.checked) setPengaduanNik(nik);
+                          else setPengaduanNik("");
+                        }} className="rounded border-slate-300 text-[#DA251C] focus:ring-[#DA251C] w-4 h-4 cursor-pointer" />
+                        <label htmlFor="useMainNikPengaduan" className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer">Sama dengan NIK utama</label>
+                      </div>
                       <input
                         type="text"
                         id="pengaduanNik"
@@ -717,5 +737,7 @@ export default function GuestPage() {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import * as XLSX from "xlsx";
 import { message } from "antd";
 import { db } from "@/lib/firebase";
@@ -59,8 +60,10 @@ export default function DashboardPage() {
       return matchesSearch && matchesJenis;
     })
     .sort((a, b) => {
-      const numA = parseInt((a.queueNumber || '').replace(/\D/g, ''), 10) || 0;
-      const numB = parseInt((b.queueNumber || '').replace(/\D/g, ''), 10) || 0;
+      const qnA = a.queueNumber_raw || a.queueNumber || '';
+      const qnB = b.queueNumber_raw || b.queueNumber || '';
+      const numA = parseInt(qnA.replace(/\D/g, ''), 10) || 0;
+      const numB = parseInt(qnB.replace(/\D/g, ''), 10) || 0;
       return sortOrder === 'asc' ? numA - numB : numB - numA;
     });
 
@@ -148,8 +151,18 @@ export default function DashboardPage() {
   return (
     <>
       {contextHolder}
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        <h1>Selamat Siang, <span className="font-bold uppercase">{user.nama}</span></h1>
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col flex-1 items-center justify-center min-h-[70vh]">
+        <div className="relative w-full max-w-2xl aspect-[2/1]">
+          {/* We assume ojkway.png is placed in public/assets/images/ */}
+          {/* <Image
+            src="/assets/images/ojk-banten-logo.png"
+            alt="OJK Way"
+            fill
+            sizes="(max-width: 768px) 100vw, 800px"
+            priority
+            className="object-contain filter drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]"
+          /> */}
+        </div>
       </main>
     </>
   );

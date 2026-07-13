@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 interface Menu {
   id: string;
@@ -59,19 +61,28 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
 
   const fetchMenus = async (currentUserParam?: any) => {
     try {
-      const resMenu = await fetch('/api/menu');
-      const jsonMenu = await resMenu.json();
-      if (jsonMenu.success) {
-        const rawMenus: Menu[] = jsonMenu.data;
-        const parents = rawMenus.filter(m => !m.parent_id).sort((a, b) => a.nama.localeCompare(b.nama));
-        const children = rawMenus.filter(m => m.parent_id).sort((a, b) => a.nama.localeCompare(b.nama));
+      const cachedMenus = localStorage.getItem('cached_menus');
+      let menusData = null;
 
-        const tree = parents.map(parent => ({
-          ...parent,
-          children: children.filter(child => child.parent_id === parent.id)
-        }));
+      if (cachedMenus) {
+        menusData = JSON.parse(cachedMenus);
+        setMenus(menusData);
+      } else {
+        const resMenu = await fetch('/api/menu');
+        const jsonMenu = await resMenu.json();
+        if (jsonMenu.success) {
+          const rawMenus: Menu[] = jsonMenu.data;
+          const parents = rawMenus.filter(m => !m.parent_id).sort((a, b) => a.nama.localeCompare(b.nama));
+          const children = rawMenus.filter(m => m.parent_id).sort((a, b) => a.nama.localeCompare(b.nama));
 
-        setMenus(tree);
+          menusData = parents.map(parent => ({
+            ...parent,
+            children: children.filter(child => child.parent_id === parent.id)
+          }));
+
+          setMenus(menusData);
+          localStorage.setItem('cached_menus', JSON.stringify(menusData));
+        }
       }
 
       // Fetch user role permissions if not admin
@@ -79,14 +90,21 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
       const isAdminCheck = currentUser && (String(currentUser.nip).toLowerCase() === 'admin' || String(currentUser.role).toLowerCase() === 'admin');
 
       if (!isAdminCheck) {
-        const role = currentUser.role || 'Pegawai';
-        const resPerm = await fetch(`/api/permission?role=${role}`);
-        const jsonPerm = await resPerm.json();
-        if (jsonPerm.success && jsonPerm.data) {
-          setUserPermissions(jsonPerm.data.menu_permissions || {});
+        const cachedPermissions = localStorage.getItem('cached_permissions');
+        if (cachedPermissions) {
+          setUserPermissions(JSON.parse(cachedPermissions));
         } else {
-          // Default if role not found, maybe no permissions
-          setUserPermissions({});
+          const role = currentUser.role || 'Pegawai';
+          const resPerm = await fetch(`/api/permission?role=${role}`);
+          const jsonPerm = await resPerm.json();
+          if (jsonPerm.success && jsonPerm.data) {
+            setUserPermissions(jsonPerm.data.menu_permissions || {});
+            localStorage.setItem('cached_permissions', JSON.stringify(jsonPerm.data.menu_permissions || {}));
+          } else {
+            // Default if role not found, maybe no permissions
+            setUserPermissions({});
+            localStorage.setItem('cached_permissions', JSON.stringify({}));
+          }
         }
       }
     } catch (error) {
@@ -96,6 +114,8 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('cached_menus');
+    localStorage.removeItem('cached_permissions');
     router.push('/login');
   };
 
@@ -108,38 +128,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className={`min-h-screen bg-slate-50 dark:bg-[#090d16] transition-all duration-300 flex flex-col ${isDesktopOpen ? 'md:pl-72' : 'md:pl-0'}`}>
-
-      {/* Tombol Hamburger Floating untuk Desktop (Muncul saat sidebar tertutup) */}
-      {!isDesktopOpen && (
-        <button
-          onClick={() => setIsDesktopOpen(true)}
-          className="hidden md:flex fixed top-4 left-4 z-40 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-        </button>
-      )}
-
-      {/* Mobile Header (Hanya tampil di HP) */}
-      <div className="md:hidden sticky top-0 z-40 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 px-4 h-16 flex items-center justify-between shadow-sm transition-colors duration-300">
-        <div className="flex items-center">
-          <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-8 w-auto dark:hidden" />
-          <img src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" className="h-8 w-auto hidden dark:block" />
-        </div>
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <button
-            onClick={() => setIsMobileOpen(!isMobileOpen)}
-            className="p-2 -mr-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            {isMobileOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-            )}
-          </button>
-        </div>
-      </div>
+    <div className={`min-h-screen bg-slate-50 dark:bg-[#090d16] transition-all duration-300 flex flex-col ${isDesktopOpen ? 'md:pl-72' : 'md:pl-20'}`}>
 
       {/* Overlay Mobile (Backdrop) */}
       {isMobileOpen && (
@@ -151,23 +140,29 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
 
       {/* Sidebar Container */}
       <aside className={`
-        fixed top-0 bottom-0 left-0 z-50 w-72 bg-white dark:bg-[#0f172a] border-r border-slate-200 dark:border-slate-800 flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none
-        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} 
-        ${isDesktopOpen ? 'md:translate-x-0' : 'md:-translate-x-full'}
+        fixed top-0 bottom-0 left-0 z-50 bg-white dark:bg-[#0f172a] border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 ease-in-out shadow-xl md:shadow-none overflow-x-hidden
+        ${isMobileOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72'} 
+        md:translate-x-0 ${isDesktopOpen ? 'md:w-72' : 'md:w-20'}
       `}>
 
         {/* Sidebar Header / Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center">
-            <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-9 w-auto dark:hidden" />
-            <img src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" className="h-9 w-auto hidden dark:block" />
-          </div>
+        <div className={`h-16 flex items-center shrink-0 border-b border-slate-200 dark:border-slate-800 ${isDesktopOpen ? 'justify-between px-6' : 'justify-between px-6 md:justify-center md:px-0'}`}>
+          <Link href="/dashboard" className="flex items-center">
+            <div className={`flex items-center ${!isDesktopOpen ? 'md:hidden' : ''}`}>
+              <img src="/assets/images/ojk-banten-logo.png" alt="Logo OJK" className="h-9 w-auto dark:hidden" />
+              <img src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" className="h-9 w-auto hidden dark:block" />
+            </div>
+          </Link>
           {/* Tombol Tutup Sidebar untuk Desktop */}
           <button
-            onClick={() => setIsDesktopOpen(false)}
+            onClick={() => setIsDesktopOpen(prev => !prev)}
             className="hidden md:block p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
+            {isDesktopOpen ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+            )}
           </button>
         </div>
 
@@ -208,9 +203,9 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                   >
                     <span className="flex items-center">
                       {getMenuIcon(menu.nama)}
-                      {menu.nama}
+                      <span className={`${!isDesktopOpen ? 'md:hidden' : ''} whitespace-nowrap`}>{menu.nama}</span>
                     </span>
-                    <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''} ${!isDesktopOpen ? 'md:hidden' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
                   {isExpanded && (
                     <div className="pl-6 mt-1 space-y-1">
@@ -227,12 +222,12 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                             key={child.id}
                             href={child.url}
                             onClick={() => setIsMobileOpen(false)}
-                            className={`block px-3 py-2 rounded-lg text-sm transition-colors ${isChildActive
+                            className={`block px-3 py-2 rounded-lg text-sm transition-colors ${!isDesktopOpen ? 'md:hidden' : ''} ${isChildActive
                               ? 'font-semibold text-[#DA251C] dark:text-red-400 bg-red-50 dark:bg-red-950/40 relative before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-[#DA251C] before:rounded-full'
                               : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                               }`}
                           >
-                            <div className="pl-2">{child.nama}</div>
+                            <div className="pl-2 whitespace-nowrap">{child.nama}</div>
                           </Link>
                         );
                       })}
@@ -252,9 +247,9 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                   : 'font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
               >
-                <div className={`flex items-center ${isActive ? 'pl-2' : ''}`}>
+                <div className={`flex items-center ${isActive && isDesktopOpen ? 'pl-2' : ''} ${!isDesktopOpen ? 'md:justify-center' : ''}`}>
                   {getMenuIcon(menu.nama)}
-                  {menu.nama}
+                  <span className={`${!isDesktopOpen ? 'md:hidden' : ''} whitespace-nowrap`}>{menu.nama}</span>
                 </div>
               </Link>
             );
@@ -267,35 +262,25 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               onClick={() => setIsMobileOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-              Layar TV Antrean
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              <span className={`${!isDesktopOpen ? 'md:hidden' : ''} whitespace-nowrap`}>Layar TV Antrean</span>
             </Link>
           </div>
-        </div>
-
-        {/* Sidebar Footer / User Profile */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between mb-4 px-2">
-            <div className="flex flex-col">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Telah Login</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[120px] uppercase">{user.nama || user.email || user.nip}</span>
-            </div>
-            <div className="hidden md:block">
-              <ThemeToggle />
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-red-50 dark:bg-slate-800 dark:hover:bg-red-950/40 text-slate-700 hover:text-[#DA251C] dark:text-slate-300 dark:hover:text-red-400 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-            Keluar Aplikasi
-          </button>
         </div>
       </aside>
 
       {/* Main Content (Anak/Children) */}
-      {children}
+      <Navbar
+        user={user}
+        isMobileOpen={isMobileOpen}
+        setIsMobileOpen={setIsMobileOpen}
+        isDesktopOpen={isDesktopOpen}
+        setIsDesktopOpen={setIsDesktopOpen}
+      />
+      <main className="flex-1 flex flex-col">
+        {children}
+      </main>
+      <Footer />
     </div>
   );
 }

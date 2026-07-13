@@ -8,9 +8,9 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     const id = params.id;
 
     const data = await request.json();
-    const { status, processedBy, catatan } = data;
+    const { status, processedBy, catatan, nomorRegister } = data;
 
-    if (!status && catatan === undefined) {
+    if (!status && catatan === undefined && nomorRegister === undefined) {
       return NextResponse.json({ error: 'Data update tidak boleh kosong' }, { status: 400 });
     }
 
@@ -46,6 +46,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     const updateData: any = {};
     if (status) updateData.status = status;
     if (catatan !== undefined) updateData.catatan = catatan;
+    if (nomorRegister !== undefined) updateData.nomorRegister = nomorRegister;
 
     if (status === 'Antre') {
       updateData.processedBy = deleteField();

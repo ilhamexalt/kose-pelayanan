@@ -97,7 +97,7 @@ export default function UpdatePasswordPage() {
         <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl transition-colors duration-300">
           <div className="mb-8 text-center">
             <Image
-              src="/assets/images/ojk-logo.png"
+              src="/assets/images/ojk-banten-logo.png"
               alt="Logo OJK"
               width={160}
               height={60}

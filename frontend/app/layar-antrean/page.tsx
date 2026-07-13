@@ -68,7 +68,7 @@ export default function DisplayScreenPage() {
             <header className="bg-slate-900/80 border-b border-slate-800/80 px-8 py-5 flex items-center justify-between backdrop-blur shadow-xl">
                 <div className="flex items-center space-x-4">
                     <div className="bg-white p-2 rounded-xl shadow-lg flex items-center justify-center">
-                        <img src="/assets/images/ojk-logo.png" alt="Logo OJK" className="h-10 w-auto" />
+                        <img src="/assets/images/ojk-banten-logo.png" alt="Logo OJK" className="h-10 w-auto" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-black tracking-wide text-white uppercase">Portal Layanan Konsumen</h1>

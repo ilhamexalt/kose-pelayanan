@@ -81,7 +81,7 @@ export default function DetailPelayananPage() {
     return d.toLocaleString('id-ID').replace(/\./g, ':');
   };
 
-  const handleUpdateStatus = async (statusId: string, newStatus: string) => {
+  const handleUpdateStatus = async (statusId: string, newStatus: string, isSaveRegister: boolean = false) => {
     setIsUpdatingStatus(true);
     
     const bodyPayload: any = { status: newStatus };
@@ -90,6 +90,10 @@ export default function DetailPelayananPage() {
         nip: user.nip || user.email || 'unknown', 
         nama: user.nama || user.email || 'Unknown User' 
       };
+    }
+    
+    if (selectedPelayanan?.nomorRegister !== undefined && (newStatus === 'Diproses' || newStatus === 'Selesai')) {
+      bodyPayload.nomorRegister = selectedPelayanan.nomorRegister;
     }
 
     try {
@@ -100,7 +104,11 @@ export default function DetailPelayananPage() {
       });
       const json = await res.json();
       if (json.success) {
-        messageApi.success(`Status antrean diperbarui menjadi ${newStatus}`);
+        if (isSaveRegister) {
+          messageApi.success('Nomor register berhasil disimpan');
+        } else {
+          messageApi.success(`Status antrean diperbarui menjadi ${newStatus}`);
+        }
       } else {
         messageApi.error(json.error || 'Gagal update status');
       }
@@ -326,6 +334,30 @@ export default function DetailPelayananPage() {
               <span className="w-2 h-2 rounded-full bg-[#DA251C]"></span>
               Tindakan & Ubah Status
             </h2>
+
+            {selectedPelayanan.status === 'Diproses' && (
+              <div className="mb-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                  Nomor Register
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={selectedPelayanan.nomorRegister || ''}
+                    onChange={(e) => setSelectedPelayanan({ ...selectedPelayanan, nomorRegister: e.target.value })}
+                    placeholder="Masukkan nomor register (opsional)..."
+                    className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C]"
+                  />
+                  <button
+                    onClick={() => handleUpdateStatus(selectedPelayanan.id, 'Diproses', true)}
+                    disabled={isUpdatingStatus}
+                    className="bg-[#DA251C] hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </div>
+            )}
             
             {isStatusLockedByOther && (
               <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-xl text-xs text-red-600 dark:text-red-400 mb-4 font-medium">
