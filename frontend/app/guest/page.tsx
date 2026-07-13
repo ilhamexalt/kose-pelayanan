@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { message } from "antd";
+import { toPng } from "html-to-image";
 import ThemeToggle from "@/components/ThemeToggle";
 import CustomSelect from "@/components/CustomSelect";
 import Footer from '@/components/Footer';
@@ -12,9 +13,11 @@ export default function GuestPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [queueNumber, setQueueNumber] = useState<string | null>(null);
+  const ticketRef = useRef<HTMLDivElement>(null);
 
   const [nik, setNik] = useState("");
   const [nama, setNama] = useState("");
+  const [alamat, setAlamat] = useState("");
   const [phone, setPhone] = useState("");
   const [jenis, setJenis] = useState("");
   const [instansi, setInstansi] = useState("");
@@ -36,8 +39,15 @@ export default function GuestPage() {
   const [pernyataan, setPernyataan] = useState(false);
   const [isNikFound, setIsNikFound] = useState<boolean | null>(null);
   const [isCheckingNik, setIsCheckingNik] = useState(false);
-  const [useMainNikSlik, setUseMainNikSlik] = useState(false);
   const [useMainNikPengaduan, setUseMainNikPengaduan] = useState(false);
+
+  useEffect(() => {
+    if (jenisDebitur === "Perseorangan") {
+      setSlikNikNpwp(nik);
+    } else if (jenisDebitur === "") {
+      setSlikNikNpwp("");
+    }
+  }, [jenisDebitur, nik]);
 
   const handleSektorChange = (val: string, checked: boolean) => {
     if (checked) {
@@ -60,12 +70,14 @@ export default function GuestPage() {
       const json = await res.json();
       if (json.success && json.found) {
         setNama(json.data.nama || "");
+        setAlamat(json.data.alamat || "");
         setPhone(json.data.phone || "");
         setIsNikFound(true);
         messageApi.success({ content: "Data NIK ditemukan!", key: "checkNikLoading", duration: 2.5 });
       } else {
         setIsNikFound(false);
         setNama("");
+        setAlamat("");
         setPhone("");
         messageApi.info({ content: "Data NIK belum terdaftar. Silakan lengkapi data Anda.", key: "checkNikLoading", duration: 3 });
       }
@@ -83,6 +95,7 @@ export default function GuestPage() {
     if (value.length < 16 && isNikFound !== null) {
       setIsNikFound(null);
       setNama("");
+      setAlamat("");
       setPhone("");
     }
   };
@@ -100,6 +113,7 @@ export default function GuestPage() {
     const data: any = {
       nik,
       nama,
+      alamat,
       phone,
       jenis,
     };
@@ -174,6 +188,25 @@ export default function GuestPage() {
     }
   };
 
+  const downloadTicket = async () => {
+    if (!ticketRef.current) return;
+    try {
+      const dataUrl = await toPng(ticketRef.current, {
+        cacheBust: true,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2
+      });
+      const link = document.createElement('a');
+      link.download = `tiket-antrean-${queueNumber}.png`;
+      link.href = dataUrl;
+      link.click();
+      messageApi.success("Tiket berhasil disimpan!");
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Gagal menyimpan tiket");
+    }
+  };
+
   return (
     <>
     <div className="flex flex-1 items-center justify-center p-6">
@@ -208,44 +241,53 @@ export default function GuestPage() {
         <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl transition-colors duration-300">
           {queueNumber ? (
             <div className="text-center py-4">
-              <div className="w-20 h-20 bg-green-50 dark:bg-emerald-950/60 text-green-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Pelayanan Berhasil Terkirim</h1>
-              <p className="text-slate-500 dark:text-slate-400 mb-8">Terima kasih telah menyampaikan permintaan pelayanan Anda. Silakan simpan nomor antrian di bawah ini untuk pengecekan status.</p>
+              <div ref={ticketRef} className="bg-white p-8 rounded-xl">
+                <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h1 className="text-2xl font-bold text-slate-800 mb-2">Pelayanan Berhasil Terkirim</h1>
+                <p className="text-slate-500 mb-8">Terima kasih telah menyampaikan permintaan pelayanan Anda. Silakan simpan nomor antrian di bawah ini untuk pengecekan status.</p>
 
-              <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-6 mb-8">
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Nomor Antrian Anda</p>
-                <div className="text-4xl font-black text-[#DA251C] dark:text-red-400 tracking-widest">{queueNumber}</div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-4">
+                  <p className="text-sm font-medium text-slate-500 mb-2">Nomor Antrian Anda</p>
+                  <div className="text-4xl font-black text-[#DA251C] tracking-widest">{queueNumber}</div>
+                </div>
               </div>
 
-              <button onClick={() => {
-                setQueueNumber(null);
-                setNik("");
-                setNama("");
-                setPhone("");
-                setJenis("");
-                setInstansi("");
-                setKeperluan("");
-                setKeperluanOther("");
-                setBertemu("");
-                setKeterangan("");
-                setJenisDebitur("");
-                setSlikNikNpwp("");
-                setEmail("");
-                setPengaduanNik("");
-                setKlasifikasi("");
-                setSektors([]);
-                setSektorOther("");
-                setPerusahaan("");
-                setProduk("");
-                setPermasalahan("");
-                setRingkasan("");
-                setPernyataan(false);
-                setIsNikFound(null);
-              }} className="w-full bg-white dark:bg-slate-800 border-2 border-[#DA251C] text-[#DA251C] dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 font-medium py-3 rounded-lg transition-all cursor-pointer">
-                Ajukan Pelayanan Lain
-              </button>
+              <div className="flex flex-col gap-3 mt-4">
+                <button onClick={downloadTicket} className="w-full bg-[#DA251C] hover:bg-[#B91C1C] text-white font-medium py-3 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  Simpan Tiket ke Galeri
+                </button>
+                <button onClick={() => {
+                  setQueueNumber(null);
+                  setNik("");
+                  setNama("");
+                  setAlamat("");
+                  setPhone("");
+                  setJenis("");
+                  setInstansi("");
+                  setKeperluan("");
+                  setKeperluanOther("");
+                  setBertemu("");
+                  setKeterangan("");
+                  setJenisDebitur("");
+                  setSlikNikNpwp("");
+                  setEmail("");
+                  setPengaduanNik("");
+                  setKlasifikasi("");
+                  setSektors([]);
+                  setSektorOther("");
+                  setPerusahaan("");
+                  setProduk("");
+                  setPermasalahan("");
+                  setRingkasan("");
+                  setPernyataan(false);
+                  setIsNikFound(null);
+                }} className="w-full bg-white dark:bg-slate-800 border-2 border-[#DA251C] text-[#DA251C] dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 font-medium py-3 rounded-lg transition-all cursor-pointer">
+                  Ajukan Pelayanan Lain
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -307,6 +349,21 @@ export default function GuestPage() {
                     required
                     className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
                     placeholder="Masukkan nama lengkap Anda"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="alamat" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alamat Lengkap <span className="text-[#DA251C]">*</span></label>
+                  <textarea
+                    id="alamat"
+                    name="alamat"
+                    value={alamat}
+                    onChange={(e) => setAlamat(e.target.value)}
+                    disabled={isNikFound === null || isNikFound === true}
+                    required
+                    rows={2}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
+                    placeholder="Masukkan alamat lengkap Anda sesuai KTP"
                   />
                 </div>
 
@@ -506,14 +563,6 @@ export default function GuestPage() {
                       <label htmlFor="slikNikNpwp" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         2. NIK (Nomor Induk Kependudukan) / NPWP (Apabila Badan Usaha) <span className="text-[#DA251C]">*</span>
                       </label>
-                      <div className="flex items-center gap-2 mb-2">
-                        <input type="checkbox" id="useMainNikSlik" checked={useMainNikSlik} onChange={(e) => {
-                          setUseMainNikSlik(e.target.checked);
-                          if (e.target.checked) setSlikNikNpwp(nik);
-                          else setSlikNikNpwp("");
-                        }} className="rounded border-slate-300 text-[#DA251C] focus:ring-[#DA251C] w-4 h-4 cursor-pointer" />
-                        <label htmlFor="useMainNikSlik" className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer">Sama dengan NIK utama</label>
-                      </div>
                       <input
                         type="text"
                         id="slikNikNpwp"
@@ -522,7 +571,8 @@ export default function GuestPage() {
                         onChange={(e) => setSlikNikNpwp(e.target.value.replace(/\D/g, '').slice(0, 16))}
                         maxLength={16}
                         required={jenis === "slik"}
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
+                        readOnly={jenisDebitur === "Perseorangan"}
+                        className={`w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all ${jenisDebitur === "Perseorangan" ? "bg-slate-100 dark:bg-slate-900 text-slate-500" : "bg-white dark:bg-slate-800"}`}
                         placeholder="Masukkan NIK atau NPWP"
                       />
                     </div>

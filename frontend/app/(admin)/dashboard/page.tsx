@@ -105,13 +105,8 @@ export default function DashboardPage() {
       }
       setUser(parsed);
 
-      const unsubscribe = onSnapshot(collection(db, 'pelayanan'), (snapshot) => {
-        const list = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setPelayananList(list);
-        setIsLoading(false);
+      const unsubscribe = onSnapshot(collection(db, 'pelayanan'), () => {
+        fetchPelayanan();
       }, (error) => {
         console.error("Realtime fetch error:", error);
         fetchPelayanan();

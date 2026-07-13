@@ -21,15 +21,15 @@ export default function HistoryPage() {
 
   const handleUpdateStatus = async (statusId: string, newStatus: string, isSaveRegister: boolean = false) => {
     setIsUpdatingStatus(true);
-    
+
     const bodyPayload: any = { status: newStatus };
     if (newStatus !== 'Antre' && user) {
-      bodyPayload.processedBy = { 
-        nip: user.nip || user.email || 'unknown', 
-        nama: user.nama || user.email || 'Unknown User' 
+      bodyPayload.processedBy = {
+        nip: user.nip || user.email || 'unknown',
+        nama: user.nama || user.email || 'Unknown User'
       };
     }
-    
+
     if (selectedDetail?.nomorRegister !== undefined && (newStatus === 'Diproses' || newStatus === 'Selesai')) {
       bodyPayload.nomorRegister = selectedDetail.nomorRegister;
     }
@@ -99,7 +99,7 @@ export default function HistoryPage() {
     .filter(p => p.status === 'Selesai' || p.status === 'Batal')
     .filter(p => {
       const matchesSearch = (p.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (p.nik || '').toLowerCase().includes(searchQuery.toLowerCase());
+        (p.nik || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesJenis = filterJenis ? p.jenis === filterJenis : true;
       return matchesSearch && matchesJenis;
     })
@@ -182,10 +182,10 @@ export default function HistoryPage() {
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Riwayat Pelayanan");
-    
+
     // Auto-size columns slightly
     const columnWidths = [
-      { wch: 5 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, 
+      { wch: 5 }, { wch: 15 }, { wch: 20 }, { wch: 25 },
       { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 25 }
     ];
     worksheet['!cols'] = columnWidths;
@@ -205,6 +205,12 @@ export default function HistoryPage() {
     );
   }
 
+  const handleCopy = (text: string, label: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    messageApi.success(`${label} berhasil disalin!`);
+  };
+
   return (
     <>
       {contextHolder}
@@ -214,17 +220,17 @@ export default function HistoryPage() {
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Riwayat Pelayanan Selesai</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">Lihat data antrean yang sudah selesai atau batal diproses.</p>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={fetchPelayanan}
               className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
               Refresh Data
             </button>
-            
-            <button 
+
+            <button
               onClick={handleExportExcel}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
             >
@@ -238,9 +244,9 @@ export default function HistoryPage() {
           <div className="flex w-full md:w-1/2 gap-2">
             <div className="relative flex-1">
               <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              <input 
-                type="text" 
-                placeholder="Cari nama atau NIK nasabah..." 
+              <input
+                type="text"
+                placeholder="Cari nama atau NIK nasabah..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -300,8 +306,8 @@ export default function HistoryPage() {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
               <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors group"
                     onClick={() => {
                       setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
@@ -329,8 +335,8 @@ export default function HistoryPage() {
               <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-200 dark:divide-slate-800">
                 {paginatedList.length > 0 ? (
                   paginatedList.map((item) => (
-                    <tr 
-                      key={item.id} 
+                    <tr
+                      key={item.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-[#DA251C] dark:text-red-400">{item.queueNumber}</td>
@@ -339,11 +345,11 @@ export default function HistoryPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">{item.nama}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">{item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 capitalize">
                         {item.processedBy ? item.processedBy.nama : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button 
+                        <button
                           onClick={() => setSelectedDetail(item)}
                           className={`px-3 py-1.5 inline-flex items-center gap-1.5 text-xs font-bold rounded-full border transition-all cursor-pointer shadow-sm hover:shadow active:scale-95 ${getStatusColor(item.status || 'Antre')} hover:opacity-80`}
                           title="Lihat Detail & Ubah Status"
@@ -384,16 +390,15 @@ export default function HistoryPage() {
                 >
                   Sebelumnya
                 </button>
-                
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center transition-colors cursor-pointer ${
-                      currentPage === page
-                        ? 'bg-[#DA251C] text-white shadow-sm'
-                        : 'border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center transition-colors cursor-pointer ${currentPage === page
+                      ? 'bg-[#DA251C] text-white shadow-sm'
+                      : 'border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                   >
                     {page}
                   </button>
@@ -415,7 +420,7 @@ export default function HistoryPage() {
       {/* Modal Detail & Ubah Status */}
       {selectedDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8">
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Detail Pelayanan</h2>
@@ -441,7 +446,7 @@ export default function HistoryPage() {
                     {selectedDetail.status || 'Antre'}
                   </span>
                   {selectedDetail.processedBy && selectedDetail.status !== 'Antre' && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">Diproses Oleh: {selectedDetail.processedBy.nama}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium capitalize">Diproses Oleh: {selectedDetail.processedBy.nama}</p>
                   )}
                 </div>
               </div>
@@ -451,16 +456,48 @@ export default function HistoryPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                   <div>
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">NIK</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nik}</p>
+                    <div className="flex items-center gap-2 group">
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nik}</p>
+                      {selectedDetail.nik && (
+                        <button onClick={() => handleCopy(selectedDetail.nik, 'NIK')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">No. HP / WhatsApp</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.phone || '-'}</p>
+                    <div className="flex items-center gap-2 group">
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.phone || '-'}</p>
+                      {selectedDetail.phone && (
+                        <button onClick={() => handleCopy(selectedDetail.phone, 'Nomor HP')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama Lengkap</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nama}</p>
+                    <div className="flex items-center gap-2 group">
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nama}</p>
+                      {selectedDetail.nama && (
+                        <button onClick={() => handleCopy(selectedDetail.nama, 'Nama')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {selectedDetail.alamat && (
+                    <div className="md:col-span-2">
+                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Alamat Lengkap</p>
+                      <div className="flex items-center gap-2 group">
+                        <p className="font-medium text-slate-900 dark:text-slate-100 text-sm whitespace-pre-wrap">{selectedDetail.alamat}</p>
+                        <button onClick={() => handleCopy(selectedDetail.alamat, 'Alamat')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="md:col-span-2">
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Jenis Pelayanan</p>
                     <p className="font-medium text-slate-900 dark:text-slate-100 text-sm capitalize">
@@ -479,9 +516,27 @@ export default function HistoryPage() {
                       <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.jenisDebitur || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">NIK / NPWP Debitur</p>
-                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.slikNikNpwp || '-'}</p>
+                      <p className="text-[11px] font-semibold text-[#DA251C] dark:text-red-400 uppercase tracking-wider mb-1">NIK / NPWP Debitur</p>
+                      <div className="flex items-center gap-2 group">
+                        <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.slikNikNpwp || '-'}</p>
+                        {selectedDetail.slikNikNpwp && (
+                          <button onClick={() => handleCopy(selectedDetail.slikNikNpwp, 'NIK/NPWP')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {selectedDetail.email && (
+                      <div className="md:col-span-2">
+                        <p className="text-[11px] font-semibold text-[#DA251C] dark:text-red-400 uppercase tracking-wider mb-1">Email Aktif</p>
+                        <div className="flex items-center gap-2 group">
+                          <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.email}</p>
+                          <button onClick={() => handleCopy(selectedDetail.email, 'Email')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -546,7 +601,7 @@ export default function HistoryPage() {
                 ) : (
                   <>
                     <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider mb-3">Tindakan & Ubah Status</h3>
-                    
+
                     {selectedDetail.status === 'Diproses' && (
                       <div className="mb-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                         <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
@@ -575,7 +630,7 @@ export default function HistoryPage() {
                       {['Antre', 'Diproses', 'Selesai', 'Batal'].map(status => {
                         const isThisStatusActive = selectedDetail.status === status || (!selectedDetail.status && status === 'Antre');
                         let isDisabled = isUpdatingStatus;
-                        
+
                         if (selectedDetail.status === 'Selesai' && (status === 'Antre' || status === 'Diproses')) {
                           isDisabled = true;
                         }
@@ -585,11 +640,10 @@ export default function HistoryPage() {
                             key={status}
                             disabled={isDisabled}
                             onClick={() => handleUpdateStatus(selectedDetail.id, status)}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${
-                              isThisStatusActive
-                                ? 'bg-[#DA251C] text-white shadow-md'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                            }`}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${isThisStatusActive
+                              ? 'bg-[#DA251C] text-white shadow-md'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                              }`}
                           >
                             {status}
                           </button>

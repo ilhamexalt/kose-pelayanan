@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
+
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
-import { encrypt, maskData } from '@/lib/crypto';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit, where } from 'firebase/firestore';
+import { encrypt, maskData, decrypt } from '@/lib/crypto';
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
     const { 
-      nik, nama, phone, jenis, 
+      nik, nama, alamat, phone, jenis, 
       instansi, keperluan, bertemu, keterangan, 
       jenisDebitur, slikNikNpwp, email,
       pengaduanNik, klasifikasi, sektor, perusahaan, produk, permasalahan, ringkasan 
     } = data;
 
-    if (!nik || !nama || !phone || !jenis) {
+    if (!nik || !nama || !alamat || !phone || !jenis) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
@@ -53,12 +56,19 @@ export async function POST(request: Request) {
     else if (jenis === 'pengaduan') prefix = 'B';
     else if (jenis === 'umum') prefix = 'C';
 
-    const snapshot = await getDocs(pelayananRef);
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const q = query(pelayananRef, where('createdAt', '>=', startOfDay));
+    const snapshot = await getDocs(q);
     let maxNum = 0;
+    
     snapshot.forEach((doc) => {
       const d = doc.data();
-      if (d.queueNumber && typeof d.queueNumber === 'string') {
-        const qn = d.queueNumber.trim().toUpperCase();
+      const rawQueueNumber = d.queueNumber_raw || d.queueNumber; // Fallback for old data
+      
+      if (rawQueueNumber && typeof rawQueueNumber === 'string') {
+        const qn = rawQueueNumber.trim().toUpperCase();
         if (qn.startsWith(`${prefix}-`) || (qn.startsWith(prefix) && /^[A-Z]\d+$/.test(qn))) {
           const numStr = qn.replace(/^[A-Z]-?/, '');
           const numPart = parseInt(numStr, 10);
@@ -76,13 +86,15 @@ export async function POST(request: Request) {
       nik: maskData(nik, 'nik'),
       nik_encrypted: encrypt(nik),
       nama,
+      alamat: maskData(alamat, 'alamat'),
+      alamat_encrypted: encrypt(alamat),
       phone: maskData(phone, 'phone'),
       phone_encrypted: encrypt(phone),
       jenis,
       queueNumber: maskData(queueNumber, 'register'),
       queueNumber_encrypted: encrypt(queueNumber),
       queueNumber_raw: queueNumber, // keeping raw for logic if needed, but masking display
-      status: 'Antre',
+      status: jenis === 'umum' ? 'Selesai' : 'Antre',
       createdAt: serverTimestamp(),
     };
 
@@ -91,16 +103,19 @@ export async function POST(request: Request) {
       payload.keperluan = keperluan;
       payload.bertemu = bertemu;
       payload.keterangan = keterangan;
+      payload.processedBy = { nip: 'sistem', nama: 'Sistem' };
     }
 
     if (jenis === 'slik') {
       payload.jenisDebitur = jenisDebitur;
-      payload.slikNikNpwp = slikNikNpwp;
+      payload.slikNikNpwp = maskData(slikNikNpwp, 'nik');
+      payload.slikNikNpwp_encrypted = encrypt(slikNikNpwp);
       payload.email = email;
     }
 
     if (jenis === 'pengaduan') {
-      payload.pengaduanNik = pengaduanNik;
+      payload.pengaduanNik = maskData(pengaduanNik, 'nik');
+      payload.pengaduanNik_encrypted = encrypt(pengaduanNik);
       payload.klasifikasi = klasifikasi;
       payload.sektor = Array.isArray(sektor) ? sektor.join(', ') : (sektor || '');
       payload.perusahaan = perusahaan;
@@ -126,6 +141,14 @@ export async function GET() {
 
     const dataArray = snapshot.docs.map(doc => {
       const data = doc.data();
+      
+      if (data.nik_encrypted) data.nik = decrypt(data.nik_encrypted);
+      if (data.phone_encrypted) data.phone = decrypt(data.phone_encrypted);
+      if (data.alamat_encrypted) data.alamat = decrypt(data.alamat_encrypted);
+      if (data.queueNumber_encrypted) data.queueNumber = decrypt(data.queueNumber_encrypted);
+      if (data.slikNikNpwp_encrypted) data.slikNikNpwp = decrypt(data.slikNikNpwp_encrypted);
+      if (data.pengaduanNik_encrypted) data.pengaduanNik = decrypt(data.pengaduanNik_encrypted);
+
       return {
         id: doc.id,
         ...data,

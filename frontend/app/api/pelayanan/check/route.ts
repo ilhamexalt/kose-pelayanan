@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, limit } from 'firebase/firestore';
+import { maskData, decrypt } from '@/lib/crypto';
 
 export async function GET(request: Request) {
   try {
@@ -11,8 +12,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'NIK harus terdiri dari 16 digit angka' }, { status: 400 });
     }
 
+    const maskedNik = maskData(nik, 'nik');
+
     const pelayananRef = collection(db, 'pelayanan');
-    const q = query(pelayananRef, where('nik', '==', nik), limit(1));
+    const q = query(pelayananRef, where('nik', '==', maskedNik), limit(1));
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
@@ -22,7 +25,8 @@ export async function GET(request: Request) {
         found: true, 
         data: {
           nama: data.nama,
-          phone: data.phone
+          phone: data.phone_encrypted ? decrypt(data.phone_encrypted) : data.phone,
+          alamat: data.alamat || ""
         } 
       });
     }

@@ -104,13 +104,9 @@ export default function DashboardPage() {
       }
       setUser(parsed);
 
-      const unsubscribe = onSnapshot(collection(db, 'pelayanan'), (snapshot) => {
-        const list = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setPelayananList(list);
-        setIsLoading(false);
+      const unsubscribe = onSnapshot(collection(db, 'pelayanan'), () => {
+        // Fetch decrypted data from the secure server API instead of using raw encrypted client data
+        fetchPelayanan();
       }, (error) => {
         console.error("Realtime fetch error:", error);
         fetchPelayanan();
@@ -192,6 +188,12 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const handleCopy = (text: string, label: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    messageApi.success(`${label} berhasil disalin!`);
+  };
 
   return (
     <>
@@ -401,7 +403,7 @@ export default function DashboardPage() {
       {/* Modal Detail & Ubah Status */}
       {selectedDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8">
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Detail Pelayanan</h2>
@@ -437,16 +439,48 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                   <div>
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">NIK</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nik}</p>
+                    <div className="flex items-center gap-2 group">
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nik}</p>
+                      {selectedDetail.nik && (
+                        <button onClick={() => handleCopy(selectedDetail.nik, 'NIK')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">No. HP / WhatsApp</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.phone || '-'}</p>
+                    <div className="flex items-center gap-2 group">
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.phone || '-'}</p>
+                      {selectedDetail.phone && (
+                        <button onClick={() => handleCopy(selectedDetail.phone, 'Nomor HP')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama Lengkap</p>
-                    <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nama}</p>
+                    <div className="flex items-center gap-2 group">
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nama}</p>
+                      {selectedDetail.nama && (
+                        <button onClick={() => handleCopy(selectedDetail.nama, 'Nama')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {selectedDetail.alamat && (
+                    <div className="md:col-span-2">
+                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Alamat Lengkap</p>
+                      <div className="flex items-center gap-2 group">
+                        <p className="font-medium text-slate-900 dark:text-slate-100 text-sm whitespace-pre-wrap">{selectedDetail.alamat}</p>
+                        <button onClick={() => handleCopy(selectedDetail.alamat, 'Alamat')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="md:col-span-2">
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Jenis Pelayanan</p>
                     <p className="font-medium text-slate-900 dark:text-slate-100 text-sm capitalize">
@@ -465,9 +499,27 @@ export default function DashboardPage() {
                       <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.jenisDebitur || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">NIK / NPWP Debitur</p>
-                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.slikNikNpwp || '-'}</p>
+                      <p className="text-[11px] font-semibold text-[#DA251C] dark:text-red-400 uppercase tracking-wider mb-1">NIK / NPWP Debitur</p>
+                      <div className="flex items-center gap-2 group">
+                        <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.slikNikNpwp || '-'}</p>
+                        {selectedDetail.slikNikNpwp && (
+                          <button onClick={() => handleCopy(selectedDetail.slikNikNpwp, 'NIK/NPWP')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {selectedDetail.email && (
+                      <div className="md:col-span-2">
+                        <p className="text-[11px] font-semibold text-[#DA251C] dark:text-red-400 uppercase tracking-wider mb-1">Email Aktif</p>
+                        <div className="flex items-center gap-2 group">
+                          <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.email}</p>
+                          <button onClick={() => handleCopy(selectedDetail.email, 'Email')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

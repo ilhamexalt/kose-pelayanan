@@ -45,7 +45,7 @@ export function decrypt(text: string): string {
 /**
  * Menyamarkan (masking) sebagian karakter untuk ditampilkan di UI
  */
-export function maskData(text: string, type: 'nik' | 'phone' | 'register'): string {
+export function maskData(text: string, type: 'nik' | 'phone' | 'register' | 'alamat'): string {
   if (!text) return text;
   
   if (type === 'nik') {
@@ -62,6 +62,10 @@ export function maskData(text: string, type: 'nik' | 'phone' | 'register'): stri
     // Tampilkan awal dan akhir antrean: A-***
     if (text.length >= 4) {
       return text.substring(0, 2) + '*'.repeat(text.length - 3) + text.substring(text.length - 1);
+    }
+  } else if (type === 'alamat') {
+    if (text.length > 5) {
+      return text.substring(0, 5) + '*'.repeat(Math.min(text.length - 5, 10)) + '...';
     }
   }
   
