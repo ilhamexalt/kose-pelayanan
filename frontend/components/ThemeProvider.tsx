@@ -55,6 +55,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
           token: {
             colorPrimary: "#DA251C",
             fontSize: 12,
+            fontFamily: "var(--font-montserrat), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
           },
         }}
       >

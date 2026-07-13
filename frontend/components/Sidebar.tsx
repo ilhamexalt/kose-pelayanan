@@ -72,8 +72,14 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         const jsonMenu = await resMenu.json();
         if (jsonMenu.success) {
           const rawMenus: Menu[] = jsonMenu.data;
-          const parents = rawMenus.filter(m => !m.parent_id).sort((a, b) => a.nama.localeCompare(b.nama));
-          const children = rawMenus.filter(m => m.parent_id).sort((a, b) => a.nama.localeCompare(b.nama));
+          const sortMenus = (a: any, b: any) => {
+            const orderA = a.urutan || 0;
+            const orderB = b.urutan || 0;
+            if (orderA !== orderB) return orderA - orderB;
+            return (a.nama || '').localeCompare(b.nama || '');
+          };
+          const parents = rawMenus.filter(m => !m.parent_id).sort(sortMenus);
+          const children = rawMenus.filter(m => m.parent_id).sort(sortMenus);
 
           menusData = parents.map(parent => ({
             ...parent,

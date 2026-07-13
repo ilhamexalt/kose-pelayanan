@@ -18,6 +18,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     if (body.url !== undefined) updateData.url = String(body.url).trim();
     if (body.is_parent !== undefined) updateData.is_parent = Boolean(body.is_parent);
     if (body.parent_id !== undefined) updateData.parent_id = body.parent_id ? String(body.parent_id) : null;
+    if (body.urutan !== undefined) updateData.urutan = Number(body.urutan) || 0;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ success: false, error: 'Tidak ada data yang diubah' }, { status: 400 });

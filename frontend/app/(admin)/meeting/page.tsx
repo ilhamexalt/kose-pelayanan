@@ -196,7 +196,7 @@ export default function MeetingPage() {
         {/* Header Section */}
         <div className="flex flex-col mb-6 gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
-            Jadwal Meeting,
+            Jadwal Meeting
           </h1>
 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

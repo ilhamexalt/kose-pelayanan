@@ -35,17 +35,17 @@ export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  
+
   const [pelayananList, setPelayananList] = useState<Pelayanan[]>([]);
   const [meetingList, setMeetingList] = useState<Meeting[]>([]);
-  
+
   const [isLoadingPelayanan, setIsLoadingPelayanan] = useState(true);
   const [isLoadingMeeting, setIsLoadingMeeting] = useState(true);
 
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
 
   const isAdminOrPramusaji = user && (
-    String(user.nip).toLowerCase() === 'admin' || 
+    String(user.nip).toLowerCase() === 'admin' ||
     String(user.role).toLowerCase() === 'admin' ||
     String(user.role).toLowerCase() === 'pramusaji'
   );
@@ -115,7 +115,7 @@ export default function DashboardPage() {
   }
 
   const todayStr = dayjs().format('YYYY-MM-DD');
-  
+
   // Hitung Data Antrean Hari Ini
   const todayPelayanan = pelayananList.filter(p => {
     const pDate = dayjs(p.createdAt).format('YYYY-MM-DD');
@@ -142,7 +142,7 @@ export default function DashboardPage() {
     <>
       {contextHolder}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-[70vh] space-y-8 font-sans">
-        
+
         {/* Header */}
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
@@ -159,9 +159,9 @@ export default function DashboardPage() {
             <svg className="w-5 h-5 text-[#DA251C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Total Antrean Hari Ini</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            
+
             {/* Total Card */}
             <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-transform hover:-translate-y-1 group">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -223,7 +223,7 @@ export default function DashboardPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] overflow-visible">
             {isLoadingMeeting ? (
               <div className="p-12 flex flex-col items-center justify-center text-slate-400">
-                 <svg className="animate-spin h-8 w-8 text-[#DA251C] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-8 w-8 text-[#DA251C] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -241,10 +241,10 @@ export default function DashboardPage() {
                   const totalPeserta = calculateTotalPeserta(meeting.pesertaInternal, meeting.pesertaEksternal);
                   const isPast = meeting.waktuSelesai && meeting.waktuSelesai < dayjs().format('HH:mm');
                   const isOngoing = meeting.waktuMulai <= dayjs().format('HH:mm') && meeting.waktuSelesai >= dayjs().format('HH:mm');
-                  
+
                   return (
-                    <div 
-                      key={meeting.id} 
+                    <div
+                      key={meeting.id}
                       className={`p-6 border-slate-100 dark:border-slate-800/50 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50
                         ${index % 3 !== 2 ? 'lg:border-r' : ''} 
                         ${index % 2 !== 1 ? 'md:border-r lg:border-r-0' : ''}
@@ -253,20 +253,20 @@ export default function DashboardPage() {
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
-                           <div className="p-2.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl text-[#DA251C] dark:text-rose-400">
+                          <div className="p-2.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl text-[#DA251C] dark:text-rose-400">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                           </div>
-                           <div>
-                              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{meeting.ruangan}</h3>
-                              <p className="text-xs text-slate-500 font-medium mt-0.5">Instansi: <span className="font-semibold text-slate-700 dark:text-slate-300">{meeting.instansi || '-'}</span></p>
-                           </div>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{meeting.ruangan}</h3>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">Instansi: <span className="font-semibold text-slate-700 dark:text-slate-300">{meeting.instansi || '-'}</span></p>
+                          </div>
                         </div>
                         {isOngoing ? (
                           <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/50 shadow-sm animate-pulse">
                             Sedang Berlangsung
                           </span>
                         ) : isPast ? (
-                           <span className="px-3 py-1.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-slate-200 dark:border-slate-700 shadow-sm">
+                          <span className="px-3 py-1.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-slate-200 dark:border-slate-700 shadow-sm">
                             Selesai
                           </span>
                         ) : (
@@ -286,44 +286,44 @@ export default function DashboardPage() {
                           <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                         </div>
                         <div className="flex-1 group/tooltip relative">
-                           <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                             Total <span className="font-bold text-[#DA251C] dark:text-red-400">{totalPeserta}</span> Peserta
-                           </p>
-                           <p className="text-xs text-slate-500 mt-1 cursor-help underline decoration-dashed decoration-slate-300 underline-offset-2 w-max hover:text-slate-800 transition-colors">
-                             Lihat Rincian
-                           </p>
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Total <span className="font-bold text-[#DA251C] dark:text-red-400">{totalPeserta}</span> Peserta
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1 cursor-help underline decoration-dashed decoration-slate-300 underline-offset-2 w-max hover:text-slate-800 transition-colors">
+                            Lihat Rincian
+                          </p>
 
-                           {/* Tooltip Content - Hover Effect */}
-                           <div className="absolute left-0 bottom-full mb-3 w-64 p-4 bg-slate-800 dark:bg-slate-700 text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 translate-y-2 group-hover/tooltip:translate-y-0 pointer-events-none border border-slate-700">
-                             <div className="mb-3 pb-3 border-b border-slate-600">
-                               <p className="font-bold text-slate-200 mb-2">Peserta Internal:</p>
-                               {meeting.pesertaInternal && meeting.pesertaInternal.length > 0 ? (
-                                 <ul className="list-disc pl-4 space-y-1">
-                                   {meeting.pesertaInternal.map((p, i) => (
-                                     <li key={i}><span className="text-slate-300">{p.jabatan}</span> ({p.jumlah} org)</li>
-                                   ))}
-                                 </ul>
-                               ) : <p className="text-slate-400 italic">Tidak ada</p>}
-                             </div>
-                             <div>
-                               <p className="font-bold text-slate-200 mb-2">Peserta Eksternal:</p>
-                               {meeting.pesertaEksternal && meeting.pesertaEksternal.length > 0 ? (
-                                 <ul className="list-disc pl-4 space-y-1">
-                                   {meeting.pesertaEksternal.map((p, i) => (
-                                     <li key={i}><span className="text-slate-300">{p.jabatan}</span> ({p.jumlah} org)</li>
-                                   ))}
-                                 </ul>
-                               ) : <p className="text-slate-400 italic">Tidak ada</p>}
-                             </div>
-                             <div className="absolute w-3 h-3 bg-slate-800 dark:bg-slate-700 rotate-45 -bottom-1.5 left-6 border-b border-r border-slate-700"></div>
-                           </div>
+                          {/* Tooltip Content - Hover Effect */}
+                          <div className="absolute left-0 bottom-full mb-3 w-64 p-4 bg-slate-800 dark:bg-slate-700 text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 translate-y-2 group-hover/tooltip:translate-y-0 pointer-events-none border border-slate-700">
+                            <div className="mb-3 pb-3 border-b border-slate-600">
+                              <p className="font-bold text-slate-200 mb-2">Peserta Internal:</p>
+                              {meeting.pesertaInternal && meeting.pesertaInternal.length > 0 ? (
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {meeting.pesertaInternal.map((p, i) => (
+                                    <li key={i}><span className="text-slate-300 capitalize">{p.jabatan}</span> ({p.jumlah} org)</li>
+                                  ))}
+                                </ul>
+                              ) : <p className="text-slate-400 italic">Tidak ada</p>}
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-200 mb-2">Peserta Eksternal:</p>
+                              {meeting.pesertaEksternal && meeting.pesertaEksternal.length > 0 ? (
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {meeting.pesertaEksternal.map((p, i) => (
+                                    <li key={i}><span className="text-slate-300 capitalize">{p.jabatan}</span> ({p.jumlah} org)</li>
+                                  ))}
+                                </ul>
+                              ) : <p className="text-slate-400 italic">Tidak ada</p>}
+                            </div>
+                            <div className="absolute w-3 h-3 bg-slate-800 dark:bg-slate-700 rotate-45 -bottom-1.5 left-6 border-b border-r border-slate-700"></div>
+                          </div>
                         </div>
                       </div>
 
                       {/* Tombol Detail Konsumsi untuk Pramusaji / Admin */}
                       {isAdminOrPramusaji && (
                         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                          <button 
+                          <button
                             onClick={() => setSelectedMeeting(meeting)}
                             className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#DA251C] bg-rose-50 hover:bg-rose-100 dark:text-rose-400 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 rounded-lg transition-colors border border-rose-100 dark:border-rose-900/50"
                           >
@@ -354,7 +354,7 @@ export default function DashboardPage() {
         open={!!selectedMeeting}
         onCancel={() => setSelectedMeeting(null)}
         footer={
-          <button 
+          <button
             onClick={() => setSelectedMeeting(null)}
             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
           >
@@ -366,7 +366,7 @@ export default function DashboardPage() {
       >
         {selectedMeeting && (
           <div className="mt-4 space-y-4 font-sans text-slate-700 dark:text-slate-300">
-            
+
             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
               <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">{selectedMeeting.ruangan}</h4>
               <p className="text-sm"><span className="font-semibold">Instansi:</span> {selectedMeeting.instansi || '-'}</p>

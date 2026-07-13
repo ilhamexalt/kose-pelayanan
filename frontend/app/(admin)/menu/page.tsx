@@ -29,12 +29,12 @@ export default function MenuPage() {
 
   // Modal Create
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ nama: '', url: '', is_parent: false, parent_id: '' });
+  const [createForm, setCreateForm] = useState({ nama: '', url: '', is_parent: false, parent_id: '', urutan: 0 });
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
 
   // Modal Edit
   const [selectedEditMenu, setSelectedEditMenu] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ nama: '', url: '', is_parent: false, parent_id: '' });
+  const [editForm, setEditForm] = useState({ nama: '', url: '', is_parent: false, parent_id: '', urutan: 0 });
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export default function MenuPage() {
       if (json.success) {
         messageApi.success("Menu berhasil ditambahkan");
         setIsCreateModalOpen(false);
-        setCreateForm({ nama: '', url: '', is_parent: false, parent_id: '' });
+        setCreateForm({ nama: '', url: '', is_parent: false, parent_id: '', urutan: 0 });
         fetchMenu();
       } else {
         messageApi.error(json.error || "Gagal menambahkan menu");
@@ -119,7 +119,8 @@ export default function MenuPage() {
       nama: menuItem.nama || '',
       url: menuItem.url || '',
       is_parent: !!menuItem.is_parent,
-      parent_id: menuItem.parent_id || ''
+      parent_id: menuItem.parent_id || '',
+      urutan: menuItem.urutan || 0
     });
   };
 
@@ -214,11 +215,16 @@ export default function MenuPage() {
       (m.url || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchQuery;
   }).sort((a, b) => {
+    const orderA = a.urutan || 0;
+    const orderB = b.urutan || 0;
     const nameA = (a.nama || '').toLowerCase();
     const nameB = (b.nama || '').toLowerCase();
+    
     if (sortOrder === 'asc') {
+      if (orderA !== orderB) return orderA - orderB;
       return nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
     } else {
+      if (orderA !== orderB) return orderB - orderA;
       return nameA > nameB ? -1 : (nameA < nameB ? 1 : 0);
     }
   });
@@ -365,6 +371,7 @@ export default function MenuPage() {
                   <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">No</th>
                   <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama Menu</th>
                   <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">URL</th>
+                  <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Urutan</th>
                   <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tipe Menu</th>
                   <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
                 </tr>
@@ -386,6 +393,7 @@ export default function MenuPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-slate-100">{capitalizeWords(item.nama)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.url}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-slate-900 dark:text-slate-100">{item.urutan || 0}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                           {item.is_parent ? (
                             <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800 border">Parent</span>
@@ -527,6 +535,15 @@ export default function MenuPage() {
                   </select>
                 </div>
               )}
+              <div>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Urutan (Opsional)</label>
+                <input
+                  type="number"
+                  value={createForm.urutan} onChange={e => setCreateForm({ ...createForm, urutan: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  placeholder="0"
+                />
+              </div>
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
                 <button type="submit" disabled={isSubmittingCreate} className="px-4 py-2 bg-[#DA251C] hover:bg-red-700 text-white rounded-lg text-sm font-medium cursor-pointer disabled:opacity-50">{isSubmittingCreate ? 'Menyimpan...' : 'Simpan'}</button>
@@ -587,6 +604,15 @@ export default function MenuPage() {
                   </select>
                 </div>
               )}
+              <div>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Urutan (Opsional)</label>
+                <input
+                  type="number"
+                  value={editForm.urutan} onChange={e => setEditForm({ ...editForm, urutan: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  placeholder="0"
+                />
+              </div>
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={() => setSelectedEditMenu(null)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
                 <button type="submit" disabled={isSubmittingEdit} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium cursor-pointer disabled:opacity-50">{isSubmittingEdit ? 'Menyimpan...' : 'Update'}</button>

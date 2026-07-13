@@ -44,7 +44,10 @@ export default function HistoryPage() {
       const json = await res.json();
       if (json.success) {
         if (isSaveRegister) {
-          messageApi.success('Nomor register berhasil disimpan');
+          messageApi.success('Data berhasil disimpan');
+          setPelayananList((prev: any[]) => prev.map(p =>
+            p.id === statusId ? { ...p, nomorRegister: selectedDetail.nomorRegister, catatan: selectedDetail.catatan } : p
+          ));
         } else {
           messageApi.success(`Status antrean diperbarui menjadi ${newStatus}`);
         }
@@ -231,13 +234,13 @@ export default function HistoryPage() {
               Refresh Data
             </button>
 
-            <button
+            {/* <button
               onClick={handleExportExcel}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               Export Excel
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -420,11 +423,11 @@ export default function HistoryPage() {
 
       {/* Modal Detail & Ubah Status */}
       {selectedDetail && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto"
           onClick={() => setSelectedDetail(null)}
         >
-          <div 
+          <div
             className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 border border-slate-100 dark:border-slate-800 my-8"
             onClick={(e) => e.stopPropagation()}
           >
@@ -453,7 +456,7 @@ export default function HistoryPage() {
                     {selectedDetail.status || 'Antre'}
                   </span>
                   {selectedDetail.processedBy && selectedDetail.status !== 'Antre' && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium capitalize">Diproses Oleh: {selectedDetail.processedBy.nama}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium capitalize">Diproses Oleh: <span className="font-bold capitalize">{selectedDetail.processedBy.nama}</span></p>
                   )}
                 </div>
               </div>
@@ -640,6 +643,10 @@ export default function HistoryPage() {
 
                         if (selectedDetail.status === 'Selesai' && (status === 'Antre' || status === 'Diproses')) {
                           isDisabled = true;
+                        }
+
+                        if (status === 'Selesai') {
+                          isDisabled = isDisabled || selectedDetail.nomorRegister !== pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister || (selectedDetail.jenis?.toLowerCase() === 'slik' && !pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister?.trim());
                         }
 
                         return (

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { nama, url, is_parent, parent_id } = body;
+    const { nama, url, is_parent, parent_id, urutan } = body;
 
     if (!nama || !url) {
       return NextResponse.json({ success: false, error: 'Nama menu dan URL wajib diisi' }, { status: 400 });
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       url: String(url).trim(),
       is_parent: Boolean(is_parent),
       parent_id: parent_id ? String(parent_id) : null,
+      urutan: Number(urutan) || 0,
       created_at: now,
       created_by: adminUser,
       updated_at: now,
