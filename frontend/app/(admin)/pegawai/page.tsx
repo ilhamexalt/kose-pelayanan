@@ -35,7 +35,7 @@ export default function PegawaiPage() {
 
   // Modal Create
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ nip: '', nama: '', email: '', username: '', password: 'Kose2026@#', role: 'Pegawai' });
+  const [createForm, setCreateForm] = useState({ nip: '', nama: '', email: '', username: '', password: process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || '', role: 'Pegawai' });
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
 
   // Modal Edit
@@ -189,7 +189,7 @@ export default function PegawaiPage() {
       if (json.success) {
         messageApi.success("Pegawai berhasil ditambahkan");
         setIsCreateModalOpen(false);
-        setCreateForm({ nip: '', nama: '', email: '', username: '', password: 'Kose2026@#', role: 'Pegawai' });
+        setCreateForm({ nip: '', nama: '', email: '', username: '', password: process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || '', role: 'Pegawai' });
         fetchPegawai();
       } else {
         messageApi.error(json.error || "Gagal menambahkan pegawai");

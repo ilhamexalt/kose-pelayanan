@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Montserrat, Poppins } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/Footer";
@@ -17,8 +17,15 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "One Portal OJK - KOSE",
+  title: "One Portal - KOSE",
   description: "Portal antrean dan layanan konsumen Otoritas Jasa Keuangan",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
