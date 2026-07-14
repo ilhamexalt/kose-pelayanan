@@ -15,7 +15,7 @@ export default function LaporanPegawaiPage() {
 
   // Gunakan hooks permission khusus laporan, atau pakai /pegawai jika menginduk kesana
   // Di sini saya pakai '/laporan' agar seragam dengan laporan lainnya.
-  const { isReady, read } = usePermissions('/laporan/pegawai');
+  const { isReady, read, export: canExport, isAdmin } = usePermissions('/laporan/pegawai');
 
   const [pegawaiList, setPegawaiList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,10 +34,15 @@ export default function LaporanPegawaiPage() {
     } else {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      fetchPegawai(parsedUser);
-      fetchRoles(parsedUser);
     }
   }, []);
+
+  useEffect(() => {
+    if (isReady && user) {
+      fetchPegawai(user);
+      fetchRoles(user);
+    }
+  }, [isReady, user, read]);
 
   const getHeaders = (customUser?: any) => {
     const currentUser = customUser || user;
@@ -176,13 +181,15 @@ export default function LaporanPegawaiPage() {
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Laporan Data Pegawai</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">Rekapitulasi dan daftar seluruh pegawai yang terdaftar di sistem.</p>
           </div>
-          <button
-            onClick={handleExportExcel}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer border-none"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            Export ke Excel
-          </button>
+          {(isAdmin || canExport) && (
+            <button
+              onClick={handleExportExcel}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer border-none"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Export ke Excel
+            </button>
+          )}
         </div>
 
         {/* Filter & Search Bar */}

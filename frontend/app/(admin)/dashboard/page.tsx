@@ -33,6 +33,7 @@ interface Meeting {
 
 export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
+  const [modalApi, modalContextHolder] = Modal.useModal();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
@@ -130,6 +131,7 @@ export default function DashboardPage() {
   // Hitung Data Meeting Hari Ini
   const todayMeeting = meetingList
     .filter(m => m.tanggal === todayStr)
+    .filter(m => !(m.waktuSelesai && m.waktuSelesai < dayjs().format('HH:mm')))
     .sort((a, b) => a.waktuMulai.localeCompare(b.waktuMulai));
 
   const calculateTotalPeserta = (internal: Peserta[], eksternal: Peserta[]) => {
@@ -138,9 +140,43 @@ export default function DashboardPage() {
     return intTotal + eksTotal;
   };
 
+  const showPesertaDetails = (meeting: Meeting) => {
+    modalApi.info({
+      title: 'Rincian Peserta Meeting',
+      content: (
+        <div className="mt-4">
+          <div className="mb-3 pb-3 border-b border-slate-200 dark:border-slate-700">
+            <p className="font-bold text-slate-800 dark:text-slate-200 mb-2">Peserta Internal:</p>
+            {meeting.pesertaInternal && meeting.pesertaInternal.length > 0 ? (
+              <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-400">
+                {meeting.pesertaInternal.map((p, i) => (
+                  <li key={i}><span className="capitalize">{p.jabatan}</span> ({p.jumlah} org)</li>
+                ))}
+              </ul>
+            ) : <p className="text-slate-500 italic">Tidak ada</p>}
+          </div>
+          <div>
+            <p className="font-bold text-slate-800 dark:text-slate-200 mb-2">Peserta Eksternal:</p>
+            {meeting.pesertaEksternal && meeting.pesertaEksternal.length > 0 ? (
+              <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-400">
+                {meeting.pesertaEksternal.map((p, i) => (
+                  <li key={i}><span className="capitalize">{p.jabatan}</span> ({p.jumlah} org)</li>
+                ))}
+              </ul>
+            ) : <p className="text-slate-500 italic">Tidak ada</p>}
+          </div>
+        </div>
+      ),
+      mask: { closable: true },
+      okText: 'Tutup',
+      okButtonProps: { className: 'bg-[#DA251C] hover:bg-red-700 border-none' }
+    });
+  };
+
   return (
     <>
       {contextHolder}
+      {modalContextHolder}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-[70vh] space-y-8 font-sans">
 
         {/* Header */}
@@ -262,15 +298,15 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         {isOngoing ? (
-                          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/50 shadow-sm animate-pulse">
+                          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/50 shadow-sm animate-pulse whitespace-nowrap flex-shrink-0 text-center">
                             Sedang Berlangsung
                           </span>
                         ) : isPast ? (
-                          <span className="px-3 py-1.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-slate-200 dark:border-slate-700 shadow-sm">
+                          <span className="px-3 py-1.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-slate-200 dark:border-slate-700 shadow-sm whitespace-nowrap flex-shrink-0 text-center">
                             Selesai
                           </span>
                         ) : (
-                          <span className="px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-blue-200 dark:border-blue-800/50 shadow-sm">
+                          <span className="px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-blue-200 dark:border-blue-800/50 shadow-sm whitespace-nowrap flex-shrink-0 text-center">
                             Akan Datang
                           </span>
                         )}
@@ -285,38 +321,13 @@ export default function DashboardPage() {
                         <div className="flex-shrink-0 mt-0.5">
                           <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                         </div>
-                        <div className="flex-1 group/tooltip relative">
+                        <div className="flex-1 relative">
                           <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                             Total <span className="font-bold text-[#DA251C] dark:text-red-400">{totalPeserta}</span> Peserta
                           </p>
-                          <p className="text-xs text-slate-500 mt-1 cursor-help underline decoration-dashed decoration-slate-300 underline-offset-2 w-max hover:text-slate-800 transition-colors">
+                          <p onClick={() => showPesertaDetails(meeting)} className="text-xs text-slate-500 mt-1 cursor-pointer underline decoration-dashed decoration-slate-300 underline-offset-2 w-max hover:text-slate-800 transition-colors">
                             Lihat Rincian
                           </p>
-
-                          {/* Tooltip Content - Hover Effect */}
-                          <div className="absolute left-0 bottom-full mb-3 w-64 p-4 bg-slate-800 dark:bg-slate-700 text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 translate-y-2 group-hover/tooltip:translate-y-0 pointer-events-none border border-slate-700">
-                            <div className="mb-3 pb-3 border-b border-slate-600">
-                              <p className="font-bold text-slate-200 mb-2">Peserta Internal:</p>
-                              {meeting.pesertaInternal && meeting.pesertaInternal.length > 0 ? (
-                                <ul className="list-disc pl-4 space-y-1">
-                                  {meeting.pesertaInternal.map((p, i) => (
-                                    <li key={i}><span className="text-slate-300 capitalize">{p.jabatan}</span> ({p.jumlah} org)</li>
-                                  ))}
-                                </ul>
-                              ) : <p className="text-slate-400 italic">Tidak ada</p>}
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-200 mb-2">Peserta Eksternal:</p>
-                              {meeting.pesertaEksternal && meeting.pesertaEksternal.length > 0 ? (
-                                <ul className="list-disc pl-4 space-y-1">
-                                  {meeting.pesertaEksternal.map((p, i) => (
-                                    <li key={i}><span className="text-slate-300 capitalize">{p.jabatan}</span> ({p.jumlah} org)</li>
-                                  ))}
-                                </ul>
-                              ) : <p className="text-slate-400 italic">Tidak ada</p>}
-                            </div>
-                            <div className="absolute w-3 h-3 bg-slate-800 dark:bg-slate-700 rotate-45 -bottom-1.5 left-6 border-b border-r border-slate-700"></div>
-                          </div>
                         </div>
                       </div>
 

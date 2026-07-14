@@ -71,6 +71,7 @@ export default function HistoryPage() {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterJenis, setFilterJenis] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -99,18 +100,26 @@ export default function HistoryPage() {
     return d.toLocaleString('id-ID').replace(/\./g, ':');
   };
 
+  const getTimeValue = (val: any) => {
+    if (!val) return 0;
+    if (val.toDate && typeof val.toDate === 'function') return val.toDate().getTime();
+    if (val.seconds !== undefined) return val.seconds * 1000;
+    return new Date(val).getTime() || 0;
+  };
+
   const filteredAndSortedList = pelayananList
     .filter(p => p.status === 'Selesai' || p.status === 'Batal')
     .filter(p => {
       const matchesSearch = (p.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.nik || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesJenis = filterJenis ? p.jenis === filterJenis : true;
-      return matchesSearch && matchesJenis;
+      const matchesStatus = filterStatus ? p.status === filterStatus : true;
+      return matchesSearch && matchesJenis && matchesStatus;
     })
     .sort((a, b) => {
-      const numA = parseInt((a.queueNumber || '').replace(/\D/g, ''), 10) || 0;
-      const numB = parseInt((b.queueNumber || '').replace(/\D/g, ''), 10) || 0;
-      return sortOrder === 'asc' ? numA - numB : numB - numA;
+      const timeA = getTimeValue(a.createdAt);
+      const timeB = getTimeValue(b.createdAt);
+      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
     });
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / itemsPerPage));
@@ -285,22 +294,42 @@ export default function HistoryPage() {
               </button>
             )}
           </div>
-          <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-2">
-            <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Jenis Pelayanan:</label>
-            <div className="w-full sm:w-60">
-              <CustomSelect
-                value={filterJenis}
-                onChange={(val) => {
-                  setFilterJenis(val);
-                  setCurrentPage(1);
-                }}
-                options={[
-                  { value: "", label: "Semua" },
-                  { value: "slik", label: "SLIK" },
-                  { value: "pengaduan", label: "Pengaduan" },
-                  { value: "umum", label: "Kunjungan Umum/Kedinasan" },
-                ]}
-              />
+          <div className="w-full md:w-auto flex flex-col sm:flex-row items-start sm:items-center justify-between md:justify-end gap-4">
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Status:</label>
+              <div className="w-full sm:w-32 shrink-0">
+                <CustomSelect
+                  value={filterStatus}
+                  onChange={(val) => {
+                    setFilterStatus(val);
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: "", label: "Semua" },
+                    { value: "Selesai", label: "Selesai" },
+                    { value: "Batal", label: "Batal" },
+                  ]}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Jenis Layanan:</label>
+              <div className="w-full sm:w-56 shrink-0">
+                <CustomSelect
+                  value={filterJenis}
+                  onChange={(val) => {
+                    setFilterJenis(val);
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: "", label: "Semua" },
+                    { value: "slik", label: "SLIK" },
+                    { value: "pengaduan", label: "Pengaduan" },
+                    { value: "umum", label: "Kunjungan Umum/Kedinasan" },
+                  ]}
+                />
+              </div>
             </div>
           </div>
         </div>

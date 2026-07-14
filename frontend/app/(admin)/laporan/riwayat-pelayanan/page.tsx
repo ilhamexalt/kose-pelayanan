@@ -13,8 +13,8 @@ export default function LaporanRiwayatPelayananPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  
-  const { isReady } = usePermissions('/laporan/riwayat-pelayanan');
+
+  const { isReady, export: canExport, isAdmin } = usePermissions('/laporan/riwayat-pelayanan');
 
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,11 +71,11 @@ export default function LaporanRiwayatPelayananPage() {
   const filteredAndSortedList = pelayananList
     .filter(p => {
       const matchesSearch = (p.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (p.nik || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (p.queueNumber_raw || p.queueNumber || '').toLowerCase().includes(searchQuery.toLowerCase());
+        (p.nik || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.queueNumber_raw || p.queueNumber || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesJenis = filterJenis ? p.jenis === filterJenis : true;
       const matchesStatus = filterStatus ? p.status === filterStatus : true;
-      
+
       let matchesDate = true;
       if (dateRange && dateRange[0] && dateRange[1]) {
         const itemDate = new Date(p.createdAt || 0);
@@ -83,7 +83,7 @@ export default function LaporanRiwayatPelayananPage() {
         const endDate = dateRange[1].endOf('day').toDate();
         matchesDate = itemDate >= startDate && itemDate <= endDate;
       }
-      
+
       return matchesSearch && matchesJenis && matchesStatus && matchesDate;
     })
     .sort((a, b) => {
@@ -155,25 +155,73 @@ export default function LaporanRiwayatPelayananPage() {
       return;
     }
 
-    const exportData = filteredAndSortedList.map((p, idx) => ({
-      'No': idx + 1,
-      'Tanggal': formatDateTime(p.createdAt),
-      'Nomor Antrean': p.queueNumber_raw || p.queueNumber || '-',
-      'Nomor Register': p.nomorRegister || '-',
-      'NIK': p.nik || '-',
-      'Nama Pemohon': p.nama || '-',
-      'Telepon': p.phone || '-',
-      'Jenis Layanan': p.jenis || '-',
-      'Status': p.status || 'Antre',
-      'Diproses Oleh': p.processedBy?.nama || '-',
-      'Catatan': p.catatan || '-'
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Riwayat Pelayanan");
 
-    XLSX.writeFile(workbook, `Laporan_Riwayat_Pelayanan_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const pengaduanList = filteredAndSortedList.filter(p => (p.jenis || '').toLowerCase() === 'pengaduan');
+    const slikList = filteredAndSortedList.filter(p => (p.jenis || '').toLowerCase() === 'slik');
+    const umumList = filteredAndSortedList.filter(p => (p.jenis || '').toLowerCase() === 'umum');
+    const lainnyaList = filteredAndSortedList.filter(p => !['pengaduan', 'slik', 'umum'].includes((p.jenis || '').toLowerCase()));
+
+    if (pengaduanList.length > 0) {
+      const exportPengaduan = pengaduanList.map((p, idx) => ({
+        'NO': idx + 1,
+        'NAMA DEBITUR': p.nama || '-',
+        'TANGGAL PENGAJUAN': formatDateTime(p.createdAt),
+        'ALAMAT': p.alamat || '-',
+        'NO. HP': p.phone || '-',
+        'EMAIL': p.email || '-',
+        'JENIS LJK': p.klasifikasi || '-',
+        'SEKTOR LJK': Array.isArray(p.sektor) ? p.sektor.join(', ') : (p.sektor || '-'),
+        'PUJK YANG DIADUKAN': p.perusahaan || '-',
+        'PERMASALAHAN': p.permasalahan || '-',
+        'KETERANGAN': p.ringkasan || p.catatan || '-',
+        'NOMOR LAPORAN': p.nomorLaporan || p.nomorRegister || p.queueNumber_raw || p.queueNumber || '-'
+      }));
+      const wsPengaduan = XLSX.utils.json_to_sheet(exportPengaduan);
+      XLSX.utils.book_append_sheet(workbook, wsPengaduan, "Laporan Pengaduan");
+    }
+
+    const generateGeneralExport = (list: any[]) => {
+      return list.map((p, idx) => ({
+        'No': idx + 1,
+        'Tanggal': formatDateTime(p.createdAt),
+        'Nomor Antrean': p.queueNumber_raw || p.queueNumber || '-',
+        'Nomor Register': p.nomorRegister || '-',
+        'NIK': p.nik || '-',
+        'Nama Pemohon': p.nama || '-',
+        'Telepon': p.phone || '-',
+        'Jenis Layanan': p.jenis || '-',
+        'Status': p.status || 'Antre',
+        'Diproses Oleh': p.processedBy?.nama || '-',
+        'Catatan': p.catatan || '-'
+      }));
+    };
+
+    if (slikList.length > 0) {
+      const wsSlik = XLSX.utils.json_to_sheet(generateGeneralExport(slikList));
+      XLSX.utils.book_append_sheet(workbook, wsSlik, "Layanan SLIK");
+    }
+
+    const generateKedinasanExport = (list: any[]) => {
+      return list.map((p, idx) => ({
+        'No': idx + 1,
+        'Tanggal': formatDateTime(p.createdAt),
+        'Nama Lengkap': p.nama || '-',
+        'Alamat Lengkap': p.alamat || '-',
+        'Nomor HP': p.phone || '-',
+        'Nama Instansi/Perusahaan': p.instansi || '-',
+        'Keperluan': p.keperluan || '-',
+        'Bagian Yang Dituju': p.bertemu || '-',
+        'Jumlah Orang': p.keterangan || '-'
+      }));
+    };
+
+    if (umumList.length > 0) {
+      const wsUmum = XLSX.utils.json_to_sheet(generateKedinasanExport(umumList));
+      XLSX.utils.book_append_sheet(workbook, wsUmum, "Layanan Umum");
+    }
+
+    XLSX.writeFile(workbook, `Laporan_Pelayanan_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   if (!isReady || isLoading) {
@@ -191,7 +239,7 @@ export default function LaporanRiwayatPelayananPage() {
     <>
       {contextHolder}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 font-sans">
-        
+
         {/* Breadcrumb & Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
@@ -203,21 +251,23 @@ export default function LaporanRiwayatPelayananPage() {
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Laporan Riwayat Pelayanan</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">Rekapitulasi seluruh riwayat antrean dan penanganan nasabah.</p>
           </div>
-          <button
-            onClick={handleExportExcel}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer border-none"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            Export ke Excel
-          </button>
+          {(isAdmin || canExport) && (
+            <button
+              onClick={handleExportExcel}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer border-none"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Export ke Excel
+            </button>
+          )}
         </div>
 
         {/* Filter & Search Bar */}
         <div className="bg-white dark:bg-[#0f172a] p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="flex w-full sm:max-w-md gap-2">
-            <Input 
+            <Input
               prefix={<svg className="w-4 h-4 text-slate-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
-              placeholder="Cari nama, NIK, antrean..." 
+              placeholder="Cari nama, NIK, antrean..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onPressEnter={() => setSearchQuery(searchInput)}
@@ -234,7 +284,7 @@ export default function LaporanRiwayatPelayananPage() {
           </div>
 
           <div className="w-full sm:w-auto flex flex-wrap gap-4">
-            <RangePicker 
+            <RangePicker
               className="w-full sm:w-64"
               value={dateRange}
               onChange={(dates) => setDateRange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null] | null)}
@@ -252,7 +302,7 @@ export default function LaporanRiwayatPelayananPage() {
                 { value: 'slik', label: 'Permintaan SLIK' }
               ]}
             />
-            
+
             <Select
               value={filterStatus}
               onChange={(value) => setFilterStatus(value)}
@@ -275,7 +325,7 @@ export default function LaporanRiwayatPelayananPage() {
             dataSource={filteredAndSortedList}
             columns={columns}
             rowKey="id"
-            pagination={{ 
+            pagination={{
               pageSize: 10,
               showTotal: (total, range) => `Menampilkan ${range[0]} - ${range[1]} dari ${total} data`
             }}

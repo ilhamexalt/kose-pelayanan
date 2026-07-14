@@ -60,10 +60,15 @@ export default function PegawaiPage() {
         return;
       }
       setUser(parsedUser);
-      fetchPegawai(parsedUser);
-      fetchRoles(parsedUser);
     }
   }, []);
+
+  useEffect(() => {
+    if (isReady && user) {
+      fetchPegawai(user);
+      fetchRoles(user);
+    }
+  }, [isReady, user, read]);
 
   const getHeaders = (customUser?: any) => {
     const currentUser = customUser || user;

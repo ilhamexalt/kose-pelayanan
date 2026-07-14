@@ -39,7 +39,7 @@ export default function GuestPage() {
   const [pernyataan, setPernyataan] = useState(false);
   const [isNikFound, setIsNikFound] = useState<boolean | null>(null);
   const [isCheckingNik, setIsCheckingNik] = useState(false);
-  const [useMainNikPengaduan, setUseMainNikPengaduan] = useState(false);
+  const [isPengaduanNikManual, setIsPengaduanNikManual] = useState(false);
 
   useEffect(() => {
     if (jenisDebitur === "Perseorangan") {
@@ -48,6 +48,12 @@ export default function GuestPage() {
       setSlikNikNpwp("");
     }
   }, [jenisDebitur, nik]);
+
+  useEffect(() => {
+    if (!isPengaduanNikManual) {
+      setPengaduanNik(nik);
+    }
+  }, [nik, isPengaduanNikManual]);
 
   const handleSektorChange = (val: string, checked: boolean) => {
     if (checked) {
@@ -104,14 +110,14 @@ export default function GuestPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!/^\d{16}$/.test(nik)) {
+    if (jenis !== "umum" && !/^\d{16}$/.test(nik)) {
       messageApi.warning("NIK utama harus berupa 16 digit angka (tidak boleh ada huruf)!");
       setIsSubmitting(false);
       return;
     }
 
     const data: any = {
-      nik,
+      nik: jenis === "umum" ? "-" : nik,
       nama,
       alamat,
       phone,
@@ -238,6 +244,17 @@ export default function GuestPage() {
           </div>
         </div> */}
 
+        <div className="mb-6 w-full rounded-2xl overflow-hidden shadow-md">
+          <Image
+            src="/assets/images/header.png"
+            alt="Header Pelayanan"
+            width={800}
+            height={200}
+            className="w-full h-auto object-cover"
+            priority
+          />
+        </div>
+
         <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl transition-colors duration-300">
           {queueNumber ? (
             <div className="text-center py-4">
@@ -284,6 +301,7 @@ export default function GuestPage() {
                   setRingkasan("");
                   setPernyataan(false);
                   setIsNikFound(null);
+                  setIsPengaduanNikManual(false);
                 }} className="w-full bg-white dark:bg-slate-800 border-2 border-[#DA251C] text-[#DA251C] dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 font-medium py-3 rounded-lg transition-all cursor-pointer">
                   Ajukan Pelayanan Lain
                 </button>
@@ -301,94 +319,16 @@ export default function GuestPage() {
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="nik" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIK <span className="text-[#DA251C]">*</span></label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      id="nik"
-                      name="nik"
-                      value={nik}
-                      onChange={handleNikChange}
-                      onBlur={checkNik}
-                      maxLength={16}
-                      required
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all pr-10"
-                      placeholder="Masukkan 16 digit NIK"
-                    />
-                    {isCheckingNik && (
-                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <svg className="animate-spin h-5 w-5 text-[#DA251C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  {isCheckingNik ? (
-                    <div className="flex items-center gap-2 mt-2 p-2.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 rounded-lg text-[#DA251C] dark:text-red-400 text-xs font-medium animate-pulse">
-                      <svg className="animate-spin h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Mengecek data NIK ke sistem... Mohon tunggu sebentar.</span>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Digunakan untuk verifikasi data (harus 16 digit).</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="nama" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap <span className="text-[#DA251C]">*</span></label>
-                  <input
-                    type="text"
-                    id="nama"
-                    name="nama"
-                    value={nama}
-                    onChange={(e) => setNama(e.target.value)}
-                    disabled={isNikFound === null || isNikFound === true}
-                    required
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
-                    placeholder="Masukkan nama lengkap Anda"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="alamat" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alamat Lengkap <span className="text-[#DA251C]">*</span></label>
-                  <textarea
-                    id="alamat"
-                    name="alamat"
-                    value={alamat}
-                    onChange={(e) => setAlamat(e.target.value)}
-                    disabled={isNikFound === null || isNikFound === true}
-                    required
-                    rows={2}
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
-                    placeholder="Masukkan alamat lengkap Anda sesuai KTP"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nomor HP <span className="text-[#DA251C]">*</span></label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    disabled={isNikFound === null || isNikFound === true}
-                    required
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
-                    placeholder="Contoh: 08123456789"
-                  />
-                </div>
-
-                <div>
                   <label htmlFor="jenis" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jenis Pelayanan <span className="text-[#DA251C]">*</span></label>
                   <CustomSelect
                     id="jenis"
                     value={jenis}
-                    onChange={(val) => setJenis(val)}
-                    disabled={isNikFound === null}
+                    onChange={(val) => {
+                      setJenis(val);
+                      if (val === 'umum') {
+                        setIsNikFound(null); // Reset checking status if they swap
+                      }
+                    }}
                     placeholder="-- Pilih Jenis Pelayanan --"
                     options={[
                       { value: "slik", label: "SLIK" },
@@ -397,6 +337,92 @@ export default function GuestPage() {
                     ]}
                   />
                 </div>
+
+                {jenis && (
+                  <>
+                    {jenis !== 'umum' && (
+                      <div>
+                        <label htmlFor="nik" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIK <span className="text-[#DA251C]">*</span></label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            id="nik"
+                            name="nik"
+                            value={nik}
+                            onChange={handleNikChange}
+                            onBlur={checkNik}
+                            maxLength={16}
+                            required={jenis !== 'umum'}
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all pr-10"
+                            placeholder="Masukkan 16 digit NIK"
+                          />
+                          {isCheckingNik && (
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                              <svg className="animate-spin h-5 w-5 text-[#DA251C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        {isCheckingNik ? (
+                          <div className="flex items-center gap-2 mt-2 p-2.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 rounded-lg text-[#DA251C] dark:text-red-400 text-xs font-medium animate-pulse">
+                            <svg className="animate-spin h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Mengecek data NIK ke sistem... Mohon tunggu sebentar.</span>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Digunakan untuk verifikasi data (harus 16 digit).</p>
+                        )}
+                      </div>
+                    )}
+
+                    <div>
+                      <label htmlFor="nama" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap <span className="text-[#DA251C]">*</span></label>
+                      <input
+                        type="text"
+                        id="nama"
+                        name="nama"
+                        value={nama}
+                        onChange={(e) => setNama(e.target.value)}
+                        disabled={jenis !== 'umum' && (isNikFound === null || isNikFound === true)}
+                        required
+                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
+                        placeholder="Masukkan nama lengkap Anda"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="alamat" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alamat Lengkap <span className="text-[#DA251C]">*</span></label>
+                      <textarea
+                        id="alamat"
+                        name="alamat"
+                        value={alamat}
+                        onChange={(e) => setAlamat(e.target.value)}
+                        disabled={jenis !== 'umum' && (isNikFound === null || isNikFound === true)}
+                        required
+                        rows={2}
+                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
+                        placeholder="Masukkan alamat lengkap Anda sesuai KTP"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nomor HP <span className="text-[#DA251C]">*</span></label>
+                      <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        disabled={jenis !== 'umum' && (isNikFound === null || isNikFound === true)}
+                        required
+                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-500"
+                        placeholder="Contoh: 08123456789"
+                      />
+                    </div>
 
                 {jenis === "umum" && (
                   <div className="bg-slate-50 dark:bg-slate-800/50 border border-red-100 dark:border-red-950/60 rounded-xl p-5 space-y-4 animate-fadeIn transition-all">
@@ -610,20 +636,15 @@ export default function GuestPage() {
                       <label htmlFor="pengaduanNik" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         NIK (Nomor Induk Kependudukan) <span className="text-[#DA251C]">*</span>
                       </label>
-                      <div className="flex items-center gap-2 mb-2">
-                        <input type="checkbox" id="useMainNikPengaduan" checked={useMainNikPengaduan} onChange={(e) => {
-                          setUseMainNikPengaduan(e.target.checked);
-                          if (e.target.checked) setPengaduanNik(nik);
-                          else setPengaduanNik("");
-                        }} className="rounded border-slate-300 text-[#DA251C] focus:ring-[#DA251C] w-4 h-4 cursor-pointer" />
-                        <label htmlFor="useMainNikPengaduan" className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer">Sama dengan NIK utama</label>
-                      </div>
                       <input
                         type="text"
                         id="pengaduanNik"
                         name="pengaduanNik"
                         value={pengaduanNik}
-                        onChange={(e) => setPengaduanNik(e.target.value.replace(/\D/g, '').slice(0, 16))}
+                        onChange={(e) => {
+                          setIsPengaduanNikManual(true);
+                          setPengaduanNik(e.target.value.replace(/\D/g, '').slice(0, 16));
+                        }}
                         maxLength={16}
                         required={jenis === "pengaduan"}
                         className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
@@ -770,7 +791,9 @@ export default function GuestPage() {
                         </span>
                       </label>
                     </div>
-                  </div>
+                    </div>
+                  )}
+                </>
                 )}
 
                 <button type="submit" disabled={isSubmitting} className="w-full bg-[#DA251C] hover:bg-red-700 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center mt-6">

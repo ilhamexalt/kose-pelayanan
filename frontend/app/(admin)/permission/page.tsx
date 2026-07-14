@@ -11,6 +11,7 @@ interface Menu {
   url: string;
   is_parent: boolean;
   parent_id?: string | null;
+  urutan?: number;
 }
 
 interface RolePermission {
@@ -21,6 +22,7 @@ interface RolePermission {
     read: boolean;
     update: boolean;
     delete: boolean;
+    export: boolean;
   }>;
 }
 
@@ -61,8 +63,13 @@ export default function PermissionPage() {
     }
     
     setUser(parsed);
-    fetchData(parsed);
   }, []);
+
+  useEffect(() => {
+    if (isReady && user) {
+      fetchData(user);
+    }
+  }, [isReady, user, read]);
 
   const getHeaders = (customUser?: any) => {
     const currentUser = customUser || user;
@@ -84,9 +91,9 @@ export default function PermissionPage() {
         const children = jsonMenu.data.filter((m: Menu) => m.parent_id).sort((a: Menu, b: Menu) => (a.urutan || 0) - (b.urutan || 0) || a.nama.localeCompare(b.nama));
         
         const sortedMenus: Menu[] = [];
-        parents.forEach(p => {
+        parents.forEach((p: Menu) => {
           sortedMenus.push(p);
-          sortedMenus.push(...children.filter(c => c.parent_id === p.id));
+          sortedMenus.push(...children.filter((c: Menu) => c.parent_id === p.id));
         });
         setMenus(sortedMenus);
       }
@@ -139,7 +146,7 @@ export default function PermissionPage() {
     setFormPermissions(prev => ({
       ...prev,
       [menuId]: {
-        ...(prev[menuId] || { create: false, read: false, update: false, delete: false }),
+        ...(prev[menuId] || { create: false, read: false, update: false, delete: false, export: false }),
         [action]: checked
       }
     }));
@@ -370,11 +377,12 @@ export default function PermissionPage() {
                           <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase">Create</th>
                           <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase">Update</th>
                           <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase">Delete</th>
+                          <th className="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase">Export</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-100 dark:divide-slate-800/50">
                         {menus.map((menu) => {
-                           const p = formPermissions[menu.id] || { create: false, read: false, update: false, delete: false };
+                           const p = formPermissions[menu.id] || { create: false, read: false, update: false, delete: false, export: false };
                            const isChild = !!menu.parent_id;
                            return (
                              <tr key={menu.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
@@ -387,16 +395,19 @@ export default function PermissionPage() {
                                  ) : menu.nama}
                                </td>
                                <td className="px-4 py-3 text-center">
-                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={p.read} onChange={(e) => handlePermissionChange(menu.id, 'read', e.target.checked)} />
+                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={!!p.read} onChange={(e) => handlePermissionChange(menu.id, 'read', e.target.checked)} />
                                </td>
                                <td className="px-4 py-3 text-center">
-                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={p.create} onChange={(e) => handlePermissionChange(menu.id, 'create', e.target.checked)} />
+                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={!!p.create} onChange={(e) => handlePermissionChange(menu.id, 'create', e.target.checked)} />
                                </td>
                                <td className="px-4 py-3 text-center">
-                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={p.update} onChange={(e) => handlePermissionChange(menu.id, 'update', e.target.checked)} />
+                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={!!p.update} onChange={(e) => handlePermissionChange(menu.id, 'update', e.target.checked)} />
                                </td>
                                <td className="px-4 py-3 text-center">
-                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={p.delete} onChange={(e) => handlePermissionChange(menu.id, 'delete', e.target.checked)} />
+                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={!!p.delete} onChange={(e) => handlePermissionChange(menu.id, 'delete', e.target.checked)} />
+                               </td>
+                               <td className="px-4 py-3 text-center">
+                                 <input type="checkbox" className="w-4 h-4 accent-[#DA251C]" checked={!!p.export} onChange={(e) => handlePermissionChange(menu.id, 'export', e.target.checked)} />
                                </td>
                              </tr>
                            );

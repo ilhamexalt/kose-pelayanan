@@ -594,13 +594,13 @@ export default function DashboardPage() {
                 <div className="mb-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
-                      Nomor Register {selectedDetail.jenis?.toLowerCase() === 'slik' && <span className="text-red-500">*</span>}
+                      {selectedDetail.jenis?.toLowerCase() === 'pengaduan' ? 'Nomor Laporan' : 'Nomor Register'} {(selectedDetail.jenis?.toLowerCase() === 'slik' || selectedDetail.jenis?.toLowerCase() === 'pengaduan') && <span className="text-red-500">*</span>}
                     </label>
                     <input
                       type="text"
                       value={selectedDetail.nomorRegister || ''}
                       onChange={(e) => setSelectedDetail({ ...selectedDetail, nomorRegister: e.target.value })}
-                      placeholder="Masukkan nomor register"
+                      placeholder={selectedDetail.jenis?.toLowerCase() === 'pengaduan' ? "Masukkan nomor laporan" : "Masukkan nomor register"}
                       className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#DA251C] mb-4"
                     />
 
@@ -646,7 +646,7 @@ export default function DashboardPage() {
                         disabled={
                           isUpdatingStatus || 
                           selectedDetail.nomorRegister !== pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister || 
-                          (selectedDetail.jenis?.toLowerCase() === 'slik' && !pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister?.trim())
+                          ((selectedDetail.jenis?.toLowerCase() === 'slik' || selectedDetail.jenis?.toLowerCase() === 'pengaduan') && !pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister?.trim())
                         }
                         onClick={() => handleUpdateStatus(selectedDetail.id, 'Selesai')}
                         className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer"

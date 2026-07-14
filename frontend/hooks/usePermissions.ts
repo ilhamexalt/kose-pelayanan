@@ -8,6 +8,7 @@ export interface Permissions {
   read: boolean;
   update: boolean;
   delete: boolean;
+  export: boolean;
   isAdmin: boolean;
   isReady: boolean;
 }
@@ -19,6 +20,7 @@ export function usePermissions(pathname: string): Permissions {
     read: false,
     update: false,
     delete: false,
+    export: false,
     isAdmin: false,
     isReady: false
   });
@@ -37,7 +39,7 @@ export function usePermissions(pathname: string): Permissions {
       const isAdmin = String(user.nip).toLowerCase() === 'admin' || String(user.role).toLowerCase() === 'admin';
       
       if (isAdmin) {
-        setPerms({ create: true, read: true, update: true, delete: true, isAdmin: true, isReady: true });
+        setPerms({ create: true, read: true, update: true, delete: true, export: true, isAdmin: true, isReady: true });
         return;
       }
 
@@ -69,6 +71,7 @@ export function usePermissions(pathname: string): Permissions {
             read: menuPerm.read === true,
             update: menuPerm.update === true,
             delete: menuPerm.delete === true,
+            export: menuPerm.export === true,
             isAdmin: false,
             isReady: true
           });
@@ -78,7 +81,7 @@ export function usePermissions(pathname: string): Permissions {
           }
         } else {
           // If menu not found or no permissions defined, block access by default
-          setPerms({ create: false, read: false, update: false, delete: false, isAdmin: false, isReady: true });
+          setPerms({ create: false, read: false, update: false, delete: false, export: false, isAdmin: false, isReady: true });
           router.push('/dashboard');
         }
       } else {
