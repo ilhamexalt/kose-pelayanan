@@ -56,41 +56,41 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="flex flex-1 items-center justify-center p-6 relative">
+      <div className="flex flex-1 items-center justify-center p-4 sm:p-6 relative">
         {contextHolder}
         <div className="absolute top-0 w-full h-1 bg-[#F1B434]"></div>
 
         <div className="w-full max-w-md">
-          <div className="mb-6 flex justify-between items-center">
+          <div className="mb-4 flex justify-between items-center">
             <Link href="/" className="inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#F1B434] transition-colors">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
               Kembali
             </Link>
           </div>
 
-          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl transition-colors duration-300">
-            <div className="mb-8 text-center">
+          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl transition-colors duration-300">
+            <div className="mb-6 text-center">
               <Image
                 src="/assets/images/ojk-banten-logo.png"
                 alt="Logo OJK"
-                width={100}
-                height={60}
-                className="mx-auto mb-6 object-contain p-1 rounded dark:hidden"
+                width={80}
+                height={48}
+                className="mx-auto mb-4 object-contain p-1 rounded dark:hidden"
                 style={{ width: 'auto', height: 'auto' }}
               />
               <Image
                 src="/assets/images/logo-ojk-putih.png"
                 alt="Logo OJK"
-                width={100}
-                height={60}
-                className="mx-auto mb-6 object-contain p-1 rounded hidden dark:block"
+                width={80}
+                height={48}
+                className="mx-auto mb-4 object-contain p-1 rounded hidden dark:block"
                 style={{ width: 'auto', height: 'auto' }}
               />
-              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Portal Pegawai</h1>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">Masuk menggunakan NIP, Username, atau Email Anda.</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Portal Pegawai</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">Masuk menggunakan NIP, Username, atau Email Anda.</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIP / Username / Email</label>
                 <input type="text" id="email" name="email" required className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP, Username, atau Email" />
@@ -130,7 +130,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <button type="submit" disabled={isLoading} className="w-full bg-[#F1B434] hover:bg-amber-500 text-slate-900 font-medium py-3 rounded-lg transition-all flex items-center justify-center mt-6 cursor-pointer">
+              <button type="submit" disabled={isLoading} className="w-full bg-[#F1B434] hover:bg-amber-500 text-slate-900 font-medium py-2.5 rounded-lg transition-all flex items-center justify-center mt-5 cursor-pointer">
                 {isLoading ? (
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
