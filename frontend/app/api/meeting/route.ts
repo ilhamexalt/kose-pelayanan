@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, where } from 'firebase/firestore';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
+import { decrypt } from '@/lib/crypto';
 
 export async function POST(request: Request) {
   try {
@@ -59,6 +61,34 @@ export async function POST(request: Request) {
 
     await addDoc(meetingRef, payload);
 
+    // Kirim notifikasi WA ke Pramusaji
+    try {
+      const usersRef = collection(db, 'users');
+      const qPramusaji = query(usersRef, where('role', 'in', ['Pramusaji', 'pramusaji', 'PRAMUSAJI']));
+      const pramusajiSnapshot = await getDocs(qPramusaji);
+
+      const totalPeserta = (pesertaInternal?.length || 0) + (pesertaEksternal?.length || 0);
+      const messageText = `*Pemberitahuan Jadwal Meeting Baru*\n\n*Ruangan:* ${ruang}\n*Waktu:* ${tanggal} ${waktuMulai} - ${waktuSelesai}\n*Instansi:* ${instansi}\n*Status:* Baru\n*Peserta:* ${totalPeserta} Orang\n*Keterangan:* ${keterangan || '-'}`;
+
+      const waPromises = pramusajiSnapshot.docs.map(async (docSnap) => {
+        const userData = docSnap.data();
+        if (userData.no_hp) {
+          try {
+            const phone = decrypt(userData.no_hp);
+            if (phone) {
+              await sendWhatsAppMessage(phone, messageText);
+            }
+          } catch (e) {
+            console.error('Failed to decrypt phone or send WA for user:', docSnap.id, e);
+          }
+        }
+      });
+
+      await Promise.all(waPromises);
+    } catch (waError) {
+      console.error('Error retrieving Pramusaji users or sending WA:', waError);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error submitting meeting:', error);
@@ -69,7 +99,7 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const meetingRef = collection(db, 'meeting');
-    const q = query(meetingRef, orderBy('createdAt', 'desc'));
+    const q = query(meetingRef, orderBy('tanggal', 'desc'));
     const snapshot = await getDocs(q);
 
     const dataArray = snapshot.docs.map(doc => {

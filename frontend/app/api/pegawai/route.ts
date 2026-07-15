@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { hashPassword } from '@/lib/password';
+import { encrypt, decrypt } from '@/lib/crypto';
 
 export async function GET(request: Request) {
   try {
@@ -12,10 +13,14 @@ export async function GET(request: Request) {
 
     const usersRef = collection(db, 'users');
     const snapshot = await getDocs(usersRef);
-    const users = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const users = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        no_hp: data.no_hp ? decrypt(data.no_hp) : ''
+      };
+    });
 
     return NextResponse.json({ success: true, data: users });
   } catch (error: any) {
@@ -32,10 +37,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { nip, nama, email, username, password } = body;
+    const { nip, nama, email, username, password, no_hp } = body;
 
-    if (!password || !nama || !username) {
-      return NextResponse.json({ success: false, error: 'Nama, Username, dan Password wajib diisi' }, { status: 400 });
+    if (!password || !nama || !username || !no_hp) {
+      return NextResponse.json({ success: false, error: 'Nama, Username, Password, dan No HP wajib diisi' }, { status: 400 });
     }
 
     const nipVal = nip !== undefined && nip !== null && nip !== '' ? Number(nip) : null;
@@ -54,6 +59,7 @@ export async function POST(request: Request) {
       nip: nipVal,
       nama: String(nama).trim(),
       email: email ? String(email).trim() : '',
+      no_hp: encrypt(String(no_hp).trim()),
       username: username ? String(username).trim() : String(nipVal || ''),
       password: hashPassword(String(password)),
       role: body.role ? String(body.role).trim() : 'Pegawai',

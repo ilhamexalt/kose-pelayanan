@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { hashPassword } from '@/lib/password';
+import { encrypt } from '@/lib/crypto';
 
 export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -20,6 +21,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     if (body.username !== undefined) updateData.username = body.username;
     if (body.role !== undefined) updateData.role = body.role;
     if (body.nip !== undefined) updateData.nip = Number(body.nip) || body.nip;
+    if (body.no_hp !== undefined && body.no_hp !== '') updateData.no_hp = encrypt(String(body.no_hp).trim());
     if (body.password !== undefined && body.password !== '') updateData.password = hashPassword(String(body.password));
 
     if (Object.keys(updateData).length === 0) {

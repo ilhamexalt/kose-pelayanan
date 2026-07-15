@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { hashPassword } from '@/lib/password';
+import { encrypt } from '@/lib/crypto';
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
     const adminUser = String(adminHeader || 'admin');
 
     for (const user of data) {
-      if (user.nama && user.username && user.password && user.role) {
+      if (user.nama && user.username && user.password && user.role && user.no_hp) {
         const nipVal = user.nip !== undefined && user.nip !== null && user.nip !== '' ? Number(user.nip) : null;
         const docId = nipVal !== null ? String(nipVal) : `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         const userRef = doc(db, 'users', docId);
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
           nip: nipVal,
           nama: String(user.nama).trim(),
           email: user.email ? String(user.email).trim() : '',
+          no_hp: encrypt(String(user.no_hp).trim()),
           username: String(user.username).trim(),
           password: hashPassword(String(user.password)),
           role: String(user.role).trim(),

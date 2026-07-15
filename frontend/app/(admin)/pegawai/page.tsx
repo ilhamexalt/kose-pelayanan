@@ -13,7 +13,7 @@ export default function PegawaiPage() {
   const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  
+
   // Use permissions hook
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/pegawai');
 
@@ -35,12 +35,12 @@ export default function PegawaiPage() {
 
   // Modal Create
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ nip: '', nama: '', email: '', username: '', password: process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || '', role: 'Pegawai' });
+  const [createForm, setCreateForm] = useState({ nip: '', nama: '', email: '', username: '', password: process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || '', role: 'Pegawai', no_hp: '' });
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
 
   // Modal Edit
   const [selectedEditUser, setSelectedEditUser] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ nama: '', email: '', username: '', password: '', role: 'Pegawai' });
+  const [editForm, setEditForm] = useState({ nama: '', email: '', username: '', password: '', role: 'Pegawai', no_hp: '' });
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
@@ -138,14 +138,15 @@ export default function PegawaiPage() {
         nip: row.nip ?? row.NIP ?? row.Nip,
         nama: row.nama ?? row.Nama ?? row.NAMA ?? row.name ?? row.Name,
         email: row.email ?? row.Email ?? row.EMAIL ?? '',
+        no_hp: row.no_hp ?? row.No_HP ?? row.NO_HP ?? row.NoHP ?? row['No HP'] ?? row.Phone ?? row.phone,
         username: row.username ?? row.Username ?? row.USERNAME ?? row.nip ?? row.NIP,
         password: row.password ?? row.Password ?? row.PASSWORD,
         role: row.role ?? row.Role ?? row.ROLE ?? 'Pegawai',
         update_password: row.update_password ?? row.Update_password ?? false
-      })).filter(u => u.nama && u.username && u.password && u.role);
+      })).filter(u => u.nama && u.username && u.password && u.role && u.no_hp);
 
       if (usersToImport.length === 0) {
-        messageApi.warning("Tidak ada data valid yang ditemukan di file Excel. Pastikan terdapat kolom nama, username, password, dan role.");
+        messageApi.warning("Tidak ada data valid yang ditemukan di file Excel. Pastikan terdapat kolom nama, username, password, role, dan no hp.");
         setIsImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
@@ -189,7 +190,7 @@ export default function PegawaiPage() {
       if (json.success) {
         messageApi.success("Pegawai berhasil ditambahkan");
         setIsCreateModalOpen(false);
-        setCreateForm({ nip: '', nama: '', email: '', username: '', password: process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || '', role: 'Pegawai' });
+        setCreateForm({ nip: '', nama: '', email: '', username: '', password: process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || '', role: 'Pegawai', no_hp: '' });
         fetchPegawai();
       } else {
         messageApi.error(json.error || "Gagal menambahkan pegawai");
@@ -209,7 +210,8 @@ export default function PegawaiPage() {
       email: userItem.email || '',
       username: userItem.username || '',
       password: '',
-      role: userItem.role || 'Pegawai'
+      role: userItem.role || 'Pegawai',
+      no_hp: userItem.no_hp || ''
     });
   };
 
@@ -381,23 +383,23 @@ export default function PegawaiPage() {
         {create && (
           <div className="bg-white dark:bg-[#0f172a] p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors duration-300">
             <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/60 text-blue-500 dark:text-blue-400 rounded-xl flex items-center justify-center shrink-0">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/60 text-blue-500 dark:text-blue-400 rounded-xl flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">Import Pegawai Massal</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unggah file Excel (.xlsx) dengan kolom <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">nip</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">nama</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">email</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">username</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">password</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">role</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">no_hp</code></p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">Import Pegawai Massal</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unggah file Excel (.xlsx) dengan kolom <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">nip</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">nama</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">email</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">username</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">password</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[#DA251C] dark:text-red-400">role</code></p>
-            </div>
+            <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+            <button
+              onClick={handleImportClick}
+              disabled={isImporting}
+              className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium py-2 px-4 rounded-lg transition-all flex items-center text-sm cursor-pointer disabled:cursor-not-allowed shrink-0"
+            >
+              {isImporting ? 'Mengunggah...' : 'Pilih Excel'}
+            </button>
           </div>
-          <input type="file" accept=".xlsx, .xls" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-          <button
-            onClick={handleImportClick}
-            disabled={isImporting}
-            className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium py-2 px-4 rounded-lg transition-all flex items-center text-sm cursor-pointer disabled:cursor-not-allowed shrink-0"
-          >
-            {isImporting ? 'Mengunggah...' : 'Pilih Excel'}
-          </button>
-        </div>
         )}
 
         {/* Filters and Actions */}
@@ -622,6 +624,10 @@ export default function PegawaiPage() {
                 <span className="text-sm text-slate-900 dark:text-slate-100 col-span-2 font-medium">{selectedDetailUser.email || '-'}</span>
               </div>
               <div className="grid grid-cols-3 gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 col-span-1">No HP</span>
+                <span className="text-sm text-slate-900 dark:text-slate-100 col-span-2 font-medium">{selectedDetailUser.no_hp || '-'}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                 <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 col-span-1">Username</span>
                 <span className="text-sm text-slate-900 dark:text-slate-100 col-span-2 font-medium">{selectedDetailUser.username || '-'}</span>
               </div>
@@ -684,6 +690,15 @@ export default function PegawaiPage() {
                   value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
                   className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                   placeholder="email@ojk.go.id"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">No HP <span className="text-red-500">*</span></label>
+                <input
+                  type="text" required
+                  value={createForm.no_hp} onChange={e => setCreateForm({ ...createForm, no_hp: e.target.value })}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  placeholder="6281234567890"
                 />
               </div>
               <div>
@@ -751,7 +766,7 @@ export default function PegawaiPage() {
             <p className="text-xs text-slate-400 mb-4">NIP: <span className="font-bold text-slate-700 dark:text-slate-200">{selectedEditUser.nip || selectedEditUser.id}</span></p>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap <span className="text-red-500">*</span></label>
                 <input
                   type="text" required
                   value={editForm.nama} onChange={e => setEditForm({ ...editForm, nama: e.target.value })}
@@ -767,7 +782,16 @@ export default function PegawaiPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Username *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">No HP <span className="text-red-500">*</span></label>
+                <input
+                  type="text" required
+                  value={editForm.no_hp} onChange={e => setEditForm({ ...editForm, no_hp: e.target.value })}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  placeholder="6281234567890"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Username <span className="text-red-500">*</span></label>
                 <input
                   type="text" required
                   value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })}
@@ -776,7 +800,7 @@ export default function PegawaiPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Role / Hak Akses *</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Role / Hak Akses <span className="text-red-500">*</span></label>
                 <input
                   type="text" list="rolesListEdit" required
                   value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}
