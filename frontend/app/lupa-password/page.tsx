@@ -235,7 +235,7 @@ export default function LupaPasswordPage() {
           </div>
         </div>
       </div>
-      <div className="hidden sm:block mt-auto">
+      <div className="mt-auto">
         <Footer />
       </div>
     </div>
