@@ -348,9 +348,9 @@ export default function HistoryPage() {
             )}
           </div>
           <div className="w-full md:w-auto flex flex-col sm:flex-row items-start sm:items-center justify-between md:justify-end gap-4">
-            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0">
               <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Status:</label>
-              <div className="w-full sm:w-32 shrink-0">
+              <div className="w-full sm:w-32">
                 <CustomSelect
                   value={filterStatus}
                   onChange={(val) => {
@@ -366,9 +366,9 @@ export default function HistoryPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
               <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Jenis Layanan:</label>
-              <div className="w-full sm:w-56 shrink-0">
+              <div className="w-full sm:w-56">
                 <CustomSelect
                   value={filterJenis}
                   onChange={(val) => {
