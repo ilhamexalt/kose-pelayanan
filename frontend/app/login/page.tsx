@@ -55,8 +55,8 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      <div className="flex flex-1 items-center justify-center p-4 sm:p-6 relative">
+    <div className="fixed inset-0 flex flex-col sm:relative sm:flex-1 w-full bg-slate-50">
+      <div className="flex flex-1 items-center justify-center p-4 sm:p-6 relative overflow-y-auto w-full">
         {contextHolder}
         <div className="absolute top-0 w-full h-1 bg-[#F1B434]"></div>
 
@@ -75,6 +75,7 @@ export default function LoginPage() {
                 alt="Logo OJK"
                 width={80}
                 height={48}
+                priority
                 className="mx-auto mb-4 object-contain p-1 rounded dark:hidden"
                 style={{ width: 'auto', height: 'auto' }}
               />
@@ -83,23 +84,24 @@ export default function LoginPage() {
                 alt="Logo OJK"
                 width={80}
                 height={48}
+                priority
                 className="mx-auto mb-4 object-contain p-1 rounded hidden dark:block"
                 style={{ width: 'auto', height: 'auto' }}
               />
               <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Portal Pegawai</h1>
-              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">Masuk menggunakan NIP, Username, atau Email Anda.</p>
+              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">Masuk menggunakan NIP, Username Anda.</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIP / Username / Email</label>
-                <input type="text" id="email" name="email" required className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP, Username, atau Email" />
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIP / Username</label>
+                <input type="text" id="email" name="email" required className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" placeholder="Masukkan NIP, Username" />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
-                  <Link href="#" className="text-xs text-slate-500 dark:text-slate-400 hover:text-[#DA251C] dark:hover:text-amber-400 transition-colors">Lupa password?</Link>
+                  <Link href="/lupa-password" className="text-xs text-slate-500 hover:text-[#DA251C] transition-colors">Lupa password?</Link>
                 </div>
                 <div className="relative">
                   <input
@@ -142,7 +144,9 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      <Footer />
-    </>
+      <div className="hidden sm:block mt-auto">
+        <Footer />
+      </div>
+    </div>
   );
 }
