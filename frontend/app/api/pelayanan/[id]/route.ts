@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, deleteField, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteField, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -44,7 +44,10 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     }
 
     const updateData: any = {};
-    if (status) updateData.status = status;
+    if (status) {
+      updateData.status = status;
+      updateData.updatedAt = serverTimestamp();
+    }
     if (catatan !== undefined) updateData.catatan = catatan;
     if (nomorRegister !== undefined) updateData.nomorRegister = nomorRegister;
 

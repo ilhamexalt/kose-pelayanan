@@ -10,6 +10,7 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 
 import CustomSelect from "@/components/CustomSelect";
+import SurveyModal from "@/components/SurveyModal";
 
 export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDetail, setSelectedDetail] = useState<any>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchInput, setSearchInput] = useState('');
@@ -648,7 +650,7 @@ export default function DashboardPage() {
                           selectedDetail.nomorRegister !== pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister || 
                           ((selectedDetail.jenis?.toLowerCase() === 'slik' || selectedDetail.jenis?.toLowerCase() === 'pengaduan') && !pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister?.trim())
                         }
-                        onClick={() => handleUpdateStatus(selectedDetail.id, 'Selesai')}
+                        onClick={() => setShowSurvey(true)}
                         className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer"
                       >
                         {isUpdatingStatus ? 'Memproses...' : 'Selesai'}
@@ -676,6 +678,18 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedDetail && (
+        <SurveyModal
+          open={showSurvey}
+          pelayananId={selectedDetail.id}
+          layananName={selectedDetail.jenis}
+          onSuccess={() => {
+            setShowSurvey(false);
+            handleUpdateStatus(selectedDetail.id, 'Selesai');
+          }}
+        />
       )}
     </>
   );

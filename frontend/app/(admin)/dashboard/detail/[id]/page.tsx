@@ -6,6 +6,7 @@ import { message } from "antd";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import ThemeToggle from "@/components/ThemeToggle";
+import SurveyModal from "@/components/SurveyModal";
 
 export default function DetailPelayananPage() {
   const params = useParams();
@@ -17,6 +18,7 @@ export default function DetailPelayananPage() {
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
   const [inputRegister, setInputRegister] = useState<string>('');
 
   useEffect(() => {
@@ -451,7 +453,13 @@ export default function DetailPelayananPage() {
                   <button
                     key={status}
                     disabled={isDisabled}
-                    onClick={() => handleUpdateStatus(selectedPelayanan.id, status)}
+                    onClick={() => {
+                      if (status === 'Selesai' && selectedPelayanan.status !== 'Selesai') {
+                        setShowSurvey(true);
+                      } else {
+                        handleUpdateStatus(selectedPelayanan.id, status);
+                      }
+                    }}
                     className={`px-6 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${
                       isThisStatusActive
                         ? 'bg-[#DA251C] text-white shadow-lg dark:bg-red-600 ring-2 ring-red-400 ring-offset-2 dark:ring-offset-slate-900'
@@ -467,6 +475,18 @@ export default function DetailPelayananPage() {
 
         </div>
       </main>
+
+      {selectedPelayanan && (
+        <SurveyModal
+          open={showSurvey}
+          pelayananId={selectedPelayanan.id}
+          layananName={selectedPelayanan.jenis}
+          onSuccess={() => {
+            setShowSurvey(false);
+            handleUpdateStatus(selectedPelayanan.id, 'Selesai');
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { message, Modal } from "antd";
 import { usePermissions } from "@/hooks/usePermissions";
 
 import CustomSelect from "@/components/CustomSelect";
+import SurveyModal from "@/components/SurveyModal";
 
 export default function HistoryPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -20,6 +21,7 @@ export default function HistoryPage() {
 
   const [selectedDetail, setSelectedDetail] = useState<any>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
 
   const handleUpdateStatus = async (statusId: string, newStatus: string, isSaveRegister: boolean = false) => {
     setIsUpdatingStatus(true);
@@ -212,7 +214,8 @@ export default function HistoryPage() {
     const dataToExport = filteredAndSortedList.map((item, index) => ({
       'No': index + 1,
       'No Antrean': item.queueNumber,
-      'Waktu': formatDateTime(item.createdAt),
+      'Waktu Daftar': formatDateTime(item.createdAt),
+      'Waktu Selesai': item.updatedAt ? formatDateTime(item.updatedAt) : '-',
       'Nama Nasabah': item.nama,
       'NIK': item.nik,
       'No HP': item.phone || '-',
@@ -421,7 +424,8 @@ export default function HistoryPage() {
                       </span>
                     </div>
                   </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Waktu</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Waktu Daftar</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Waktu Selesai</th>
                   <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama</th>
                   <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jenis</th>
                   <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Proses Oleh</th>
@@ -449,6 +453,9 @@ export default function HistoryPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                         {formatDateTime(item.createdAt)}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                        {item.updatedAt ? formatDateTime(item.updatedAt) : '-'}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">{item.nama}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">{item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 capitalize">
@@ -468,7 +475,7 @@ export default function HistoryPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={del ? 7 : 6} className="px-6 py-16 text-center">
+                    <td colSpan={del ? 8 : 7} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <svg className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         <p className="text-base font-medium text-slate-600 dark:text-slate-300">Tidak ada riwayat pelayanan</p>
@@ -551,6 +558,9 @@ export default function HistoryPage() {
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nomor Antrean</p>
                   <p className="text-2xl font-black text-[#DA251C] dark:text-red-400">{selectedDetail.queueNumber}</p>
                   <p className="text-xs text-slate-400 mt-1">Waktu Daftar: {formatDateTime(selectedDetail.createdAt)}</p>
+                  {selectedDetail.updatedAt && (
+                    <p className="text-xs text-slate-400 mt-1">Waktu Selesai: {formatDateTime(selectedDetail.updatedAt)}</p>
+                  )}
                 </div>
                 <div className="text-left sm:text-right">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Status Saat Ini</p>
@@ -699,7 +709,22 @@ export default function HistoryPage() {
                     {selectedDetail.nomorRegister && (
                       <div className="mb-4 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                         <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Nomor Register</p>
-                        <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nomorRegister}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.nomorRegister}</p>
+                          <button 
+                            onClick={() => {
+                              navigator.clipboard.writeText(selectedDetail.nomorRegister);
+                              messageApi.success('Nomor Register disalin!');
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-all active:scale-95"
+                            title="Salin Nomor Register"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -755,7 +780,13 @@ export default function HistoryPage() {
                           <button
                             key={status}
                             disabled={isDisabled}
-                            onClick={() => handleUpdateStatus(selectedDetail.id, status)}
+                            onClick={() => {
+                              if (status === 'Selesai' && selectedDetail.status !== 'Selesai') {
+                                setShowSurvey(true);
+                              } else {
+                                handleUpdateStatus(selectedDetail.id, status);
+                              }
+                            }}
                             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${isThisStatusActive
                               ? 'bg-[#DA251C] text-white shadow-md'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -773,6 +804,18 @@ export default function HistoryPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedDetail && (
+        <SurveyModal
+          open={showSurvey}
+          pelayananId={selectedDetail.id}
+          layananName={selectedDetail.jenis}
+          onSuccess={() => {
+            setShowSurvey(false);
+            handleUpdateStatus(selectedDetail.id, 'Selesai');
+          }}
+        />
       )}
     </>
   );
