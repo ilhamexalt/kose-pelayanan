@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { message } from "antd";
+import { message, Modal } from "antd";
 import { usePermissions } from "@/hooks/usePermissions";
 
 import CustomSelect from "@/components/CustomSelect";
 
 export default function HistoryPage() {
   const [messageApi, contextHolder] = message.useMessage();
+  const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/riwayat-antrean');
@@ -75,6 +76,7 @@ export default function HistoryPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
 
   const getStatusColor = (status: string) => {
@@ -127,6 +129,47 @@ export default function HistoryPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(paginatedList.map(p => p.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(selectedId => selectedId !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    modalApi.confirm({
+      title: 'Konfirmasi Hapus Massal',
+      content: `Apakah Anda yakin ingin menghapus ${selectedIds.length} data riwayat terpilih?`,
+      okText: 'Ya, Hapus',
+      okType: 'danger',
+      cancelText: 'Batal',
+      onOk: async () => {
+        try {
+          await Promise.all(selectedIds.map(id =>
+            fetch(`/api/pelayanan/${id}`, {
+              method: 'DELETE'
+            })
+          ));
+          messageApi.success(`${selectedIds.length} Riwayat berhasil dihapus`);
+          setSelectedIds([]);
+          fetchPelayanan();
+        } catch (err) {
+          messageApi.error("Terjadi kesalahan koneksi saat menghapus massal");
+        }
+      }
+    });
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -227,6 +270,7 @@ export default function HistoryPage() {
   return (
     <>
       {contextHolder}
+      {modalHolder}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
@@ -235,6 +279,15 @@ export default function HistoryPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {selectedIds.length > 0 && del && (
+              <button
+                onClick={handleBulkDelete}
+                className="bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 font-bold py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                Hapus ({selectedIds.length})
+              </button>
+            )}
             <button
               onClick={fetchPelayanan}
               className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium py-2 px-4 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer"
@@ -339,6 +392,16 @@ export default function HistoryPage() {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
               <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
                 <tr>
+                  {del && (
+                    <th scope="col" className="px-6 py-4 text-left w-12">
+                      <input
+                        type="checkbox"
+                        onChange={handleSelectAll}
+                        checked={paginatedList.length > 0 && selectedIds.length === paginatedList.length}
+                        className="rounded border-slate-300 dark:border-slate-700 text-[#DA251C] focus:ring-[#DA251C]"
+                      />
+                    </th>
+                  )}
                   <th
                     scope="col"
                     className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors group"
@@ -372,6 +435,16 @@ export default function HistoryPage() {
                       key={item.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
+                      {del && (
+                        <td className="px-6 py-4 whitespace-nowrap text-left">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => handleSelectRow(item.id)}
+                            className="rounded border-slate-300 dark:border-slate-700 text-[#DA251C] focus:ring-[#DA251C]"
+                          />
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-[#DA251C] dark:text-red-400">{item.queueNumber}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                         {formatDateTime(item.createdAt)}
@@ -395,7 +468,7 @@ export default function HistoryPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center">
+                    <td colSpan={del ? 7 : 6} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <svg className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         <p className="text-base font-medium text-slate-600 dark:text-slate-300">Tidak ada riwayat pelayanan</p>

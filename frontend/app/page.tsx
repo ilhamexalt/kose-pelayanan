@@ -2,10 +2,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import ThemeToggle from '@/components/ThemeToggle';
 import Footer from '@/components/Footer';
+import MaintenanceOverlay from '@/components/MaintenanceOverlay';
 
 export default function Home() {
   return (
     <div className="min-h-screen lg:h-screen flex flex-col relative bg-slate-50 dark:bg-[#090d16] transition-colors duration-300 overflow-x-hidden lg:overflow-hidden">
+      <MaintenanceOverlay />
       {/* Background Ornaments */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-br from-[#DA251C]/10 to-transparent blur-3xl opacity-70 dark:opacity-40" />
@@ -16,18 +18,18 @@ export default function Home() {
       {/* Header */}
       <header className="relative z-20 w-full px-4 py-4 sm:px-6 sm:py-4 flex justify-between items-center max-w-screen-2xl mx-auto flex-shrink-0">
         <div className="flex items-center">
-          <div className="bg-white/80 dark:bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-sm border border-slate-200/50 dark:border-white/10 transition-all">
+          <div>
             <Image
               src="/assets/images/ojk-banten-logo.png"
               alt="Logo OJK Banten"
               width={140}
               height={50}
-              className="h-6 sm:h-8 w-auto"
+              className="h-6 sm:h-14 w-auto"
               priority
             />
           </div>
         </div>
-        <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+        <div className="flex items-center gap-3">
           <ThemeToggle />
         </div>
       </header>

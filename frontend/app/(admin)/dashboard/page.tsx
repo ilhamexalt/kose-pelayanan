@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { message, Modal } from "antd";
+import { message, Modal, Switch } from "antd";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, doc, setDoc } from "firebase/firestore";
 import dayjs from "dayjs";
 import 'dayjs/locale/id';
 
@@ -45,6 +45,9 @@ export default function DashboardPage() {
 
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
 
+  const [isMaintenance, setIsMaintenance] = useState(false);
+  const [isMaintenanceLoading, setIsMaintenanceLoading] = useState(true);
+
   const isAdminOrPramusaji = user && (
     String(user.nip).toLowerCase() === 'admin' ||
     String(user.role).toLowerCase() === 'admin' ||
@@ -72,7 +75,17 @@ export default function DashboardPage() {
         fetchPelayanan();
       });
 
-      return () => unsubscribe();
+      const unsubscribeMaintenance = onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
+        if (snapshot.exists()) {
+          setIsMaintenance(snapshot.data().maintenanceMode === true);
+        }
+        setIsMaintenanceLoading(false);
+      });
+
+      return () => {
+        unsubscribe();
+        unsubscribeMaintenance();
+      };
     }
   }, []);
 
@@ -101,6 +114,16 @@ export default function DashboardPage() {
       console.error("Failed to fetch meeting", error);
     } finally {
       setIsLoadingMeeting(false);
+    }
+  };
+
+  const handleToggleMaintenance = async (checked: boolean) => {
+    try {
+      await setDoc(doc(db, 'settings', 'general'), { maintenanceMode: checked }, { merge: true });
+      messageApi.success(`Maintenance mode berhasil di${checked ? 'aktifkan' : 'matikan'}`);
+    } catch (error) {
+      console.error("Failed to toggle maintenance mode:", error);
+      messageApi.error("Gagal mengubah status maintenance");
     }
   };
 
@@ -180,13 +203,29 @@ export default function DashboardPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-[70vh] space-y-8 font-sans">
 
         {/* Header */}
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
-            Dashboard Summary
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Ringkasan antrean dan jadwal ruangan untuk hari ini: {dayjs().locale('id').format('dddd, DD MMMM YYYY')}
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
+              Dashboard Summary
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Ringkasan antrean dan jadwal ruangan untuk hari ini: {dayjs().locale('id').format('dddd, DD MMMM YYYY')}
+            </p>
+          </div>
+          
+          {isAdminOrPramusaji && !isMaintenanceLoading && (
+            <div className="flex items-center gap-3 bg-white dark:bg-slate-800/50 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm w-fit">
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Maintenance Mode</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{isMaintenance ? 'Aktif (Halaman publik dikunci)' : 'Nonaktif (Normal)'}</span>
+              </div>
+              <Switch 
+                checked={isMaintenance} 
+                onChange={handleToggleMaintenance} 
+                className={isMaintenance ? 'bg-[#DA251C]' : 'bg-slate-300 dark:bg-slate-600'}
+              />
+            </div>
+          )}
         </div>
 
         {/* Blok 1: Antrean */}

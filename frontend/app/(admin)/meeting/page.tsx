@@ -20,6 +20,7 @@ interface Meeting {
 }
 
 export default function MeetingPage() {
+  const [messageApi, contextHolder] = message.useMessage();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/meeting');
@@ -33,7 +34,7 @@ export default function MeetingPage() {
         setMeetings(json.data);
       }
     } catch (e) {
-      message.error("Gagal mengambil data jadwal");
+      messageApi.error("Gagal mengambil data jadwal");
     } finally {
       setLoading(false);
     }
@@ -94,11 +95,11 @@ export default function MeetingPage() {
     try {
       const res = await fetch(`/api/meeting/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        message.success("Jadwal dihapus");
+        messageApi.success("Jadwal dihapus");
         fetchMeetings();
       }
     } catch (e) {
-      message.error("Gagal menghapus jadwal");
+      messageApi.error("Gagal menghapus jadwal");
     }
   };
 
@@ -193,6 +194,7 @@ export default function MeetingPage() {
 
   return (
     <div className="w-full p-4 sm:p-6 lg:p-8 font-sans">
+      {contextHolder}
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="flex flex-col mb-6 gap-4">

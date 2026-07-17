@@ -134,16 +134,33 @@ export default function PegawaiPage() {
       const worksheet = workbook.Sheets[worksheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      const usersToImport = jsonData.map((row: any) => ({
-        nip: row.nip ?? row.NIP ?? row.Nip,
-        nama: row.nama ?? row.Nama ?? row.NAMA ?? row.name ?? row.Name,
-        email: row.email ?? row.Email ?? row.EMAIL ?? '',
-        no_hp: row.no_hp ?? row.No_HP ?? row.NO_HP ?? row.NoHP ?? row['No HP'] ?? row.Phone ?? row.phone,
-        username: row.username ?? row.Username ?? row.USERNAME ?? row.nip ?? row.NIP,
-        password: row.password ?? row.Password ?? row.PASSWORD,
-        role: row.role ?? row.Role ?? row.ROLE ?? 'Pegawai',
-        update_password: row.update_password ?? row.Update_password ?? false
-      })).filter(u => u.nama && u.username && u.password && u.role && u.no_hp);
+      const usersToImport = jsonData.map((row: any) => {
+        const nip = row.nip ?? row.NIP ?? row.Nip;
+        const nama = row.nama ?? row.Nama ?? row.NAMA ?? row.name ?? row.Name ?? '';
+        let username = row.username ?? row.Username ?? row.USERNAME;
+
+        if (!username && nama) {
+          const parts = nama.trim().toLowerCase().split(/\s+/);
+          if (parts.length >= 2) {
+            username = `${parts[0]}.${parts[1]}`;
+          } else if (parts.length === 1 && parts[0] !== '') {
+            username = `${parts[0]}.${parts[0]}`;
+          }
+        }
+        
+        if (!username) username = nip;
+
+        return {
+          nip: nip,
+          nama: nama,
+          email: row.email ?? row.Email ?? row.EMAIL ?? '',
+          no_hp: row.no_hp ?? row.No_HP ?? row.NO_HP ?? row.NoHP ?? row['No HP'] ?? row.Phone ?? row.phone,
+          username: username,
+          password: row.password ?? row.Password ?? row.PASSWORD,
+          role: row.role ?? row.Role ?? row.ROLE ?? 'Pegawai',
+          update_password: row.update_password ?? row.Update_password ?? false
+        };
+      }).filter(u => u.nama && u.username && u.password && u.role && u.no_hp);
 
       if (usersToImport.length === 0) {
         messageApi.warning("Tidak ada data valid yang ditemukan di file Excel. Pastikan terdapat kolom nama, username, password, role, dan no hp.");

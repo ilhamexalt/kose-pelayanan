@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, deleteField } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteField, deleteDoc } from 'firebase/firestore';
 
 export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -59,6 +59,27 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     return NextResponse.json({ success: true, message: 'Status berhasil diperbarui' });
   } catch (error: any) {
     console.error('Error updating pelayanan status:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
+  try {
+    const params = await props.params;
+    const id = params.id;
+
+    const pelayananRef = doc(db, 'pelayanan', id);
+    const docSnap = await getDoc(pelayananRef);
+
+    if (!docSnap.exists()) {
+      return NextResponse.json({ success: false, error: 'Data antrean tidak ditemukan' }, { status: 404 });
+    }
+
+    await deleteDoc(pelayananRef);
+
+    return NextResponse.json({ success: true, message: 'Data berhasil dihapus' });
+  } catch (error: any) {
+    console.error('Error deleting pelayanan:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

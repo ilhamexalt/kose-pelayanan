@@ -67,7 +67,9 @@ export async function POST(request: Request) {
       const qPramusaji = query(usersRef, where('role', 'in', ['Pramusaji', 'pramusaji', 'PRAMUSAJI']));
       const pramusajiSnapshot = await getDocs(qPramusaji);
 
-      const totalPeserta = (pesertaInternal?.length || 0) + (pesertaEksternal?.length || 0);
+      const sumInternal = (pesertaInternal || []).reduce((acc: number, curr: any) => acc + (Number(curr.jumlah) || 0), 0);
+      const sumEksternal = (pesertaEksternal || []).reduce((acc: number, curr: any) => acc + (Number(curr.jumlah) || 0), 0);
+      const totalPeserta = sumInternal + sumEksternal;
       const messageText = `*Pemberitahuan Jadwal Meeting Baru*\n\n*Ruangan:* ${ruang}\n*Waktu:* ${tanggal} ${waktuMulai} - ${waktuSelesai}\n*Instansi:* ${instansi}\n*Status:* Baru\n*Peserta:* ${totalPeserta} Orang\n*Keterangan:* ${keterangan || '-'}`;
 
       const waPromises = pramusajiSnapshot.docs.map(async (docSnap) => {
