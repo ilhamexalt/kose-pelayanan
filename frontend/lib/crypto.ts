@@ -48,8 +48,8 @@ export function decrypt(text: string): string {
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
-  } catch (err) {
-    console.error("Decryption error", err);
+  } catch (err: any) {
+    console.error("Decryption warning:", err?.message || err);
     return text;
   }
 }
