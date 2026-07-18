@@ -46,7 +46,7 @@ export default function MaintenanceOverlay() {
 
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Under Maintenance</h2>
           <p className="text-slate-600 dark:text-slate-400 mb-8 font-medium leading-relaxed">
-            Mohon maaf, sistem One Portal OJK sedang dalam perbaikan rutin. Silakan kembali beberapa saat lagi.
+            Mohon maaf, sistem One Portal OJK Provinsi Banten sedang dalam perbaikan rutin. Silakan kembali beberapa saat lagi.
           </p>
 
           <div className="w-full flex justify-center pb-2">
