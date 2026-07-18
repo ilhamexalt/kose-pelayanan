@@ -3,11 +3,15 @@ import { db } from '@/lib/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { hashPassword } from '@/lib/password';
 import { encrypt } from '@/lib/crypto';
+import { cookies } from 'next/headers';
+import { decryptSession } from '@/lib/session';
 
 export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
-    const adminHeader = request.headers.get('x-admin-nip');
-    if (String(adminHeader || '').toLowerCase() !== 'admin') {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('auth_session')?.value;
+    const session = sessionToken ? decryptSession(sessionToken) : null;
+    if (!session || String(session.user.role).toLowerCase() !== 'admin') {
       return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat mengakses data pegawai' }, { status: 403 });
     }
 
@@ -29,7 +33,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     }
 
     updateData.updated_at = new Date().toISOString();
-    updateData.updated_by = String(adminHeader || 'admin');
+    updateData.updated_by = String(session.user.nip);
 
     const userRef = doc(db, 'users', id);
     await updateDoc(userRef, updateData);
@@ -43,8 +47,10 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
 
 export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
-    const adminHeader = request.headers.get('x-admin-nip');
-    if (String(adminHeader || '').toLowerCase() !== 'admin') {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('auth_session')?.value;
+    const session = sessionToken ? decryptSession(sessionToken) : null;
+    if (!session || String(session.user.role).toLowerCase() !== 'admin') {
       return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat menghapus pegawai' }, { status: 403 });
     }
 

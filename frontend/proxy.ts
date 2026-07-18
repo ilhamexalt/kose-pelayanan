@@ -19,6 +19,9 @@ export function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get('auth_session')?.value;
 
   if (!sessionToken) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Harap login terlebih dahulu' }, { status: 401 });
+    }
     // Redirect to login if no session cookie exists
     return NextResponse.redirect(new URL('/login', request.url));
   }

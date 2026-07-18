@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
+import { cookies } from 'next/headers';
+import { decryptSession } from '@/lib/session';
 
 export async function GET(request: Request) {
   try {
@@ -20,8 +22,10 @@ export async function GET(request: Request) {
     }
 
     // Jika tidak ada parameter role, berarti request list semua role (hanya admin)
-    const adminHeader = request.headers.get('x-admin-nip');
-    if (String(adminHeader || '').toLowerCase() !== 'admin') {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('auth_session')?.value;
+    const session = sessionToken ? decryptSession(sessionToken) : null;
+    if (!session || String(session.user.role).toLowerCase() !== 'admin') {
       return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat mengakses data permission' }, { status: 403 });
     }
 
@@ -41,9 +45,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const adminHeader = request.headers.get('x-admin-nip');
-    if (String(adminHeader || '').toLowerCase() !== 'admin') {
-      return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat menambah data permission' }, { status: 403 });
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('auth_session')?.value;
+    const session = sessionToken ? decryptSession(sessionToken) : null;
+    if (!session || String(session.user.role).toLowerCase() !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat membuat permission baru' }, { status: 403 });
     }
 
     const body = await request.json();

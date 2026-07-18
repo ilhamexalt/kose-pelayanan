@@ -3,11 +3,15 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { hashPassword } from '@/lib/password';
 import { encrypt, decrypt } from '@/lib/crypto';
+import { cookies } from 'next/headers';
+import { decryptSession } from '@/lib/session';
 
 export async function GET(request: Request) {
   try {
-    const adminHeader = request.headers.get('x-admin-nip');
-    if (String(adminHeader || '').toLowerCase() !== 'admin') {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('auth_session')?.value;
+    const session = sessionToken ? decryptSession(sessionToken) : null;
+    if (!session || String(session.user.role).toLowerCase() !== 'admin') {
       return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat mengakses data pegawai' }, { status: 403 });
     }
 
@@ -31,8 +35,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const adminHeader = request.headers.get('x-admin-nip');
-    if (String(adminHeader || '').toLowerCase() !== 'admin') {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('auth_session')?.value;
+    const session = sessionToken ? decryptSession(sessionToken) : null;
+    if (!session || String(session.user.role).toLowerCase() !== 'admin') {
       return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat mengubah data pegawai' }, { status: 403 });
     }
 
@@ -54,7 +60,7 @@ export async function POST(request: Request) {
     }
 
     const now = new Date().toISOString();
-    const adminUser = String(adminHeader || 'admin');
+    const adminUser = String(session.user.nip);
     await setDoc(userRef, {
       nip: nipVal,
       nama: String(nama).trim(),

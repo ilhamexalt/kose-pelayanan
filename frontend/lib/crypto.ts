@@ -1,10 +1,12 @@
 import crypto from 'crypto';
 
 let key = process.env.ENCRYPTION_KEY;
+let isMissingKeyInProd = false;
 
 if (!key) {
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('CRITICAL: ENCRYPTION_KEY environment variable is missing in production!');
+    isMissingKeyInProd = true;
+    key = '12345678901234567890123456789012'; // Dummy key to prevent crash during build phase
   } else {
     console.warn('⚠️ WARNING: ENCRYPTION_KEY is not set. Using an ephemeral key for development.');
     key = crypto.randomBytes(16).toString('hex'); // 32 characters
@@ -18,6 +20,7 @@ const IV_LENGTH = 16;
  * Mengenkripsi teks menggunakan AES-256-CBC
  */
 export function encrypt(text: string): string {
+  if (isMissingKeyInProd) throw new Error('CRITICAL: ENCRYPTION_KEY environment variable is missing in production!');
   if (!text) return text;
   try {
     const iv = crypto.randomBytes(IV_LENGTH);
@@ -35,6 +38,7 @@ export function encrypt(text: string): string {
  * Mendekripsi teks yang dienkripsi menggunakan AES-256-CBC
  */
 export function decrypt(text: string): string {
+  if (isMissingKeyInProd) throw new Error('CRITICAL: ENCRYPTION_KEY environment variable is missing in production!');
   if (!text || !text.includes(':')) return text;
   try {
     const textParts = text.split(':');

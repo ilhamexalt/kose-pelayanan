@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { cookies } from 'next/headers';
+import { decryptSession } from '@/lib/session';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const adminHeader = request.headers.get('x-admin-nip');
-    if (String(adminHeader || '').toLowerCase() !== 'admin') {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('auth_session')?.value;
+    const session = sessionToken ? decryptSession(sessionToken) : null;
+    if (!session || String(session.user.role).toLowerCase() !== 'admin') {
       return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat mengubah permission' }, { status: 403 });
     }
 
@@ -38,8 +42,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const adminHeader = request.headers.get('x-admin-nip');
-    if (String(adminHeader || '').toLowerCase() !== 'admin') {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('auth_session')?.value;
+    const session = sessionToken ? decryptSession(sessionToken) : null;
+    if (!session || String(session.user.role).toLowerCase() !== 'admin') {
       return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya admin yang dapat menghapus permission' }, { status: 403 });
     }
 
