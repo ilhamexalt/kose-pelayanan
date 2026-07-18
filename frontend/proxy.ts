@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { decryptSession } from './lib/session';
 
 // Define public routes that don't require authentication
-const publicRoutes = ['/login', '/lupa-password', '/layar-antrean'];
+const publicRoutes = ['/', '/login', '/lupa-password', '/layar-antrean', '/guest'];
 // Also allow API routes related to login/auth and public assets
 const publicPrefixes = ['/api/login', '/api/lupa-password', '/api/auth/me', '/api/logout', '/_next', '/favicon', '/assets'];
 
