@@ -21,10 +21,10 @@ export default function LupaPasswordPage() {
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  
+
   // State for step 1
   const [identifier, setIdentifier] = useState("");
-  
+
   // State for step 2
   const [userId, setUserId] = useState("");
   const [phoneMasked, setPhoneMasked] = useState("");
@@ -66,7 +66,7 @@ export default function LupaPasswordPage() {
 
   const handleVerifyReset = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmPassword) {
       messageApi.error('Konfirmasi password tidak cocok!');
       return;
@@ -131,16 +131,16 @@ export default function LupaPasswordPage() {
             {step === 1 ? (
               <form onSubmit={handleRequestOtp} className="space-y-4">
                 <div>
-                  <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 mb-1">NIP / Username</label>
-                  <input 
-                    type="text" 
-                    id="identifier" 
-                    name="identifier" 
+                  <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 mb-1">NIP / Username <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    id="identifier"
+                    name="identifier"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    required 
-                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" 
-                    placeholder="Masukkan NIP atau Username" 
+                    required
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all"
+                    placeholder="Masukkan NIP atau Username"
                   />
                 </div>
 
@@ -157,16 +157,16 @@ export default function LupaPasswordPage() {
               <form onSubmit={handleVerifyReset} className="space-y-4">
                 <div>
                   <label htmlFor="otp" className="block text-sm font-medium text-slate-700 mb-1">Kode OTP</label>
-                  <input 
-                    type="text" 
-                    id="otp" 
-                    name="otp" 
+                  <input
+                    type="text"
+                    id="otp"
+                    name="otp"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    required 
+                    required
                     maxLength={6}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all tracking-widest text-center text-lg font-bold" 
-                    placeholder="••••••" 
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all tracking-widest text-center text-lg font-bold"
+                    placeholder="••••••"
                   />
                 </div>
 
@@ -199,15 +199,15 @@ export default function LupaPasswordPage() {
 
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">Konfirmasi Password Baru</label>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    id="confirmPassword" 
-                    name="confirmPassword" 
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    required 
-                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all" 
-                    placeholder="Ulangi password baru" 
+                    required
+                    className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all"
+                    placeholder="Ulangi password baru"
                   />
                 </div>
 
@@ -219,16 +219,16 @@ export default function LupaPasswordPage() {
                     </svg>
                   ) : "Ubah Password"}
                 </button>
-                
+
                 <div className="text-center mt-4">
-                   <button 
-                     type="button" 
-                     onClick={() => handleRequestOtp()} 
-                     disabled={countdown > 0}
-                     className={`text-xs ${countdown > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-slate-500 hover:text-[#DA251C]'}`}
-                   >
-                     {countdown > 0 ? `Kirim ulang OTP (${countdown}s)` : "Kirim ulang OTP"}
-                   </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRequestOtp()}
+                    disabled={countdown > 0}
+                    className={`text-xs ${countdown > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-slate-500 hover:text-[#DA251C]'}`}
+                  >
+                    {countdown > 0 ? `Kirim ulang OTP (${countdown}s)` : "Kirim ulang OTP"}
+                  </button>
                 </div>
               </form>
             )}
