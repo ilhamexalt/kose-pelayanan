@@ -45,7 +45,7 @@ export default function MenuPage() {
       return;
     }
     fetchMenu(user);
-  }, [user, isLoading]);
+  }, [user, isAuthLoading]);
 
   const getHeaders = (customUser?: any) => {
     const currentUser = customUser || user;

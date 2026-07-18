@@ -29,9 +29,9 @@ export default function LaporanRiwayatPelayananPage() {
 
 
   useEffect(() => {
-    if (isLoading || !user) return;
+    if (isAuthLoading || !user) return;
     fetchPelayanan();
-  }, [user, isLoading]);
+  }, [user, isAuthLoading]);
 
   const fetchPelayanan = async () => {
     try {

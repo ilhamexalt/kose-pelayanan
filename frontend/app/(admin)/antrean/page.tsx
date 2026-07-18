@@ -111,7 +111,7 @@ export default function DashboardPage() {
       });
 
       return () => unsubscribe();
-  }, [user, isLoading, router]);
+  }, [user, isAuthLoading, router]);
 
   const fetchPelayanan = async () => {
     try {

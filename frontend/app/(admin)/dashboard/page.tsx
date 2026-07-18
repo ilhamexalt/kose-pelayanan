@@ -82,7 +82,7 @@ export default function DashboardPage() {
         unsubscribe();
         unsubscribeMaintenance();
       };
-  }, [user, isLoading, router]);
+  }, [user, isAuthLoading, router]);
 
   const fetchPelayanan = async () => {
     try {

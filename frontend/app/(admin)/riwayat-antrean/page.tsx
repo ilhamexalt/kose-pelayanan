@@ -175,13 +175,13 @@ export default function HistoryPage() {
   };
 
   useEffect(() => {
-    if (isLoading || !user) return;
+    if (isAuthLoading || !user) return;
     if (user.update_password === false) {
       router.push('/update-password');
       return;
     }
     fetchPelayanan();
-  }, [user, isLoading]);
+  }, [user, isAuthLoading]);
 
   const fetchPelayanan = async () => {
     try {

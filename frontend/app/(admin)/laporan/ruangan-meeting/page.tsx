@@ -28,9 +28,9 @@ export default function LaporanRuanganMeetingPage() {
 
 
   useEffect(() => {
-    if (isLoading || !user) return;
+    if (isAuthLoading || !user) return;
     fetchMeetings();
-  }, [user, isLoading]);
+  }, [user, isAuthLoading]);
 
   const fetchMeetings = async () => {
     try {

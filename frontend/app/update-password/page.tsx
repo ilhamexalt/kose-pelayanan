@@ -24,6 +24,7 @@ export default function UpdatePasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return;
     if (!newPassword || !confirmPassword) {
       messageApi.warning("Harap lengkapi semua kolom password.");
       return;

@@ -7,7 +7,7 @@ const publicRoutes = ['/login', '/lupa-password', '/layar-antrean'];
 // Also allow API routes related to login/auth and public assets
 const publicPrefixes = ['/api/login', '/api/lupa-password', '/api/auth/me', '/api/logout', '/_next', '/favicon', '/assets'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
   // Skip middleware for public routes and static assets

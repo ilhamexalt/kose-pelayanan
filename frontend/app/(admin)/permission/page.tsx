@@ -55,7 +55,7 @@ export default function PermissionPage() {
       router.push('/update-password');
       return;
     }
-  }, [user, isLoading]);
+  }, [user, isAuthLoading]);
 
   useEffect(() => {
     if (isReady && user) {
