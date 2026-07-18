@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { message, Modal } from "antd";
@@ -14,7 +15,7 @@ export default function HistoryPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/riwayat-antrean');
   const [pelayananList, setPelayananList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -174,19 +175,13 @@ export default function HistoryPage() {
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push('/login');
-    } else {
-      const parsed = JSON.parse(storedUser);
-      if (parsed.update_password === false) {
-        router.push('/update-password');
-        return;
-      }
-      setUser(parsed);
-      fetchPelayanan();
+    if (isLoading || !user) return;
+    if (user.update_password === false) {
+      router.push('/update-password');
+      return;
     }
-  }, []);
+    fetchPelayanan();
+  }, [user, isLoading]);
 
   const fetchPelayanan = async () => {
     try {

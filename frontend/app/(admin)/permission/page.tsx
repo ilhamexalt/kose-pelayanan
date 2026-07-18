@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { message, Modal } from "antd";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -31,7 +32,7 @@ export default function PermissionPage() {
   const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
   
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [roles, setRoles] = useState<RolePermission[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
   const [distinctUserRoles, setDistinctUserRoles] = useState<string[]>([]);
@@ -49,21 +50,12 @@ export default function PermissionPage() {
   const [formPermissions, setFormPermissions] = useState<Record<string, any>>({});
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push('/login');
-      return;
-    }
-    
-    const parsed = JSON.parse(storedUser);
-    
-    if (parsed.update_password === false) {
+    if (isAuthLoading || !user) return;
+    if (user.update_password === false) {
       router.push('/update-password');
       return;
     }
-    
-    setUser(parsed);
-  }, []);
+  }, [user, isLoading]);
 
   useEffect(() => {
     if (isReady && user) {

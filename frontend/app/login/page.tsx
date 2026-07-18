@@ -36,13 +36,14 @@ export default function LoginPage() {
       if (json.success) {
         localStorage.removeItem('cached_menus');
         localStorage.removeItem('cached_permissions');
-        localStorage.setItem('user', JSON.stringify(json.user));
+        // No longer store in localStorage
         if (json.user.update_password === false) {
           messageApi.warning("Keamanan Akun: Anda wajib memperbarui password terlebih dahulu.");
           router.push('/update-password');
         } else {
           messageApi.success("Login berhasil!");
-          router.push('/dashboard');
+          // Force a full reload to ensure AuthProvider fetches the new session and middleware allows access
+          window.location.href = '/dashboard';
         }
       } else {
         messageApi.error(json.error || 'Login gagal');

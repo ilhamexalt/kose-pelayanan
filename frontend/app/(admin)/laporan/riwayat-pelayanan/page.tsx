@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePermissions } from "@/hooks/usePermissions";
 import * as XLSX from "xlsx";
@@ -12,7 +13,7 @@ import dayjs from "dayjs";
 export default function LaporanRiwayatPelayananPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   const { isReady, export: canExport, isAdmin } = usePermissions('/laporan/riwayat-pelayanan');
 
@@ -28,15 +29,9 @@ export default function LaporanRiwayatPelayananPage() {
 
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push('/login');
-    } else {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      fetchPelayanan();
-    }
-  }, []);
+    if (isLoading || !user) return;
+    fetchPelayanan();
+  }, [user, isLoading]);
 
   const fetchPelayanan = async () => {
     try {

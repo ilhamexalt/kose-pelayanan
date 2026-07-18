@@ -24,8 +24,14 @@ export default function Navbar({ user, isMobileOpen, setIsMobileOpen, isDesktopO
     else setGreeting("Selamat Malam");
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } catch (e) {
+      console.error(e);
+    }
+    localStorage.removeItem('cached_menus');
+    localStorage.removeItem('cached_permissions');
     router.push('/login');
   };
 

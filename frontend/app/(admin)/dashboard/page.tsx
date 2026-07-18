@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { message, Modal, Switch } from "antd";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, doc, setDoc } from "firebase/firestore";
@@ -35,7 +36,7 @@ export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [modalApi, modalContextHolder] = Modal.useModal();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   const [pelayananList, setPelayananList] = useState<Pelayanan[]>([]);
   const [meetingList, setMeetingList] = useState<Meeting[]>([]);
@@ -55,18 +56,13 @@ export default function DashboardPage() {
   );
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push('/login');
-    } else {
-      const parsed = JSON.parse(storedUser);
-      if (parsed.update_password === false) {
-        router.push('/update-password');
-        return;
-      }
-      setUser(parsed);
+    if (isAuthLoading || !user) return;
+    if (user.update_password === false) {
+      router.push('/update-password');
+      return;
+    }
 
-      fetchMeeting();
+    fetchMeeting();
 
       const unsubscribe = onSnapshot(collection(db, 'pelayanan'), () => {
         fetchPelayanan();
@@ -86,8 +82,7 @@ export default function DashboardPage() {
         unsubscribe();
         unsubscribeMaintenance();
       };
-    }
-  }, []);
+  }, [user, isLoading, router]);
 
   const fetchPelayanan = async () => {
     try {

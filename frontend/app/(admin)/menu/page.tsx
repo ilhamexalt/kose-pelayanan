@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { message, Modal } from "antd";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -11,7 +12,7 @@ export default function MenuPage() {
   const [messageApi, messageHolder] = message.useMessage();
   const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading: isAuthLoading } = useAuth();
   
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/menu');
 
@@ -38,23 +39,13 @@ export default function MenuPage() {
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push('/login');
-    } else {
-      const parsedUser = JSON.parse(storedUser);
-      if (parsedUser.update_password === false) {
-        router.push('/update-password');
-        return;
-      }
-      if (parsedUser.update_password === false) {
-        router.push('/update-password');
-        return;
-      }
-      setUser(parsedUser);
-      fetchMenu(parsedUser);
+    if (isAuthLoading || !user) return;
+    if (user.update_password === false) {
+      router.push('/update-password');
+      return;
     }
-  }, []);
+    fetchMenu(user);
+  }, [user, isLoading]);
 
   const getHeaders = (customUser?: any) => {
     const currentUser = customUser || user;

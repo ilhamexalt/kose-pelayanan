@@ -28,6 +28,8 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+import { AuthProvider } from "@/contexts/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,9 +42,11 @@ export default function RootLayout({
     >
       <body className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors duration-300">
         <ThemeProvider>
-          <main className="flex-1 flex flex-col">
-            {children}
-          </main>
+          <AuthProvider>
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

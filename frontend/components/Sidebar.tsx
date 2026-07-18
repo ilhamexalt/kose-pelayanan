@@ -40,10 +40,12 @@ const getMenuIcon = (nama: string) => {
   return <svg className="w-5 h-5 mr-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>;
 };
 
+import { useAuth } from "@/contexts/AuthContext";
+
 export default function Sidebar({ children }: { children?: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isDesktopOpen, setIsDesktopOpen] = useState(true);
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -51,13 +53,10 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      fetchMenus(parsedUser);
+    if (user) {
+      fetchMenus(user);
     }
-  }, []);
+  }, [user]);
 
   const fetchMenus = async (currentUserParam?: any) => {
     try {
@@ -92,7 +91,8 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
       }
 
       // Fetch user role permissions if not admin
-      const currentUser = currentUserParam || user || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {});
+      const currentUser = currentUserParam || user;
+      if (!currentUser) return;
       const isAdminCheck = currentUser && (String(currentUser.nip).toLowerCase() === 'admin' || String(currentUser.role).toLowerCase() === 'admin');
 
       if (!isAdminCheck) {

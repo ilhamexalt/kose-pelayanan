@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePermissions } from "@/hooks/usePermissions";
 import * as XLSX from "xlsx";
@@ -11,7 +12,7 @@ import type { ColumnsType } from "antd/es/table";
 export default function LaporanPegawaiPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   // Gunakan hooks permission khusus laporan, atau pakai /pegawai jika menginduk kesana
   // Di sini saya pakai '/laporan' agar seragam dengan laporan lainnya.
@@ -28,14 +29,8 @@ export default function LaporanPegawaiPage() {
 
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push('/login');
-    } else {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-    }
-  }, []);
+    // Session is handled by AuthProvider and middleware
+  }, [user]);
 
   useEffect(() => {
     if (isReady && user) {

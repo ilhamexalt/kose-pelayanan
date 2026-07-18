@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePermissions } from "@/hooks/usePermissions";
 import * as XLSX from "xlsx";
@@ -12,7 +13,7 @@ export default function PegawaiPage() {
   const [messageApi, messageHolder] = message.useMessage();
   const [modalApi, modalHolder] = Modal.useModal();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   // Use permissions hook
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/pegawai');
@@ -46,22 +47,12 @@ export default function PegawaiPage() {
   const [showEditPassword, setShowEditPassword] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      router.push('/login');
-    } else {
-      const parsedUser = JSON.parse(storedUser);
-      if (parsedUser.update_password === false) {
-        router.push('/update-password');
-        return;
-      }
-      if (parsedUser.update_password === false) {
-        router.push('/update-password');
-        return;
-      }
-      setUser(parsedUser);
+    if (isAuthLoading || !user) return;
+    if (user.update_password === false) {
+      router.push('/update-password');
+      return;
     }
-  }, []);
+  }, [user, isAuthLoading]);
 
   useEffect(() => {
     if (isReady && user) {

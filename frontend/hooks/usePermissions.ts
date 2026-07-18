@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export interface Permissions {
   create: boolean;
   read: boolean;
@@ -15,6 +17,7 @@ export interface Permissions {
 
 export function usePermissions(pathname: string): Permissions {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
   const [perms, setPerms] = useState<Permissions>({
     create: false,
     read: false,
@@ -29,13 +32,14 @@ export function usePermissions(pathname: string): Permissions {
     let timeoutId: NodeJS.Timeout;
 
     const checkPermissions = () => {
-      const userStr = localStorage.getItem('user');
-      if (!userStr) {
+      if (isLoading) return; // Tunggu auth selesai
+
+      if (!user) {
         setPerms(p => ({ ...p, isReady: true }));
         router.push('/login');
         return;
       }
-      const user = JSON.parse(userStr);
+      
       const isAdmin = String(user.nip).toLowerCase() === 'admin' || String(user.role).toLowerCase() === 'admin';
       
       if (isAdmin) {

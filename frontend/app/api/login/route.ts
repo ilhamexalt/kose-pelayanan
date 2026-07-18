@@ -42,18 +42,37 @@ export async function POST(request: Request) {
 
     if (userFound) {
       if (verifyPassword(password, userFound.password)) {
-        return NextResponse.json({ 
-          success: true, 
-          user: { 
-            id: userFound.id || String(userFound.nip),
-            nip: userFound.nip, 
-            nama: userFound.nama, 
-            email: userFound.email || '',
-            username: userFound.username || String(userFound.nip),
-            role: userFound.role || 'Pegawai',
-            update_password: Boolean(userFound.update_password)
-          } 
+        const userData = { 
+          id: userFound.id || String(userFound.nip),
+          nip: userFound.nip, 
+          nama: userFound.nama, 
+          email: userFound.email || '',
+          username: userFound.username || String(userFound.nip),
+          role: userFound.role || 'Pegawai',
+          update_password: Boolean(userFound.update_password)
+        };
+        
+        // Buat sesi
+        const { encryptSession, SESSION_EXPIRES_IN } = await import('@/lib/session');
+        const { cookies } = await import('next/headers');
+        
+        const payload = {
+          user: userData,
+          expiresAt: Date.now() + SESSION_EXPIRES_IN * 1000,
+        };
+        
+        const token = encryptSession(payload);
+        
+        const cookieStore = await cookies();
+        cookieStore.set('auth_session', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: SESSION_EXPIRES_IN,
+          path: '/',
         });
+
+        return NextResponse.json({ success: true, user: userData });
       } else {
         return NextResponse.json({ error: 'Password salah' }, { status: 401 });
       }

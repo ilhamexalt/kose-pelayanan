@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { message } from "antd";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -9,7 +10,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 export default function UpdatePasswordPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user, refreshSession } = useAuth();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,13 +19,8 @@ export default function UpdatePasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      router.push("/login");
-    } else {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+    if (!user) return;
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,9 +60,7 @@ export default function UpdatePasswordPage() {
       const json = await res.json();
 
       if (json.success) {
-        const updatedUser = { ...user, update_password: true };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
+        await refreshSession();
         messageApi.success("Password Anda berhasil diperbarui!");
         setTimeout(() => {
           router.push("/dashboard");
