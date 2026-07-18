@@ -1,9 +1,17 @@
 import crypto from 'crypto';
 
-// Gunakan kunci dari environment, atau gunakan fallback untuk development.
-// Pada production, HARUS mengatur ENCRYPTION_KEY di .env.local dengan kunci 32-byte (64 karakter hex).
-// Rekomendasi kunci yang aman dapat digenerate dengan: crypto.randomBytes(32).toString('hex')
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '12345678901234567890123456789012'; // 32 chars (256 bit)
+let key = process.env.ENCRYPTION_KEY;
+
+if (!key) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL: ENCRYPTION_KEY environment variable is missing in production!');
+  } else {
+    console.warn('⚠️ WARNING: ENCRYPTION_KEY is not set. Using an ephemeral key for development.');
+    key = crypto.randomBytes(16).toString('hex'); // 32 characters
+  }
+}
+
+const ENCRYPTION_KEY = key;
 const IV_LENGTH = 16;
 
 /**
