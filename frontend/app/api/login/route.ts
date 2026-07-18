@@ -42,6 +42,18 @@ export async function POST(request: Request) {
 
     if (userFound) {
       if (verifyPassword(password, userFound.password)) {
+        // [SECURITY UPGRADE] Auto-migrate plaintext password to bcrypt hash on first successful login
+        if (!String(userFound.password).startsWith('$2')) {
+          try {
+            const { hashPassword } = await import('@/lib/password');
+            const { updateDoc } = await import('firebase/firestore');
+            await updateDoc(doc(db, 'users', userFound.id), {
+              password: hashPassword(password)
+            });
+          } catch (err) {
+            console.error('Gagal migrasi password ke hash:', err);
+          }
+        }
         const userData = { 
           id: userFound.id || String(userFound.nip),
           nip: userFound.nip, 
