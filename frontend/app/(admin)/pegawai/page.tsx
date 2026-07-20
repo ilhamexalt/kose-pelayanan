@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePermissions } from "@/hooks/usePermissions";
 import * as XLSX from "xlsx";
-import { message, Modal } from "antd";
+import { message, Modal, Pagination } from "antd";
 
 
 export default function PegawaiPage() {
@@ -571,38 +571,17 @@ export default function PegawaiPage() {
           </div>
 
           {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredPegawai.length)} dari {filteredPegawai.length} data
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-50"
-                >
-                  Sebelumnya
-                </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`px-3 py-1 rounded text-sm font-medium ${currentPage === i + 1 ? 'bg-[#DA251C] text-white' : 'bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-50"
-                >
-                  Selanjutnya
-                </button>
-              </div>
+          {/* Pagination Controls */}
+          {filteredPegawai.length > 0 && (
+            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+              <Pagination
+                current={currentPage}
+                pageSize={itemsPerPage}
+                total={filteredPegawai.length}
+                onChange={(page) => setCurrentPage(page)}
+                showTotal={(total, range) => `Menampilkan ${range[0]} - ${range[1]} dari ${total} data`}
+                showSizeChanger={false}
+              />
             </div>
           )}
         </div>

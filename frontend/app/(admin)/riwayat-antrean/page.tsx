@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { message, Modal } from "antd";
+import { message, Modal, Pagination } from "antd";
 import { usePermissions } from "@/hooks/usePermissions";
 
 import CustomSelect from "@/components/CustomSelect";
@@ -485,41 +485,15 @@ export default function HistoryPage() {
 
           {/* Pagination Controls */}
           {filteredAndSortedList.length > 0 && (
-            <div className="bg-slate-50 dark:bg-slate-800/40 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors duration-300">
-              <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Menampilkan <span className="font-semibold text-slate-800 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</span> hingga <span className="font-semibold text-slate-800 dark:text-slate-200">{Math.min(currentPage * itemsPerPage, filteredAndSortedList.length)}</span> dari <span className="font-semibold text-slate-800 dark:text-slate-200">{filteredAndSortedList.length}</span> data
-              </div>
-
-              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                >
-                  Sebelumnya
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center transition-colors cursor-pointer ${currentPage === page
-                      ? 'bg-[#DA251C] text-white shadow-sm'
-                      : 'border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-
-                <button
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                >
-                  Selanjutnya
-                </button>
-              </div>
+            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+              <Pagination
+                current={currentPage}
+                pageSize={itemsPerPage}
+                total={filteredAndSortedList.length}
+                onChange={(page) => setCurrentPage(page)}
+                showTotal={(total, range) => `Menampilkan ${range[0]} - ${range[1]} dari ${total} data`}
+                showSizeChanger={false}
+              />
             </div>
           )}
         </div>
