@@ -39,10 +39,16 @@ export function encrypt(text: string): string {
  */
 export function decrypt(text: string): string {
   if (isMissingKeyInProd) throw new Error('CRITICAL: ENCRYPTION_KEY environment variable is missing in production!');
-  if (!text || !text.includes(':')) return text;
+  if (!text || typeof text !== 'string' || !text.includes(':')) return text;
   try {
     const textParts = text.split(':');
-    const iv = Buffer.from(textParts.shift()!, 'hex');
+    const ivHex = textParts.shift()!;
+    
+    // IV untuk aes-256-cbc harus persis 16 byte (32 karakter hex).
+    // Jika tidak 32 karakter, berarti ini kemungkinan besar bukan teks yang dienkripsi (misal: waktu "14:30" atau URL "http://...").
+    if (ivHex.length !== 32) return text;
+
+    const iv = Buffer.from(ivHex, 'hex');
     const encryptedText = Buffer.from(textParts.join(':'), 'hex');
     const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
     let decrypted = decipher.update(encryptedText);
