@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       "TAD": "Pak Aria",
       "AIM": "Pak Aried",
       "RE": "Mba Reni",
-      "AR": "Mas Audi",
+      "AR": "Pak Audi",
       "MFF": "Mas Fikri",
     };
 
