@@ -80,7 +80,21 @@ export async function POST(request: Request) {
       return `${i + 1}. ${names} - ${j.kegiatan}${timePart}${tempatStr}`;
     }).join('\n');
 
+    // Menentukan waktu (pagi/siang/sore/malam) berdasarkan jam saat ini (WIB)
+    const currentHour = new Date(today.getTime() + (7 * 60 * 60 * 1000)).getUTCHours();
+    let waktu = 'pagi';
+    if (currentHour >= 4 && currentHour < 11) {
+      waktu = 'pagi';
+    } else if (currentHour >= 11 && currentHour < 15) {
+      waktu = 'siang';
+    } else if (currentHour >= 15 && currentHour < 18) {
+      waktu = 'sore';
+    } else {
+      waktu = 'malam';
+    }
+
     const vars = {
+      waktu,
       hari,
       tanggal: tanggal.toString(),
       bulan,

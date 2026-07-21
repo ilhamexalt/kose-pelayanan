@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/jadwal-pepk-lmst/send-group",
+      "schedule": "5 9 * * *"
+    }
+  ]
+}
