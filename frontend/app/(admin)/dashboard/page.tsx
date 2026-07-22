@@ -443,8 +443,12 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-b border-slate-100 dark:border-slate-800/50">
                 {todayJadwalPepk.map((jadwal, index) => {
                   const names = Array.isArray(jadwal.nama) ? jadwal.nama.join(', ') : jadwal.nama;
-                  const isPast = jadwal.jamSelesai && jadwal.jamSelesai < dayjs().format('HH:mm');
-                  const isOngoing = jadwal.jamMulai && jadwal.jamSelesai && jadwal.jamMulai <= dayjs().format('HH:mm') && jadwal.jamSelesai >= dayjs().format('HH:mm');
+                  const currentTime = dayjs().format('HH:mm');
+                  const hasTime = jadwal.jamMulai && jadwal.jamSelesai;
+                  
+                  const isPast = hasTime ? jadwal.jamSelesai < currentTime : false;
+                  const isUpcoming = hasTime ? jadwal.jamMulai > currentTime : false;
+                  const isOngoing = !isPast && !isUpcoming;
 
                   return (
                     <div

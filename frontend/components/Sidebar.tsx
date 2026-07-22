@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import ThemeToggle from "@/components/ThemeToggle";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -155,8 +156,8 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         <div className={`h-16 flex items-center shrink-0 border-b border-slate-200 dark:border-slate-800 ${isDesktopOpen ? 'justify-between px-6' : 'justify-between px-6 md:justify-center md:px-0'}`}>
           <Link href="/dashboard" className="flex items-center">
             <div className={`flex items-center ${!isDesktopOpen ? 'md:hidden' : ''}`}>
-              <img src="/assets/images/ojk-banten-logo.png" alt="Logo OJK" className="h-9 w-auto dark:hidden" />
-              <img src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" className="h-9 w-auto hidden dark:block" />
+              <Image src="/assets/images/ojk-banten-logo.png" alt="Logo OJK" width={140} height={36} className="h-9 w-auto dark:hidden" priority />
+              <Image src="/assets/images/logo-ojk-putih.png" alt="Logo OJK" width={140} height={36} className="h-9 w-auto hidden dark:block" priority />
             </div>
           </Link>
           {/* Tombol Tutup Sidebar untuk Desktop */}
@@ -278,7 +279,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
 
         {/* Bottom Banner Image */}
         <div className={`p-4 mt-auto border-t border-slate-200 dark:border-slate-800 ${!isDesktopOpen ? 'md:hidden' : ''}`}>
-          <img src="/assets/images/pct3.jpeg" alt="Banner" className="w-full h-72 rounded-xl shadow-sm object-cover" />
+          <Image src="/assets/images/pct3.jpeg" alt="Banner" width={300} height={288} className="w-full h-72 rounded-xl shadow-sm object-cover" />
         </div>
       </aside>
 

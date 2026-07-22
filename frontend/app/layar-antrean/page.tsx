@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
@@ -73,7 +74,7 @@ export default function DisplayScreenPage() {
             <header className="bg-[#1e293b] border-b border-slate-700 px-8 py-5 flex items-center justify-between shadow-md">
                 <div className="flex items-center space-x-5">
                     <div className="bg-white p-2.5 rounded-xl flex items-center justify-center">
-                        <img src="/assets/images/ojk-banten-logo.png" alt="Logo OJK" className="h-10 w-auto" />
+                        <Image src="/assets/images/ojk-banten-logo.png" alt="Logo OJK" width={140} height={40} className="h-10 w-auto" priority />
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold tracking-wide text-white uppercase">Portal Layanan Konsumen</h1>
