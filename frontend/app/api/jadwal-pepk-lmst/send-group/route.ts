@@ -18,30 +18,49 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'WA_GROUP_JID tidak dikonfigurasi di .env.local' }, { status: 500 });
     }
 
-    // Get tomorrow's date
+    // Get current date in UTC+7
     const today = new Date();
-    // Use UTC+7
-    const tomorrow = new Date(today.getTime() + (7 * 60 * 60 * 1000) + (24 * 60 * 60 * 1000));
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const current = new Date(today.getTime() + (7 * 60 * 60 * 1000));
+    
+    let targetDate = new Date(current.getTime() + (24 * 60 * 60 * 1000));
+    let targetDateStr = targetDate.toISOString().split('T')[0];
 
-    // Fetch schedules for tomorrow
+    // Fetch schedules
     const jadwalRef = collection(db, 'jadwal_pepk_lmst');
-    // NOTE: Since Firebase queries on string can be tricky if not exactly equal, we fetch all and filter, or just query where
-    const q = query(jadwalRef, where('tanggal', '==', tomorrowStr));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(jadwalRef);
+    const allJadwals = snapshot.docs.map(doc => doc.data());
 
-    if (snapshot.empty) {
-      return NextResponse.json({ error: 'Tidak ada jadwal untuk esok hari' }, { status: 400 });
+    let jadwals: any[] = [];
+
+    // Filter schedules for targetDate, skip weekends if empty
+    while (true) {
+      const dayOfWeek = targetDate.getUTCDay();
+      const isWeekend = dayOfWeek === 6 || dayOfWeek === 0;
+
+      jadwals = allJadwals.filter(j => {
+        const start = j.tanggalMulai || j.tanggal;
+        const end = j.tanggalSelesai || j.tanggalMulai || j.tanggal;
+        return start <= targetDateStr && targetDateStr <= end;
+      });
+
+      if (jadwals.length > 0 || !isWeekend) {
+        break;
+      }
+
+      // If it's a weekend and no schedules, skip to next day
+      targetDate = new Date(targetDate.getTime() + (24 * 60 * 60 * 1000));
+      targetDateStr = targetDate.toISOString().split('T')[0];
     }
 
-    // Sort by timestamp or just return them
-    const jadwals = snapshot.docs.map(doc => doc.data());
+    if (jadwals.length === 0) {
+      return NextResponse.json({ error: `Tidak ada jadwal untuk tanggal ${targetDateStr}` }, { status: 400 });
+    }
 
     // Format variables
-    const hari = DAYS[tomorrow.getUTCDay()];
-    const tanggal = tomorrow.getUTCDate();
-    const bulan = MONTHS[tomorrow.getUTCMonth()];
-    const tahun = tomorrow.getUTCFullYear();
+    const hari = DAYS[targetDate.getUTCDay()];
+    const tanggal = targetDate.getUTCDate();
+    const bulan = MONTHS[targetDate.getUTCMonth()];
+    const tahun = targetDate.getUTCFullYear();
 
     const PEGAWAI_OPTIONS: Record<string, string> = {
       "DKA": "Pak Dendy",

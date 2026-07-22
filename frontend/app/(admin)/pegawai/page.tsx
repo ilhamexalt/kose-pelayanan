@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePermissions } from "@/hooks/usePermissions";
 import * as XLSX from "xlsx";
-import { message, Modal, Pagination } from "antd";
+import { message, Modal, Pagination, Select } from "antd";
 
 
 export default function PegawaiPage() {
@@ -26,6 +26,7 @@ export default function PegawaiPage() {
 
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterRole, setFilterRole] = useState('');
 
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -322,7 +323,10 @@ export default function PegawaiPage() {
     const matchQuery = (p.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (String(p.nip) || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.email || '').toLowerCase().includes(searchQuery.toLowerCase());
-    return matchQuery;
+    
+    const matchRole = filterRole ? (p.role || 'Pegawai') === filterRole : true;
+
+    return matchQuery && matchRole;
   }).sort((a, b) => {
     const nameA = (a.nama || '').toLowerCase();
     const nameB = (b.nama || '').toLowerCase();
@@ -426,26 +430,41 @@ export default function PegawaiPage() {
                     setCurrentPage(1);
                   }
                 }}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                className="w-full h-[38px] pl-10 pr-4 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
               />
             </div>
+            <Select
+              value={filterRole || undefined}
+              onChange={(value) => {
+                setFilterRole(value || '');
+                setCurrentPage(1);
+              }}
+              placeholder="Semua Role"
+              allowClear
+              className="w-48 h-[38px] [&_.ant-select-selector]:!h-[38px] [&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-300 dark:[&_.ant-select-selector]:!border-slate-700 [&_.ant-select-selection-item]:!leading-[36px] [&_.ant-select-selection-placeholder]:!leading-[36px] text-sm"
+              options={[
+                { value: '', label: 'Semua Role' },
+                ...Array.from(new Set(pegawaiList.map(p => p.role || 'Pegawai'))).sort().map(r => ({ value: r, label: r }))
+              ]}
+            />
             <button
               onClick={() => {
                 setSearchQuery(searchInput);
                 setCurrentPage(1);
               }}
-              className="px-4 py-2 bg-[#DA251C] hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer flex items-center gap-1 shadow-sm shrink-0"
+              className="h-[38px] px-4 bg-[#DA251C] hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-sm shrink-0"
             >
               Cari
             </button>
-            {searchQuery && (
+            {(searchQuery || filterRole) && (
               <button
                 onClick={() => {
                   setSearchInput('');
                   setSearchQuery('');
+                  setFilterRole('');
                   setCurrentPage(1);
                 }}
-                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm transition-colors cursor-pointer shrink-0"
+                className="h-[38px] px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm transition-colors cursor-pointer flex items-center justify-center shrink-0"
                 title="Reset Cari"
               >
                 ✕

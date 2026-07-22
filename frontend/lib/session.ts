@@ -1,7 +1,7 @@
 import { encrypt, decrypt } from './crypto';
 
-// Token expiration time in seconds (e.g., 24 hours)
-export const SESSION_EXPIRES_IN = 24 * 60 * 60;
+// Token expiration time in seconds (120 minutes)
+export const SESSION_EXPIRES_IN = 120 * 60;
 
 export interface SessionPayload {
   user: {

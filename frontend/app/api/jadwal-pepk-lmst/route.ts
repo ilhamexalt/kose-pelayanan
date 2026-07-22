@@ -5,9 +5,9 @@ import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, upda
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { nama, kegiatan, tempat, tanggal, jamMulai, jamSelesai, status } = data;
+    const { nama, kegiatan, tempat, tanggalMulai, tanggalSelesai, jamMulai, jamSelesai, status } = data;
 
-    if (!nama || (Array.isArray(nama) && nama.length === 0) || !kegiatan || !tempat || !tanggal) {
+    if (!nama || (Array.isArray(nama) && nama.length === 0) || !kegiatan || !tempat || !tanggalMulai || !tanggalSelesai) {
       return NextResponse.json({ error: 'Nama, kegiatan, tempat, dan tanggal wajib diisi' }, { status: 400 });
     }
 
@@ -15,7 +15,8 @@ export async function POST(request: Request) {
       nama,
       kegiatan,
       tempat,
-      tanggal,
+      tanggalMulai,
+      tanggalSelesai,
       jamMulai: jamMulai || '',
       jamSelesai: jamSelesai || '',
       status: status || 'Belum Mulai',
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const jadwalRef = collection(db, 'jadwal_pepk_lmst');
-    const q = query(jadwalRef, orderBy('tanggal', 'desc'));
+    const q = query(jadwalRef, orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
 
     const dataArray = snapshot.docs.map(doc => {
@@ -48,7 +49,7 @@ export async function GET() {
         updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : null,
       };
     });
-      
+
     return NextResponse.json({ success: true, data: dataArray });
   } catch (error: any) {
     console.error('Error fetching jadwal:', error);

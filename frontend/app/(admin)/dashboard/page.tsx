@@ -40,9 +40,11 @@ export default function DashboardPage() {
 
   const [pelayananList, setPelayananList] = useState<Pelayanan[]>([]);
   const [meetingList, setMeetingList] = useState<Meeting[]>([]);
+  const [jadwalPepkList, setJadwalPepkList] = useState<any[]>([]);
 
   const [isLoadingPelayanan, setIsLoadingPelayanan] = useState(true);
   const [isLoadingMeeting, setIsLoadingMeeting] = useState(true);
+  const [isLoadingJadwalPepk, setIsLoadingJadwalPepk] = useState(true);
 
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
 
@@ -63,6 +65,7 @@ export default function DashboardPage() {
     }
 
     fetchMeeting();
+    fetchJadwalPepk();
 
       const unsubscribe = onSnapshot(collection(db, 'pelayanan'), () => {
         fetchPelayanan();
@@ -112,6 +115,20 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchJadwalPepk = async () => {
+    try {
+      const res = await fetch('/api/jadwal-pepk-lmst');
+      const json = await res.json();
+      if (json.success) {
+        setJadwalPepkList(json.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch jadwal pepk", error);
+    } finally {
+      setIsLoadingJadwalPepk(false);
+    }
+  };
+
   const handleToggleMaintenance = async (checked: boolean) => {
     try {
       await setDoc(doc(db, 'settings', 'general'), { maintenanceMode: checked }, { merge: true });
@@ -151,6 +168,20 @@ export default function DashboardPage() {
     .filter(m => m.tanggal === todayStr)
     .filter(m => !(m.waktuSelesai && m.waktuSelesai < dayjs().format('HH:mm')))
     .sort((a, b) => a.waktuMulai.localeCompare(b.waktuMulai));
+
+  // Hitung Data Jadwal PEPK & LMST Hari Ini
+  const todayJadwalPepk = jadwalPepkList
+    .filter(j => {
+      const d1 = j.tanggalMulai ? dayjs(j.tanggalMulai) : (j.tanggal ? dayjs(j.tanggal) : null);
+      const d2 = j.tanggalSelesai ? dayjs(j.tanggalSelesai) : (j.tanggal ? dayjs(j.tanggal) : null);
+      if (!d1) return false;
+      const d2Safe = d2 || d1;
+      
+      const today = dayjs(todayStr);
+      return (today.isSame(d1, 'day') || today.isAfter(d1, 'day')) && 
+             (today.isSame(d2Safe, 'day') || today.isBefore(d2Safe, 'day'));
+    })
+    .sort((a, b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''));
 
   const calculateTotalPeserta = (internal: Peserta[], eksternal: Peserta[]) => {
     const intTotal = (internal || []).reduce((acc, curr) => acc + (Number(curr.jumlah) || 0), 0);
@@ -377,6 +408,88 @@ export default function DashboardPage() {
                           </button>
                         </div>
                       )}
+
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Blok 3: Jadwal PEPK & LMST */}
+        <section className="space-y-4 pt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-5 h-5 text-[#DA251C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Jadwal PEPK & LMST Hari Ini</h2>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] overflow-visible">
+            {isLoadingJadwalPepk ? (
+              <div className="p-12 flex flex-col items-center justify-center text-slate-400">
+                <svg className="animate-spin h-8 w-8 text-[#DA251C] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p>Memuat jadwal PEPK & LMST...</p>
+              </div>
+            ) : todayJadwalPepk.length === 0 ? (
+              <div className="p-12 flex flex-col items-center justify-center text-slate-400 text-center">
+                <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <p className="text-lg font-medium text-slate-600 dark:text-slate-300">Tidak ada jadwal PEPK & LMST hari ini</p>
+                <p className="text-sm mt-1">Jadwal saat ini kosong.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-b border-slate-100 dark:border-slate-800/50">
+                {todayJadwalPepk.map((jadwal, index) => {
+                  const names = Array.isArray(jadwal.nama) ? jadwal.nama.join(', ') : jadwal.nama;
+                  const isPast = jadwal.jamSelesai && jadwal.jamSelesai < dayjs().format('HH:mm');
+                  const isOngoing = jadwal.jamMulai && jadwal.jamSelesai && jadwal.jamMulai <= dayjs().format('HH:mm') && jadwal.jamSelesai >= dayjs().format('HH:mm');
+
+                  return (
+                    <div
+                      key={jadwal.id}
+                      className={`p-6 border-slate-100 dark:border-slate-800/50 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50
+                        ${index % 3 !== 2 ? 'lg:border-r' : ''} 
+                        ${index % 2 !== 1 ? 'md:border-r lg:border-r-0' : ''}
+                        border-b
+                      `}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-xl text-blue-600 dark:text-blue-400">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight line-clamp-1">{jadwal.kegiatan}</h3>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">Pegawai: <span className="font-semibold text-slate-700 dark:text-slate-300">{names || '-'}</span></p>
+                          </div>
+                        </div>
+                        {isOngoing ? (
+                          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/50 shadow-sm animate-pulse whitespace-nowrap flex-shrink-0 text-center">
+                            Sedang Berlangsung
+                          </span>
+                        ) : isPast ? (
+                          <span className="px-3 py-1.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-slate-200 dark:border-slate-700 shadow-sm whitespace-nowrap flex-shrink-0 text-center">
+                            Selesai
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-bold rounded-full uppercase tracking-wide border border-blue-200 dark:border-blue-800/50 shadow-sm whitespace-nowrap flex-shrink-0 text-center">
+                            Akan Datang
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                          <svg className="w-5 h-5 text-blue-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          <span>{jadwal.jamMulai || '-'} - {jadwal.jamSelesai || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          <span className="line-clamp-1 max-w-[100px]">{jadwal.tempat || '-'}</span>
+                        </div>
+                      </div>
 
                     </div>
                   );

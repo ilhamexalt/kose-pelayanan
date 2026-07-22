@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { Modal } from "antd";
 
 interface User {
   id: string;
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [modal, contextHolder] = Modal.useModal();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -35,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchSession = async () => {
     try {
-      // Don't fetch session if on public routes that don't need auth
       if (pathname === '/login' || pathname === '/lupa-password') {
         setIsLoading(false);
         return;
@@ -60,8 +61,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchSession();
   }, [pathname]);
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      router.push('/login');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || pathname === '/login' || pathname === '/lupa-password') return;
+
+    let timeoutId: NodeJS.Timeout;
+    
+    // Waktu idle 60 menit
+    const IDLE_TIME = 60 * 60 * 1000;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        modal.warning({
+          title: 'Sesi Habis',
+          content: 'Sesi Anda telah habis karena tidak ada aktivitas.',
+          onOk: handleLogout,
+        });
+      }, IDLE_TIME);
+    };
+
+    resetTimer();
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll'];
+    events.forEach((event) => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [user, pathname, modal]);
+
   return (
     <AuthContext.Provider value={{ user, setUser, isLoading, refreshSession: fetchSession }}>
+      {contextHolder}
       {children}
     </AuthContext.Provider>
   );
