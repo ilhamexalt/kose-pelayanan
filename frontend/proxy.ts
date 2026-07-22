@@ -19,6 +19,12 @@ export function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get('auth_session')?.value;
 
   if (!sessionToken) {
+    // Allow Vercel Cron jobs if they have the correct Authorization header
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.next();
+    }
+
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ success: false, error: 'Unauthorized: Harap login terlebih dahulu' }, { status: 401 });
     }

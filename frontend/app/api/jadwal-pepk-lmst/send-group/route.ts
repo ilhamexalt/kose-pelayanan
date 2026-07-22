@@ -118,5 +118,8 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  console.log("Cron GET request received!");
+  const authHeader = request.headers.get('authorization');
+  console.log("Auth header:", authHeader ? "Present" : "Missing");
   return POST(request);
 }
