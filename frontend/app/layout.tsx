@@ -30,6 +30,8 @@ export const viewport: Viewport = {
 
 import { AuthProvider } from "@/contexts/AuthContext";
 
+import MaintenanceOverlay from "@/components/MaintenanceOverlay";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,9 +45,11 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors duration-300">
         <ThemeProvider>
           <AuthProvider>
-            <main className="flex-1 flex flex-col">
-              {children}
-            </main>
+            <MaintenanceOverlay>
+              <main className="flex-1 flex flex-col">
+                {children}
+              </main>
+            </MaintenanceOverlay>
           </AuthProvider>
         </ThemeProvider>
       </body>

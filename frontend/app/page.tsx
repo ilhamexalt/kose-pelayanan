@@ -2,12 +2,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import ThemeToggle from '@/components/ThemeToggle';
 import Footer from '@/components/Footer';
-import MaintenanceOverlay from '@/components/MaintenanceOverlay';
 
 export default function Home() {
   return (
     <div className="min-h-screen lg:h-screen flex flex-col relative bg-slate-50 dark:bg-[#090d16] transition-colors duration-300 overflow-x-hidden lg:overflow-hidden">
-      <MaintenanceOverlay />
       {/* Background Ornaments */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-br from-[#DA251C]/10 to-transparent blur-3xl opacity-70 dark:opacity-40" />

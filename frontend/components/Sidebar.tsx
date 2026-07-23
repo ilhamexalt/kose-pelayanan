@@ -279,7 +279,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
 
         {/* Bottom Banner Image */}
         <div className={`p-4 mt-auto border-t border-slate-200 dark:border-slate-800 ${!isDesktopOpen ? 'md:hidden' : ''}`}>
-          <Image src="/assets/images/pct3.jpeg" alt="Banner" width={300} height={288} className="w-full h-72 rounded-xl shadow-sm object-cover" />
+          <Image src="/assets/images/pct3.jpeg" alt="Banner" width={300} height={288} className="w-full h-72 rounded-xl shadow-sm object-cover" priority />
         </div>
       </aside>
 

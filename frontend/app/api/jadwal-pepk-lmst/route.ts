@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const jadwalRef = collection(db, 'jadwal_pepk_lmst');
-    const q = query(jadwalRef, orderBy('createdAt', 'desc'));
+    const q = query(jadwalRef);
     const snapshot = await getDocs(q);
 
     const dataArray = snapshot.docs.map(doc => {
@@ -48,6 +48,17 @@ export async function GET() {
         createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : null,
         updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : null,
       };
+    });
+
+    dataArray.sort((a: any, b: any) => {
+      const dateA = a.tanggalMulai || '';
+      const dateB = b.tanggalMulai || '';
+      if (dateA !== dateB) {
+        return dateB.localeCompare(dateA);
+      }
+      const jamA = a.jamMulai || '';
+      const jamB = b.jamMulai || '';
+      return jamB.localeCompare(jamA);
     });
 
     return NextResponse.json({ success: true, data: dataArray });

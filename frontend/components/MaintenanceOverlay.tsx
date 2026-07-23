@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
 
-export default function MaintenanceOverlay() {
+export default function MaintenanceOverlay({ children }: { children?: React.ReactNode }) {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,9 +28,29 @@ export default function MaintenanceOverlay() {
     return () => unsubscribe();
   }, []);
 
-  if (isLoading || !isMaintenance) {
-    return null;
+  // 1. Tunggu sampai status maintenance selesai di-fetch dari Firebase
+  if (isLoading) {
+    return <div className="min-h-screen bg-slate-50 dark:bg-[#090d16]" />;
   }
+
+  // 2. Jika maintenance TIDAK aktif, langsung tampilkan halaman web
+  if (!isMaintenance) {
+    return <>{children}</>;
+  }
+
+  // 3. Maintenance AKTIF. Kita harus cek apakah user ini admin atau bukan.
+  // Jika status login (auth) masih loading, tunggu sebentar.
+  if (isAuthLoading) {
+    return <div className="min-h-screen bg-slate-50 dark:bg-[#090d16]" />;
+  }
+
+  // 4. Auth sudah selesai. Jika dia admin, izinkan masuk (bypass).
+  const isAdmin = user && String(user.role).toLowerCase() === 'admin';
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
+  // 5. Bukan admin, tampilkan layar maintenance.
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-[#090d16] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
