@@ -13,6 +13,7 @@ export interface SessionPayload {
     role: string;
     update_password: boolean;
   };
+  session_token?: string;
   expiresAt: number;
 }
 

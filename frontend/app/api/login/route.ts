@@ -64,12 +64,23 @@ export async function POST(request: Request) {
           update_password: Boolean(userFound.update_password)
         };
         
+        // Generate session token and update DB
+        const { randomUUID } = await import('crypto');
+        const sessionToken = randomUUID();
+        const { updateDoc } = await import('firebase/firestore');
+        await updateDoc(doc(db, 'users', userData.id), {
+          is_active: true,
+          last_login: new Date().toISOString(),
+          session_token: sessionToken
+        });
+        
         // Buat sesi
         const { encryptSession, SESSION_EXPIRES_IN } = await import('@/lib/session');
         const { cookies } = await import('next/headers');
         
         const payload = {
           user: userData,
+          session_token: sessionToken,
           expiresAt: Date.now() + SESSION_EXPIRES_IN * 1000,
         };
         

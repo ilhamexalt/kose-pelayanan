@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePermissions } from "@/hooks/usePermissions";
 import * as XLSX from "xlsx";
-import { message, Modal, Pagination, Select } from "antd";
+import { message, Modal, Select, Table } from "antd";
+import type { ColumnsType } from "antd/es/table";
 
 
 export default function PegawaiPage() {
@@ -31,7 +32,6 @@ export default function PegawaiPage() {
 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedDetailUser, setSelectedDetailUser] = useState<any>(null);
 
@@ -337,25 +337,92 @@ export default function PegawaiPage() {
     }
   });
 
-  const totalPages = Math.ceil(filteredPegawai.length / itemsPerPage);
-  const paginatedPegawai = filteredPegawai.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      const allIds = paginatedPegawai.filter(p => p.nip !== 'admin' && p.id !== 'admin' && String(p.role).toLowerCase() !== 'admin').map(p => p.id);
-      setSelectedIds(allIds);
-    } else {
-      setSelectedIds([]);
-    }
+  const rowSelection = {
+    selectedRowKeys: selectedIds,
+    onChange: (newSelectedRowKeys: React.Key[]) => {
+      setSelectedIds(newSelectedRowKeys as string[]);
+    },
+    getCheckboxProps: (record: any) => ({
+      disabled: record.nip === 'admin' || record.id === 'admin' || String(record.role).toLowerCase() === 'admin',
+    }),
   };
 
-  const handleSelectRow = (id: string) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter(selectedId => selectedId !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
+  const columns: ColumnsType<any> = [
+    {
+      title: 'No',
+      key: 'no',
+      width: 60,
+      render: (text, record, index) => (currentPage - 1) * 10 + index + 1,
+    },
+    {
+      title: 'NIP',
+      dataIndex: 'nip',
+      key: 'nip',
+      render: (text, record) => <div className="text-sm text-slate-900 dark:text-slate-100">{record.nip || record.id}</div>,
+    },
+    {
+      title: 'Nama',
+      key: 'nama',
+      render: (_, record) => {
+        const isAdminCheck = record.nip === 'admin' || record.id === 'admin' || String(record.role).toLowerCase() === 'admin';
+        return (
+          <div className="text-sm text-slate-900 dark:text-slate-100 font-medium">
+            {capitalizeWords(record.nama)}
+            {isAdminCheck && <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border dark:border-amber-800 text-[10px] rounded-full font-bold">UTAMA</span>}
+          </div>
+        );
+      }
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      render: (text) => <div className="text-sm text-slate-500 dark:text-slate-400">{text || '-'}</div>,
+    },
+    {
+      title: 'Role',
+      dataIndex: 'role',
+      key: 'role',
+      render: (text) => <div className="text-sm text-slate-500 dark:text-slate-400">{text || '-'}</div>,
+    },
+    {
+      title: 'Aksi',
+      key: 'aksi',
+      align: 'right',
+      render: (_, item) => {
+        const isAdminCheck = item.nip === 'admin' || item.id === 'admin' || String(item.role).toLowerCase() === 'admin';
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => setSelectedDetailUser(item)}
+              className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs transition-colors cursor-pointer border-none"
+              title="Detail"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            </button>
+            {update && (
+              <button
+                onClick={() => handleOpenEdit(item)}
+                className="px-2.5 py-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded text-xs transition-colors cursor-pointer border-none"
+                title="Edit"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              </button>
+            )}
+            {del && !isAdminCheck && (
+              <button
+                onClick={() => handleDelete(item)}
+                className="px-2.5 py-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded text-xs transition-colors cursor-pointer border-none"
+                title="Hapus"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            )}
+          </div>
+        );
+      }
     }
-  };
+  ];
 
   if (isLoading || !user) {
     return (
@@ -501,108 +568,22 @@ export default function PegawaiPage() {
         </div>
 
         {/* Pegawai Table */}
-        <div className="bg-white dark:bg-[#0f172a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors duration-300">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-              <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                  <th scope="col" className="px-6 py-4 text-left">
-                    <input
-                      type="checkbox"
-                      onChange={handleSelectAll}
-                      checked={paginatedPegawai.length > 0 && selectedIds.length === paginatedPegawai.filter(p => p.nip !== 'admin' && p.id !== 'admin' && String(p.role).toLowerCase() !== 'admin').length}
-                      className="rounded border-slate-300 dark:border-slate-700 text-[#DA251C] focus:ring-[#DA251C]"
-                    />
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">No</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">NIP</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
-                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-200 dark:divide-slate-800">
-                {paginatedPegawai.length > 0 ? (
-                  paginatedPegawai.map((item, idx) => {
-                    const isAdmin = item.nip === 'admin' || item.id === 'admin' || String(item.role).toLowerCase() === 'admin';
-                    return (
-                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-left">
-                          {!isAdmin && (
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.includes(item.id)}
-                              onChange={() => handleSelectRow(item.id)}
-                              className="rounded border-slate-300 dark:border-slate-700 text-[#DA251C] focus:ring-[#DA251C]"
-                            />
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100">{item.nip || item.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">
-                          {capitalizeWords(item.nama)}
-                          {isAdmin && <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border dark:border-amber-800 text-[10px] rounded-full font-bold">UTAMA</span>}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.email || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{item.role || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => setSelectedDetailUser(item)}
-                              className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs transition-colors"
-                              title="Detail"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                            </button>
-                            {update && (
-                              <button
-                                onClick={() => handleOpenEdit(item)}
-                                className="px-2.5 py-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded text-xs transition-colors"
-                                title="Edit"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                              </button>
-                            )}
-                            {del && !isAdmin && (
-                              <button
-                                onClick={() => handleDelete(item)}
-                                className="px-2.5 py-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded text-xs transition-colors"
-                                title="Hapus"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center">
-                      <p className="text-base font-medium text-slate-600 dark:text-slate-300">Tidak ada data pegawai</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          {/* Pagination Controls */}
-          {filteredPegawai.length > 0 && (
-            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
-              <Pagination
-                current={currentPage}
-                pageSize={itemsPerPage}
-                total={filteredPegawai.length}
-                onChange={(page) => setCurrentPage(page)}
-                showTotal={(total, range) => `Menampilkan ${range[0]} - ${range[1]} dari ${total} data`}
-                showSizeChanger={false}
-              />
-            </div>
-          )}
+        <div className="bg-white dark:bg-[#0f172a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-2 overflow-hidden transition-colors duration-300">
+          <Table
+            size="small"
+            dataSource={filteredPegawai}
+            columns={columns}
+            rowKey="id"
+            rowSelection={rowSelection}
+            pagination={{
+              current: currentPage,
+              pageSize: 10,
+              total: filteredPegawai.length,
+              onChange: (page) => setCurrentPage(page),
+              showTotal: (total, range) => `Menampilkan ${range[0]} - ${range[1]} dari ${total} data`
+            }}
+            scroll={{ x: 'max-content' }}
+          />
         </div>
       </main>
 
