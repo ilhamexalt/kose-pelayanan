@@ -33,6 +33,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Session killed or expired' }, { status: 401 });
     }
 
+    // Refresh critical fields from DB so session is not stale
+    payload.user.update_password = Boolean(userData.update_password);
+
     return NextResponse.json({ user: payload.user });
   } catch (error) {
     console.error('Error in /api/auth/me:', error);

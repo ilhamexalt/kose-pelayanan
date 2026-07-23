@@ -51,7 +51,7 @@ export default function UserLogPage() {
         modalApi.confirm({
             title: 'Konfirmasi Kill Session',
             content: `Apakah Anda yakin ingin memutus sesi untuk user ${userName}? User ini akan otomatis keluar dari aplikasi.`,
-            okText: 'Ya, Putus Sesi',
+            okText: 'Ya, Kill Session',
             okType: 'danger',
             cancelText: 'Batal',
             onOk: async () => {
