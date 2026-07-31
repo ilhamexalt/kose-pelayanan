@@ -39,8 +39,8 @@ interface Meeting {
 const ALL_ROOMS = [
   "Tanjung Lesung",
   "Pulau Umang",
-  "Karang Bolong",
-  "Sawarna",
+  "Pulau Sangiang",
+  "Pulau Tunda",
   "Baduy",
   "Ujung Kulon"
 ];
@@ -61,6 +61,11 @@ export default function OperasionalDashboardPage() {
 
   const [currentTime, setCurrentTime] = useState(dayjs());
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pepkSlideIndex, setPepkSlideIndex] = useState(0);
+  const [isTomorrowMode, setIsTomorrowMode] = useState(false);
+  const [showCountdownModal, setShowCountdownModal] = useState(false);
+  const [countdownSeconds, setCountdownSeconds] = useState(5);
+  const [hasTriggered1600, setHasTriggered1600] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -130,6 +135,58 @@ export default function OperasionalDashboardPage() {
     };
   }, [user, isAuthLoading, router]);
 
+  useEffect(() => {
+    const now = dayjs();
+    const isAfterTargetTime = (now.hour() === 14 && now.minute() >= 50) || now.hour() > 14;
+    if (isAfterTargetTime && !hasTriggered1600 && !isTomorrowMode && !showCountdownModal) {
+      setHasTriggered1600(true);
+      setShowCountdownModal(true);
+      setCountdownSeconds(5);
+    }
+    if (!isAfterTargetTime && hasTriggered1600) {
+      setHasTriggered1600(false);
+      setIsTomorrowMode(false);
+    }
+  }, [currentTime, hasTriggered1600, isTomorrowMode, showCountdownModal]);
+
+  useEffect(() => {
+    if (!showCountdownModal) return;
+    const interval = setInterval(() => {
+      setCountdownSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setShowCountdownModal(false);
+          setIsTomorrowMode(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showCountdownModal]);
+
+  useEffect(() => {
+    const todayStr = dayjs().format('YYYY-MM-DD');
+    const targetDateStr = isTomorrowMode
+      ? dayjs().add(1, 'day').format('YYYY-MM-DD')
+      : todayStr;
+    const targetPepkList = jadwalPepkList.filter(j => {
+      const d1 = j.tanggalMulai ? dayjs(j.tanggalMulai) : (j.tanggal ? dayjs(j.tanggal) : null);
+      const d2 = j.tanggalSelesai ? dayjs(j.tanggalSelesai) : (j.tanggal ? dayjs(j.tanggal) : null);
+      if (!d1) return false;
+      const d2Safe = d2 || d1;
+      const target = dayjs(targetDateStr);
+      return (target.isSame(d1, 'day') || target.isAfter(d1, 'day')) && 
+             (target.isSame(d2Safe, 'day') || target.isBefore(d2Safe, 'day'));
+    });
+
+    if (targetPepkList.length <= 1) return;
+    const timer = setInterval(() => {
+      setPepkSlideIndex((prev) => (prev + 1) % targetPepkList.length);
+    }, 5000); // 5 detik per slide
+    return () => clearInterval(timer);
+  }, [jadwalPepkList, isTomorrowMode]);
+
   const fetchPelayanan = async () => {
     try {
       const res = await fetch('/api/pelayanan');
@@ -172,18 +229,38 @@ export default function OperasionalDashboardPage() {
     }
   };
 
-  if (!user) {
+  const isInitialDataLoading = isAuthLoading || isLoadingPelayanan || isLoadingMeeting || isLoadingJadwalPepk;
+
+  if (!user || isInitialDataLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16]">
-        <svg className="animate-spin h-8 w-8 text-[#DA251C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0b0f19] p-4 text-center select-none">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-xl flex flex-col items-center gap-4 animate-scaleUp">
+          <div className="w-16 h-16 rounded-2xl bg-[#DA251C]/10 dark:bg-[#DA251C]/20 flex items-center justify-center border border-[#DA251C]/20 shadow-inner">
+            <svg className="animate-spin h-8 w-8 text-[#DA251C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100 mb-1">
+              Memuat Dasbor Operasional
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Menyiapkan data antrean, ruangan meeting & agenda PEPK...
+            </p>
+          </div>
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div className="bg-[#DA251C] h-full w-1/2 animate-pulse rounded-full" />
+          </div>
+        </div>
       </div>
     );
   }
 
   const todayStr = dayjs().format('YYYY-MM-DD');
+  const targetDateStr = isTomorrowMode
+    ? dayjs().add(1, 'day').format('YYYY-MM-DD')
+    : todayStr;
   const nowTimeStr = currentTime.format('HH:mm');
 
   // Pelayanan Hari Ini
@@ -203,7 +280,12 @@ export default function OperasionalDashboardPage() {
   const selesaiPct = totalAntrean > 0 ? Math.round((selesaiCount / totalAntrean) * 100) : 0;
   const batalPct = totalAntrean > 0 ? Math.round((batalCount / totalAntrean) * 100) : 0;
 
-  // Meeting Hari Ini
+  // Meeting untuk Tabel Jadwal (Hari Ini / Besok)
+  const targetMeeting = meetingList
+    .filter(m => m.tanggal === targetDateStr)
+    .sort((a, b) => a.waktuMulai.localeCompare(b.waktuMulai));
+
+  // Meeting hari ini (untuk status ruangan realtime)
   const todayMeeting = meetingList
     .filter(m => m.tanggal === todayStr)
     .sort((a, b) => a.waktuMulai.localeCompare(b.waktuMulai));
@@ -212,18 +294,85 @@ export default function OperasionalDashboardPage() {
     return !todayMeeting.some(m => m.ruangan === r && nowTimeStr >= m.waktuMulai && nowTimeStr < m.waktuSelesai);
   }).length;
 
-  // Jadwal PEPK Hari Ini
+  const getAvailableTimeSlots = (roomMeetings: Meeting[]) => {
+    if (!roomMeetings || roomMeetings.length === 0) return "Sepanjang hari";
+
+    const blockedHours = new Set<number>();
+    for (const m of roomMeetings) {
+      const startH = parseInt((m.waktuMulai || '').split(':')[0], 10);
+      const endH = parseInt((m.waktuSelesai || '').split(':')[0], 10);
+      if (!isNaN(startH) && !isNaN(endH)) {
+        for (let h = startH; h <= endH; h++) {
+          blockedHours.add(h);
+        }
+      }
+    }
+
+    const effectiveNowH = dayjs().minute() > 0 ? dayjs().hour() + 1 : dayjs().hour();
+    const freeHours: number[] = [];
+    for (let h = 8; h <= 17; h++) {
+      if (h >= effectiveNowH && !blockedHours.has(h)) {
+        freeHours.push(h);
+      }
+    }
+
+    if (freeHours.length === 0) {
+      const allFree: number[] = [];
+      for (let h = 8; h <= 17; h++) {
+        if (!blockedHours.has(h)) allFree.push(h);
+      }
+      if (allFree.length === 0) return "Penuh hari ini";
+      return "Tidak ada jam tersisa";
+    }
+
+    const ranges: string[] = [];
+    let startRange: number | null = null;
+    let prev: number | null = null;
+
+    for (let i = 0; i < freeHours.length; i++) {
+      const h = freeHours[i];
+      if (startRange === null) {
+        startRange = h;
+        prev = h;
+      } else if (h === (prev as number) + 1) {
+        prev = h;
+      } else {
+        ranges.push(
+          startRange === prev
+            ? `${String(startRange).padStart(2, '0')}:00`
+            : `${String(startRange).padStart(2, '0')}:00 - ${String(prev).padStart(2, '0')}:00`
+        );
+        startRange = h;
+        prev = h;
+      }
+    }
+
+    if (startRange !== null && prev !== null) {
+      ranges.push(
+        startRange === prev
+          ? `${String(startRange).padStart(2, '0')}:00`
+          : `${String(startRange).padStart(2, '0')}:00 - ${String(prev).padStart(2, '0')}:00`
+      );
+    }
+
+    return ranges.length > 0 ? ranges.join(", ") : "Penuh hari ini";
+  };
+
+  // Jadwal PEPK Hari Ini / Besok
   const todayJadwalPepk = jadwalPepkList
     .filter(j => {
       const d1 = j.tanggalMulai ? dayjs(j.tanggalMulai) : (j.tanggal ? dayjs(j.tanggal) : null);
       const d2 = j.tanggalSelesai ? dayjs(j.tanggalSelesai) : (j.tanggal ? dayjs(j.tanggal) : null);
       if (!d1) return false;
       const d2Safe = d2 || d1;
-      const today = dayjs(todayStr);
-      return (today.isSame(d1, 'day') || today.isAfter(d1, 'day')) && 
-             (today.isSame(d2Safe, 'day') || today.isBefore(d2Safe, 'day'));
+      const target = dayjs(targetDateStr);
+      return (target.isSame(d1, 'day') || target.isAfter(d1, 'day')) && 
+             (target.isSame(d2Safe, 'day') || target.isBefore(d2Safe, 'day'));
     })
     .sort((a, b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''));
+
+  const activePepkIndex = pepkSlideIndex >= todayJadwalPepk.length ? 0 : pepkSlideIndex;
+  const activeJadwalPepk = todayJadwalPepk[activePepkIndex];
 
   const calculateTotalPeserta = (internal: Peserta[], eksternal: Peserta[]) => {
     const intTotal = (internal || []).reduce((acc, curr) => acc + (Number(curr.jumlah) || 0), 0);
@@ -263,29 +412,29 @@ export default function OperasionalDashboardPage() {
   };
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#0b0f19] p-3.5 sm:p-5 flex flex-col gap-3.5 transition-colors select-none">
+    <main className="min-h-screen lg:h-screen w-full overflow-y-auto lg:overflow-hidden bg-slate-50 dark:bg-[#0b0f19] p-3 sm:p-4 md:p-5 flex flex-col gap-3.5 transition-colors select-none">
       {contextHolder}
       {modalContextHolder}
 
       {/* Header Bar - Compact & Full Width */}
-      <div className="shrink-0 flex items-center justify-between gap-4 bg-white dark:bg-slate-900 py-3 px-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              Executive Daily Analytics
+      <div className="shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 py-3 sm:py-2.5 px-4 sm:px-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2.5 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full bg-[#DA251C] animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#DA251C] whitespace-nowrap">
+              OPERASIONAL
             </span>
           </div>
-          <span className="h-4 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
-          <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 hidden sm:block">
-            Operational Daily Dashboard
+          <span className="h-4 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block shrink-0" />
+          <h1 className="text-sm sm:text-base md:text-lg font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap shrink-0">
+            Dasbor Operasional Harian
           </h1>
-          <span className="text-xs text-slate-500 dark:text-slate-400 hidden lg:block">
+          <span className="text-xs text-slate-500 dark:text-slate-400 hidden xl:block truncate min-w-0">
             — Pantauan realtime layanan antrean, ruangan meeting & agenda PEPK
           </span>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
           <button
             onClick={() => {
               try {
@@ -295,10 +444,10 @@ export default function OperasionalDashboardPage() {
               } catch (e) {}
               router.push('/dashboard');
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
             title="Kembali ke Dashboard"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>Kembali</span>
@@ -316,42 +465,42 @@ export default function OperasionalDashboardPage() {
                 }
               } catch (e) {}
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border whitespace-nowrap shrink-0 ${
               isFullscreen
                 ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
                 : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
             }`}
             title="Aktifkan / Nonaktifkan TV Mode Fullscreen (F11)"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
             </svg>
             <span className="hidden sm:inline">{isFullscreen ? "TV Mode Aktif" : "Layar Penuh"}</span>
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
-            <svg className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl whitespace-nowrap shrink-0">
+            <svg className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <div className="text-xs flex items-center gap-2">
+            <div className="text-xs flex items-center gap-2 whitespace-nowrap">
               <span className="font-semibold text-slate-800 dark:text-slate-200">{currentTime.locale('id').format('DD MMMM YYYY')}</span>
               <span className="text-slate-400">|</span>
               <span className="text-slate-600 dark:text-slate-300 font-mono font-bold">{currentTime.format('HH:mm:ss')} WIB</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-emerald-700 dark:text-emerald-400 text-xs font-semibold whitespace-nowrap shrink-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
             <span>Live Sync</span>
           </div>
         </div>
       </div>
 
       {/* KPI Summary Row - Compact & Full Width */}
-      <div className="shrink-0 grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+      <div className="shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
         
         {/* Total KPI */}
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Layanan</span>
             <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300">
@@ -359,7 +508,7 @@ export default function OperasionalDashboardPage() {
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">
+            <span className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100">
               {isLoadingPelayanan ? '-' : totalAntrean}
             </span>
             <span className="text-[11px] text-slate-500 dark:text-slate-400">Pengunjung hari ini</span>
@@ -370,7 +519,7 @@ export default function OperasionalDashboardPage() {
         </div>
 
         {/* Sedang Antre KPI */}
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-wider">Antre</span>
             <div className="p-1.5 bg-amber-50 dark:bg-amber-950/40 rounded-lg text-amber-600 dark:text-amber-400">
@@ -379,7 +528,7 @@ export default function OperasionalDashboardPage() {
           </div>
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : antreCount}</span>
+              <span className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : antreCount}</span>
               <span className="text-xs font-bold text-amber-600 dark:text-amber-400">({antrePct}%)</span>
             </div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400">Menunggu</span>
@@ -390,7 +539,7 @@ export default function OperasionalDashboardPage() {
         </div>
 
         {/* Diproses KPI */}
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-bold text-blue-600 dark:text-blue-500 uppercase tracking-wider">Diproses</span>
             <div className="p-1.5 bg-blue-50 dark:bg-blue-950/40 rounded-lg text-blue-600 dark:text-blue-400">
@@ -399,7 +548,7 @@ export default function OperasionalDashboardPage() {
           </div>
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : prosesCount}</span>
+              <span className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : prosesCount}</span>
               <span className="text-xs font-bold text-blue-600 dark:text-blue-400">({prosesPct}%)</span>
             </div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400">Dilayani</span>
@@ -410,7 +559,7 @@ export default function OperasionalDashboardPage() {
         </div>
 
         {/* Selesai KPI */}
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-wider">Selesai</span>
             <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg text-emerald-600 dark:text-emerald-400">
@@ -419,7 +568,7 @@ export default function OperasionalDashboardPage() {
           </div>
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : selesaiCount}</span>
+              <span className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : selesaiCount}</span>
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">({selesaiPct}%)</span>
             </div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400">Tuntas</span>
@@ -430,7 +579,7 @@ export default function OperasionalDashboardPage() {
         </div>
 
         {/* Batal KPI */}
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-bold text-rose-600 dark:text-rose-500 uppercase tracking-wider">Batal</span>
             <div className="p-1.5 bg-rose-50 dark:bg-rose-950/40 rounded-lg text-rose-600 dark:text-rose-400">
@@ -439,7 +588,7 @@ export default function OperasionalDashboardPage() {
           </div>
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : batalCount}</span>
+              <span className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100">{isLoadingPelayanan ? '-' : batalCount}</span>
               <span className="text-xs font-bold text-rose-600 dark:text-rose-400">({batalPct}%)</span>
             </div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400">Dibatalkan</span>
@@ -452,7 +601,7 @@ export default function OperasionalDashboardPage() {
       </div>
 
       {/* Main Analytical Grid - Flex 1 to Fill Exactly Remaining Screen Height */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+      <div className="flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3.5">
         
         {/* Left Column (7 cols): Room Occupancy & Meeting Schedule Table */}
         <div className="lg:col-span-7 flex flex-col gap-3.5 min-h-0">
@@ -475,16 +624,21 @@ export default function OperasionalDashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 overflow-hidden">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-hidden">
               {ALL_ROOMS.map((roomName) => {
-                const currentMeeting = todayMeeting.find(m => {
-                  return m.ruangan === roomName && nowTimeStr >= m.waktuMulai && nowTimeStr < m.waktuSelesai;
+                const roomMeetingsToday = todayMeeting
+                  .filter(m => m.ruangan === roomName)
+                  .sort((a, b) => (a.waktuMulai || '').localeCompare(b.waktuMulai || ''));
+
+                const currentMeeting = roomMeetingsToday.find(m => {
+                  return nowTimeStr >= m.waktuMulai && nowTimeStr < m.waktuSelesai;
                 });
-                const nextMeeting = todayMeeting
-                  .filter(m => m.ruangan === roomName && m.waktuMulai > nowTimeStr)
+                const nextMeeting = roomMeetingsToday
+                  .filter(m => m.waktuMulai > nowTimeStr)
                   .sort((a, b) => a.waktuMulai.localeCompare(b.waktuMulai))[0];
 
                 const isAvailable = !currentMeeting;
+                const availableSlotsStr = getAvailableTimeSlots(roomMeetingsToday);
 
                 return (
                   <div
@@ -518,12 +672,14 @@ export default function OperasionalDashboardPage() {
                           <span className="text-slate-600 dark:text-slate-300 ml-1">({currentMeeting.instansi || 'Internal'})</span>
                         </div>
                       ) : nextMeeting ? (
-                        <div className="truncate" title={`Jadwal: ${nextMeeting.waktuMulai} (${nextMeeting.instansi})`}>
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Jadwal: {nextMeeting.waktuMulai}</span>
+                        <div className="truncate" title={`Jadwal: ${nextMeeting.waktuMulai}-${nextMeeting.waktuSelesai} (${nextMeeting.instansi})`}>
+                          <span className="text-blue-600 dark:text-blue-400 font-medium">Jadwal: {nextMeeting.waktuMulai}-{nextMeeting.waktuSelesai}</span>
                           <span className="text-slate-600 dark:text-slate-300 ml-1">({nextMeeting.instansi || 'Internal'})</span>
                         </div>
                       ) : (
-                        <div className="font-medium">Sepanjang hari</div>
+                        <div className="font-medium text-emerald-700 dark:text-emerald-400 truncate" title={availableSlotsStr}>
+                          {availableSlotsStr}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -533,24 +689,31 @@ export default function OperasionalDashboardPage() {
           </div>
 
           {/* Meeting Schedule Table Card (Bottom Half) */}
-          <div className="flex-1 min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
+          <div className="flex-1 min-h-[260px] lg:min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
             <div className="pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
               <div>
-                <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                  Jadwal Meeting Hari Ini
+                <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <span>Jadwal Meeting {isTomorrowMode ? "Besok" : "Hari Ini"}</span>
+                  {isTomorrowMode && (
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60">
+                      {dayjs(targetDateStr).locale('id').format('DD MMM YYYY')}
+                    </span>
+                  )}
                 </h2>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Daftar agenda pemakaian ruang rapat ({todayMeeting.length} jadwal)
+                  Daftar agenda pemakaian ruang rapat ({targetMeeting.length} jadwal untuk {isTomorrowMode ? "hari besok" : "hari ini"})
                 </p>
               </div>
             </div>
 
             {isLoadingMeeting ? (
               <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">Memuat jadwal...</div>
-            ) : todayMeeting.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">Tidak ada jadwal meeting hari ini.</div>
+            ) : targetMeeting.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
+                Tidak ada jadwal meeting untuk {isTomorrowMode ? "hari besok" : "hari ini"}.
+              </div>
             ) : (
-              <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10">
                     <tr>
@@ -562,9 +725,9 @@ export default function OperasionalDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                    {todayMeeting.map((m) => {
-                      const isPast = m.waktuSelesai && m.waktuSelesai < nowTimeStr;
-                      const isOngoing = m.waktuMulai <= nowTimeStr && m.waktuSelesai >= nowTimeStr;
+                    {targetMeeting.map((m) => {
+                      const isPast = !isTomorrowMode && m.waktuSelesai && m.waktuSelesai < nowTimeStr;
+                      const isOngoing = !isTomorrowMode && m.waktuMulai <= nowTimeStr && m.waktuSelesai >= nowTimeStr;
                       const totalPeserta = calculateTotalPeserta(m.pesertaInternal, m.pesertaEksternal);
 
                       return (
@@ -587,7 +750,9 @@ export default function OperasionalDashboardPage() {
                             </button>
                           </td>
                           <td className="py-2 px-3">
-                            {isOngoing ? (
+                            {isTomorrowMode ? (
+                              <Tag color="blue" className="m-0 font-semibold">Jadwal Besok</Tag>
+                            ) : isOngoing ? (
                               <Tag color="error" className="m-0 font-semibold">Sedang Berlangsung</Tag>
                             ) : isPast ? (
                               <Tag color="default" className="m-0">Selesai</Tag>
@@ -606,126 +771,110 @@ export default function OperasionalDashboardPage() {
 
         </div>
 
-        {/* Right Column (5 cols): Queue Composition & PEPK Agenda */}
+        {/* Right Column (5 cols): PEPK Agenda */}
         <div className="lg:col-span-5 flex flex-col gap-3.5 min-h-0">
           
-          {/* Status Distribution Bar Chart Card (Top Half) */}
-          <div className="shrink-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-              Komposisi Status Pelayanan
-            </h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5">
-              Proporsi antrean berdasarkan status saat ini
-            </p>
-
-            {totalAntrean === 0 ? (
-              <div className="py-3 text-center text-xs text-slate-400">Belum ada data pelayanan hari ini</div>
-            ) : (
-              <div className="space-y-3">
-                {/* Multi-segment Horizontal Bar */}
-                <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full flex overflow-hidden">
-                  {antrePct > 0 && <div className="bg-amber-500 h-full" style={{ width: `${antrePct}%` }} title={`Antre: ${antreCount} (${antrePct}%)`} />}
-                  {prosesPct > 0 && <div className="bg-blue-500 h-full" style={{ width: `${prosesPct}%` }} title={`Diproses: ${prosesCount} (${prosesPct}%)`} />}
-                  {selesaiPct > 0 && <div className="bg-emerald-500 h-full" style={{ width: `${selesaiPct}%` }} title={`Selesai: ${selesaiCount} (${selesaiPct}%)`} />}
-                  {batalPct > 0 && <div className="bg-rose-500 h-full" style={{ width: `${batalPct}%` }} title={`Batal: ${batalCount} (${batalPct}%)`} />}
-                </div>
-
-                {/* Legend List */}
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-amber-500" />
-                      <span className="text-slate-700 dark:text-slate-300 font-medium">Antre</span>
-                    </div>
-                    <span className="font-bold text-slate-800 dark:text-slate-100">{antreCount} ({antrePct}%)</span>
-                  </div>
-
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-blue-500" />
-                      <span className="text-slate-700 dark:text-slate-300 font-medium">Diproses</span>
-                    </div>
-                    <span className="font-bold text-slate-800 dark:text-slate-100">{prosesCount} ({prosesPct}%)</span>
-                  </div>
-
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span className="text-slate-700 dark:text-slate-300 font-medium">Selesai</span>
-                    </div>
-                    <span className="font-bold text-slate-800 dark:text-slate-100">{selesaiCount} ({selesaiPct}%)</span>
-                  </div>
-
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-rose-500" />
-                      <span className="text-slate-700 dark:text-slate-300 font-medium">Batal</span>
-                    </div>
-                    <span className="font-bold text-slate-800 dark:text-slate-100">{batalCount} ({batalPct}%)</span>
-                  </div>
-                </div>
+          {/* PEPK Agenda Card (Full Height - Auto Carousel) */}
+          <div className="flex-1 min-h-[320px] lg:min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
+            <div className="pb-2.5 mb-3 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <span>Agenda PEPK & LMST {isTomorrowMode ? "Besok" : "Hari Ini"}</span>
+                  {isTomorrowMode && (
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60">
+                      {dayjs(targetDateStr).locale('id').format('DD MMM YYYY')}
+                    </span>
+                  )}
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Kegiatan Edukasi & Perlindungan Konsumen ({todayJadwalPepk.length} agenda untuk {isTomorrowMode ? "besok" : "hari ini"})
+                </p>
               </div>
-            )}
-          </div>
 
-          {/* PEPK Agenda Card (Bottom Half) */}
-          <div className="flex-1 min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
-            <div className="pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                Agenda PEPK & LMST Hari Ini
-              </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Kegiatan Edukasi & Perlindungan Konsumen ({todayJadwalPepk.length} agenda)
-              </p>
+              {todayJadwalPepk.length > 1 && (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  {activePepkIndex + 1} / {todayJadwalPepk.length}
+                </span>
+              )}
             </div>
 
             {isLoadingJadwalPepk ? (
               <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">Memuat agenda...</div>
             ) : todayJadwalPepk.length === 0 ? (
               <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
-                Tidak ada agenda PEPK / LMST untuk hari ini.
+                Tidak ada agenda PEPK / LMST untuk {isTomorrowMode ? "hari besok" : "hari ini"}.
               </div>
             ) : (
-              <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5">
-                {todayJadwalPepk.map((j, i) => {
-                  const names = Array.isArray(j.nama) ? j.nama.join(', ') : j.nama;
-                  const currentTimeStr = dayjs().format('HH:mm');
-                  const hasTime = j.jamMulai && j.jamSelesai;
-                  
-                  const isPast = hasTime ? j.jamSelesai < currentTimeStr : false;
-                  const isUpcoming = hasTime ? j.jamMulai > currentTimeStr : false;
-                  const isOngoing = !isPast && !isUpcoming;
+              <div className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden">
+                {/* Active Agenda Card (At the top, no white gap above) */}
+                <div>
+                  {(() => {
+                    const j = activeJadwalPepk;
+                    if (!j) return null;
+                    const names = Array.isArray(j.nama) ? j.nama.join(', ') : j.nama;
+                    const currentTimeStr = dayjs().format('HH:mm');
+                    const hasTime = j.jamMulai && j.jamSelesai;
+                    
+                    const isPast = !isTomorrowMode && hasTime ? j.jamSelesai < currentTimeStr : false;
+                    const isUpcoming = !isTomorrowMode && hasTime ? j.jamMulai > currentTimeStr : false;
+                    const isOngoing = !isTomorrowMode && !isPast && !isUpcoming;
 
-                  return (
-                    <div key={j.id || i} className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        {isOngoing ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/60 animate-pulse">
-                            Sedang Berlangsung
+                    return (
+                      <div
+                        key={j.id || activePepkIndex}
+                        className="p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 flex flex-col justify-start shadow-inner animate-smoothSlide transition-all duration-700"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                          {isTomorrowMode ? (
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 uppercase tracking-wide border border-blue-200 dark:border-blue-800/60">
+                              JADWAL BESOK
+                            </span>
+                          ) : isOngoing ? (
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/60 animate-pulse">
+                              SEDANG BERLANGSUNG
+                            </span>
+                          ) : isPast ? (
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase tracking-wide border border-slate-300 dark:border-slate-700">
+                              SELESAI
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 uppercase tracking-wide border border-blue-200 dark:border-blue-800/60">
+                              AKAN DATANG
+                            </span>
+                          )}
+                          <span className="text-xs sm:text-sm font-mono font-extrabold text-slate-700 dark:text-slate-200">
+                            {j.jamMulai || '-'} - {j.jamSelesai || '-'}
                           </span>
-                        ) : isPast ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase tracking-wide border border-slate-300 dark:border-slate-700">
-                            Selesai
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 uppercase tracking-wide border border-blue-200 dark:border-blue-800/60">
-                            Akan Datang
-                          </span>
-                        )}
-                        <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200">
-                          {j.jamMulai || '-'} - {j.jamSelesai || '-'}
-                        </span>
+                        </div>
+                        <h4 className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 mb-2 leading-snug">
+                          {j.kegiatan || '-'}
+                        </h4>
+                        <div className="text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t border-slate-200/60 dark:border-slate-700/50">
+                          <span>● Pegawai: <strong className="text-slate-800 dark:text-slate-100 font-bold">{names || '-'}</strong></span>
+                          <span>● Tempat: <strong className="text-slate-800 dark:text-slate-100 font-bold">{j.tempat || '-'}</strong></span>
+                        </div>
                       </div>
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1.5 leading-snug">
-                        {j.kegiatan || '-'}
-                      </h4>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span>● Pegawai: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{names || '-'}</strong></span>
-                        <span>● Tempat: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{j.tempat || '-'}</strong></span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })()}
+                </div>
+
+                {/* Dot Indicators Center Below Card */}
+                {todayJadwalPepk.length > 1 && (
+                  <div className="flex items-center justify-center gap-2 pt-2 pb-1">
+                    {todayJadwalPepk.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setPepkSlideIndex(idx)}
+                        className={`h-2 rounded-full transition-all duration-700 ease-out cursor-pointer ${
+                          idx === activePepkIndex
+                            ? 'w-7 bg-[#DA251C] shadow-sm'
+                            : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
+                        }`}
+                        title={`Slide ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -733,6 +882,34 @@ export default function OperasionalDashboardPage() {
         </div>
 
       </div>
+
+      {/* Modal Countdown 5 Detik Perpindahan Mode Besok (16:00 WIB) */}
+      {showCountdownModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md animate-fadeIn p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center space-y-4 animate-scaleUp">
+            <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-2 border border-blue-100 dark:border-blue-900/50 shadow-inner">
+              <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">
+              Pembaruan Jadwal Otomatis
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              Waktu menunjukkan pukul <strong className="text-slate-800 dark:text-slate-200">14.50 WIB</strong>. Sistem sedang memperbarui tampilan informasi <strong className="text-[#DA251C]">Jadwal Meeting & Agenda PEPK</strong> untuk <strong className="text-blue-600 dark:text-blue-400">Hari Besok</strong>.
+            </p>
+            <div className="py-2">
+              <div className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Mohon menunggu...</span>
+                <span className="w-7 h-7 rounded-full bg-[#DA251C] text-white font-extrabold text-sm flex items-center justify-center shadow">
+                  {countdownSeconds}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
