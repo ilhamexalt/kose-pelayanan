@@ -484,43 +484,56 @@ export default function JadwalPepkLmstPage() {
         footer={null}
         forceRender
         centered
+        width={560}
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          className="mt-4"
+          className="mt-2"
         >
-          <Form.Item
-            name="nama"
-            label="Nama"
-            rules={[{ required: true, message: 'Harap pilih nama' }]}
-          >
-            <Select
-              mode="multiple"
-              options={PEGAWAI_OPTIONS}
-              placeholder="Pilih Nama"
-              allowClear
-            />
-          </Form.Item>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3.5">
+            <Form.Item
+              name="nama"
+              label="Nama"
+              rules={[{ required: true, message: 'Harap pilih nama' }]}
+            >
+              <Select
+                mode="multiple"
+                options={PEGAWAI_OPTIONS}
+                placeholder="Pilih Nama"
+                allowClear
+              />
+            </Form.Item>
 
-          <Form.Item
-            name="kegiatan"
-            label="Kegiatan"
-            rules={[{ required: true, message: 'Harap isi kegiatan' }]}
-          >
-            <Input placeholder="Masukkan nama kegiatan" />
-          </Form.Item>
+            <Form.Item
+              name="status"
+              label="Status"
+              rules={[{ required: true, message: 'Harap pilih status' }]}
+            >
+              <Select options={STATUS_OPTIONS} />
+            </Form.Item>
+          </div>
 
-          <Form.Item
-            name="tempat"
-            label="Tempat"
-            rules={[{ required: true, message: 'Harap isi tempat' }]}
-          >
-            <Input placeholder="Masukkan tempat kegiatan" />
-          </Form.Item>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3.5">
+            <Form.Item
+              name="kegiatan"
+              label="Kegiatan"
+              rules={[{ required: true, message: 'Harap isi kegiatan' }]}
+            >
+              <Input placeholder="Masukkan nama kegiatan" />
+            </Form.Item>
 
-          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="tempat"
+              label="Tempat"
+              rules={[{ required: true, message: 'Harap isi tempat' }]}
+            >
+              <Input placeholder="Masukkan tempat kegiatan" />
+            </Form.Item>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3.5">
             <Form.Item
               name="tanggalMulai"
               label="Tanggal Mulai"
@@ -538,7 +551,7 @@ export default function JadwalPepkLmstPage() {
             </Form.Item>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3.5">
             <Form.Item
               name="jamMulai"
               label="Jam Mulai"
@@ -553,15 +566,8 @@ export default function JadwalPepkLmstPage() {
               <TimePicker className="w-full" format="HH:mm" />
             </Form.Item>
           </div>
-          <Form.Item
-            name="status"
-            label="Status"
-            rules={[{ required: true, message: 'Harap pilih status' }]}
-          >
-            <Select options={STATUS_OPTIONS} />
-          </Form.Item>
 
-          <div className="flex justify-end gap-2 mt-6">
+          <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
             <Button onClick={handleCancel}>Batal</Button>
             <Button type="primary" htmlType="submit" loading={submitting} style={{ backgroundColor: "#DA251C" }}>
               {isEditing ? 'Simpan Perubahan' : 'Tambah Jadwal'}

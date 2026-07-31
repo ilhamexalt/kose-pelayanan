@@ -649,70 +649,79 @@ export default function PegawaiPage() {
       {/* Modal Tambah Manual */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Tambah Pegawai Baru</h2>
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">NIP</label>
-                <input
-                  type="text"
-                  value={createForm.nip} onChange={e => setCreateForm({ ...createForm, nip: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Contoh: 12345678"
-                />
+            <form onSubmit={handleCreateSubmit} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">NIP</label>
+                  <input
+                    type="text"
+                    value={createForm.nip} onChange={e => setCreateForm({ ...createForm, nip: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Contoh: 12345678"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Username <span className="text-red-500">*</span></label>
+                  <input
+                    type="text" required
+                    value={createForm.username} onChange={e => setCreateForm({ ...createForm, username: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Username untuk login"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap <span className="text-red-500">*</span></label>
-                <input
-                  type="text" required
-                  value={createForm.nama} onChange={e => setCreateForm({ ...createForm, nama: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Nama Pegawai"
-                />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap <span className="text-red-500">*</span></label>
+                  <input
+                    type="text" required
+                    value={createForm.nama} onChange={e => setCreateForm({ ...createForm, nama: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Nama Pegawai"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Email</label>
+                  <input
+                    type="email"
+                    value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="email@ojk.go.id"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Email</label>
-                <input
-                  type="email"
-                  value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="email@ojk.go.id"
-                />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">No HP <span className="text-red-500">*</span></label>
+                  <input
+                    type="text" required
+                    value={createForm.no_hp} onChange={e => setCreateForm({ ...createForm, no_hp: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="6281234567890"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Role / Hak Akses <span className="text-red-500">*</span></label>
+                  <input
+                    type="text" list="rolesListCreate" required
+                    value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Ketik role baru atau pilih..."
+                  />
+                  <datalist id="rolesListCreate">
+                    <option value="Pegawai">Pegawai</option>
+                    {rolesList.filter(r => r.toLowerCase() !== 'pegawai' && r.toLowerCase() !== 'admin').map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                    <option value="Admin">Admin</option>
+                  </datalist>
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">No HP <span className="text-red-500">*</span></label>
-                <input
-                  type="text" required
-                  value={createForm.no_hp} onChange={e => setCreateForm({ ...createForm, no_hp: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="6281234567890"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Username <span className="text-red-500">*</span></label>
-                <input
-                  type="text" required
-                  value={createForm.username} onChange={e => setCreateForm({ ...createForm, username: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Username untuk login"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Role / Hak Akses <span className="text-red-500">*</span></label>
-                <input
-                  type="text" list="rolesListCreate" required
-                  value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Ketik role baru atau pilih..."
-                />
-                <datalist id="rolesListCreate">
-                  <option value="Pegawai">Pegawai</option>
-                  {rolesList.filter(r => r.toLowerCase() !== 'pegawai' && r.toLowerCase() !== 'admin').map(r => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                  <option value="Admin">Admin</option>
-                </datalist>
-              </div>
+
               <div>
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Password <span className="text-red-500">*</span></label>
                 <div className="relative">
@@ -736,6 +745,7 @@ export default function PegawaiPage() {
                   </button>
                 </div>
               </div>
+
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
                 <button type="submit" disabled={isSubmittingCreate} className="px-4 py-2 bg-[#DA251C] hover:bg-red-700 text-white rounded-lg text-sm font-medium cursor-pointer disabled:opacity-50">{isSubmittingCreate ? 'Menyimpan...' : 'Simpan'}</button>
@@ -748,83 +758,92 @@ export default function PegawaiPage() {
       {/* Modal Edit */}
       {selectedEditUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">Edit Pegawai</h2>
             <p className="text-xs text-slate-400 mb-4">NIP: <span className="font-bold text-slate-700 dark:text-slate-200">{selectedEditUser.nip || selectedEditUser.id}</span></p>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap <span className="text-red-500">*</span></label>
-                <input
-                  type="text" required
-                  value={editForm.nama} onChange={e => setEditForm({ ...editForm, nama: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Email</label>
-                <input
-                  type="email"
-                  value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">No HP <span className="text-red-500">*</span></label>
-                <input
-                  type="text" required
-                  value={editForm.no_hp} onChange={e => setEditForm({ ...editForm, no_hp: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="6281234567890"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Username <span className="text-red-500">*</span></label>
-                <input
-                  type="text" required
-                  value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Username untuk login"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Role / Hak Akses <span className="text-red-500">*</span></label>
-                <input
-                  type="text" list="rolesListEdit" required
-                  value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Ketik role baru atau pilih..."
-                />
-                <datalist id="rolesListEdit">
-                  <option value="Pegawai">Pegawai</option>
-                  {rolesList.filter(r => r.toLowerCase() !== 'pegawai' && r.toLowerCase() !== 'admin').map(r => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                  <option value="Admin">Admin</option>
-                </datalist>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Ubah Password</label>
-                <div className="relative">
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Lengkap <span className="text-red-500">*</span></label>
                   <input
-                    type={showEditPassword ? "text" : "password"}
-                    value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })}
-                    className="w-full px-3 py-2 pr-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                    placeholder="Biarkan kosong jika tidak diubah"
+                    type="text" required
+                    value={editForm.nama} onChange={e => setEditForm({ ...editForm, nama: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowEditPassword(!showEditPassword)}
-                    className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                    title={showEditPassword ? "Sembunyikan password" : "Tampilkan password"}
-                  >
-                    {showEditPassword ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                    )}
-                  </button>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Username <span className="text-red-500">*</span></label>
+                  <input
+                    type="text" required
+                    value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Username untuk login"
+                  />
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Email</label>
+                  <input
+                    type="email"
+                    value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">No HP <span className="text-red-500">*</span></label>
+                  <input
+                    type="text" required
+                    value={editForm.no_hp} onChange={e => setEditForm({ ...editForm, no_hp: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="6281234567890"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Role / Hak Akses <span className="text-red-500">*</span></label>
+                  <input
+                    type="text" list="rolesListEdit" required
+                    value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Ketik role baru atau pilih..."
+                  />
+                  <datalist id="rolesListEdit">
+                    <option value="Pegawai">Pegawai</option>
+                    {rolesList.filter(r => r.toLowerCase() !== 'pegawai' && r.toLowerCase() !== 'admin').map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                    <option value="Admin">Admin</option>
+                  </datalist>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Ubah Password</label>
+                  <div className="relative">
+                    <input
+                      type={showEditPassword ? "text" : "password"}
+                      value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })}
+                      className="w-full px-3 py-2 pr-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                      placeholder="Biarkan kosong jika tidak diubah"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEditPassword(!showEditPassword)}
+                      className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      title={showEditPassword ? "Sembunyikan password" : "Tampilkan password"}
+                    >
+                      {showEditPassword ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={() => setSelectedEditUser(null)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
                 <button type="submit" disabled={isSubmittingEdit} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium cursor-pointer disabled:opacity-50">{isSubmittingEdit ? 'Menyimpan...' : 'Update'}</button>

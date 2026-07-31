@@ -455,27 +455,29 @@ export default function MenuPage() {
       {/* Modal Tambah Manual */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Tambah Menu Baru</h2>
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Menu *</label>
-                <input
-                  type="text" required
-                  value={createForm.nama} onChange={e => setCreateForm({ ...createForm, nama: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="Contoh: Manajemen Menu"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">URL (Path) *</label>
-                <input
-                  type="text" required={!createForm.is_parent}
-                  value={createForm.url} onChange={e => setCreateForm({ ...createForm, url: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 dark:disabled:bg-slate-900/50"
-                  placeholder="Contoh: /menu"
-                  disabled={createForm.is_parent}
-                />
+            <form onSubmit={handleCreateSubmit} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Menu *</label>
+                  <input
+                    type="text" required
+                    value={createForm.nama} onChange={e => setCreateForm({ ...createForm, nama: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="Contoh: Manajemen Menu"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">URL (Path) *</label>
+                  <input
+                    type="text" required={!createForm.is_parent}
+                    value={createForm.url} onChange={e => setCreateForm({ ...createForm, url: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 dark:disabled:bg-slate-900/50"
+                    placeholder="Contoh: /menu"
+                    disabled={createForm.is_parent}
+                  />
+                </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <input
@@ -491,29 +493,42 @@ export default function MenuPage() {
                 <label htmlFor="is_parent_create" className="text-sm font-medium text-slate-700 dark:text-slate-300">Jadikan sebagai Parent Menu (memiliki sub-menu)</label>
               </div>
               {!createForm.is_parent && (
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Pilih Parent Menu (Opsional)</label>
-                  <select
-                    value={createForm.parent_id}
-                    onChange={e => setCreateForm({ ...createForm, parent_id: e.target.value })}
-                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  >
-                    <option value="">-- Tidak Ada Parent --</option>
-                    {menuList.filter(m => m.is_parent).map(parent => (
-                      <option key={parent.id} value={parent.id}>{parent.nama}</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Pilih Parent Menu (Opsional)</label>
+                    <select
+                      value={createForm.parent_id}
+                      onChange={e => setCreateForm({ ...createForm, parent_id: e.target.value })}
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    >
+                      <option value="">-- Tidak Ada Parent --</option>
+                      {menuList.filter(m => m.is_parent).map(parent => (
+                        <option key={parent.id} value={parent.id}>{parent.nama}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Urutan (Opsional)</label>
+                    <input
+                      type="number"
+                      value={createForm.urutan} onChange={e => setCreateForm({ ...createForm, urutan: parseInt(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
               )}
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Urutan (Opsional)</label>
-                <input
-                  type="number"
-                  value={createForm.urutan} onChange={e => setCreateForm({ ...createForm, urutan: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="0"
-                />
-              </div>
+              {createForm.is_parent && (
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Urutan (Opsional)</label>
+                  <input
+                    type="number"
+                    value={createForm.urutan} onChange={e => setCreateForm({ ...createForm, urutan: parseInt(e.target.value) || 0 })}
+                    className="w-full sm:w-1/2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              )}
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
                 <button type="submit" disabled={isSubmittingCreate} className="px-4 py-2 bg-[#DA251C] hover:bg-red-700 text-white rounded-lg text-sm font-medium cursor-pointer disabled:opacity-50">{isSubmittingCreate ? 'Menyimpan...' : 'Simpan'}</button>
@@ -526,25 +541,27 @@ export default function MenuPage() {
       {/* Modal Edit */}
       {selectedEditMenu && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 border border-slate-100 dark:border-slate-800 transition-colors duration-300">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Edit Menu</h2>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Menu *</label>
-                <input
-                  type="text" required
-                  value={editForm.nama} onChange={e => setEditForm({ ...editForm, nama: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">URL (Path) *</label>
-                <input
-                  type="text" required={!editForm.is_parent}
-                  value={editForm.url} onChange={e => setEditForm({ ...editForm, url: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 dark:disabled:bg-slate-900/50"
-                  disabled={editForm.is_parent}
-                />
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Nama Menu *</label>
+                  <input
+                    type="text" required
+                    value={editForm.nama} onChange={e => setEditForm({ ...editForm, nama: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">URL (Path) *</label>
+                  <input
+                    type="text" required={!editForm.is_parent}
+                    value={editForm.url} onChange={e => setEditForm({ ...editForm, url: e.target.value })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 dark:disabled:bg-slate-900/50"
+                    disabled={editForm.is_parent}
+                  />
+                </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <input
@@ -560,29 +577,42 @@ export default function MenuPage() {
                 <label htmlFor="is_parent_edit" className="text-sm font-medium text-slate-700 dark:text-slate-300">Jadikan sebagai Parent Menu (memiliki sub-menu)</label>
               </div>
               {!editForm.is_parent && (
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Pilih Parent Menu (Opsional)</label>
-                  <select
-                    value={editForm.parent_id}
-                    onChange={e => setEditForm({ ...editForm, parent_id: e.target.value })}
-                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  >
-                    <option value="">-- Tidak Ada Parent --</option>
-                    {menuList.filter(m => m.is_parent && m.id !== selectedEditMenu?.id).map(parent => (
-                      <option key={parent.id} value={parent.id}>{parent.nama}</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Pilih Parent Menu (Opsional)</label>
+                    <select
+                      value={editForm.parent_id}
+                      onChange={e => setEditForm({ ...editForm, parent_id: e.target.value })}
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    >
+                      <option value="">-- Tidak Ada Parent --</option>
+                      {menuList.filter(m => m.is_parent && m.id !== selectedEditMenu?.id).map(parent => (
+                        <option key={parent.id} value={parent.id}>{parent.nama}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Urutan (Opsional)</label>
+                    <input
+                      type="number"
+                      value={editForm.urutan} onChange={e => setEditForm({ ...editForm, urutan: parseInt(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
               )}
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Urutan (Opsional)</label>
-                <input
-                  type="number"
-                  value={editForm.urutan} onChange={e => setEditForm({ ...editForm, urutan: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
-                  placeholder="0"
-                />
-              </div>
+              {editForm.is_parent && (
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Urutan (Opsional)</label>
+                  <input
+                    type="number"
+                    value={editForm.urutan} onChange={e => setEditForm({ ...editForm, urutan: parseInt(e.target.value) || 0 })}
+                    className="w-full sm:w-1/2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              )}
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={() => setSelectedEditMenu(null)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium cursor-pointer">Batal</button>
                 <button type="submit" disabled={isSubmittingEdit} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium cursor-pointer disabled:opacity-50">{isSubmittingEdit ? 'Menyimpan...' : 'Update'}</button>
