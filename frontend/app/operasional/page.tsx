@@ -60,12 +60,39 @@ export default function OperasionalDashboardPage() {
   const [isLoadingJadwalPepk, setIsLoadingJadwalPepk] = useState(true);
 
   const [currentTime, setCurrentTime] = useState(dayjs());
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(dayjs());
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const checkFS = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", checkFS);
+    checkFS();
+
+    const docEl = document.documentElement as any;
+    const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+    if (requestFS && !document.fullscreenElement) {
+      requestFS.call(docEl).catch(() => {});
+    }
+
+    const handleFirstTouch = () => {
+      if (!document.fullscreenElement && requestFS) {
+        requestFS.call(docEl).catch(() => {});
+      }
+    };
+    window.addEventListener("click", handleFirstTouch, { once: true });
+
+    return () => {
+      document.removeEventListener("fullscreenchange", checkFS);
+      window.removeEventListener("click", handleFirstTouch);
+    };
   }, []);
 
   useEffect(() => {
@@ -260,7 +287,14 @@ export default function OperasionalDashboardPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => {
+              try {
+                if (document.fullscreenElement && document.exitFullscreen) {
+                  document.exitFullscreen().catch(() => {});
+                }
+              } catch (e) {}
+              router.push('/dashboard');
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
             title="Kembali ke Dashboard"
           >
@@ -268,6 +302,31 @@ export default function OperasionalDashboardPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>Kembali</span>
+          </button>
+
+          <button
+            onClick={() => {
+              try {
+                const docEl = document.documentElement as any;
+                if (!document.fullscreenElement) {
+                  const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+                  if (requestFS) requestFS.call(docEl);
+                } else {
+                  if (document.exitFullscreen) document.exitFullscreen();
+                }
+              } catch (e) {}
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+              isFullscreen
+                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
+                : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+            }`}
+            title="Aktifkan / Nonaktifkan TV Mode Fullscreen (F11)"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+            <span className="hidden sm:inline">{isFullscreen ? "TV Mode Aktif" : "Layar Penuh"}</span>
           </button>
 
           <div className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">

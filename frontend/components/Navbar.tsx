@@ -25,6 +25,22 @@ export default function Navbar({ user, isMobileOpen, setIsMobileOpen, isDesktopO
     else setGreeting("Selamat Malam");
   }, []);
 
+  const handleOpenOperationalFullscreen = (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      const docEl = document.documentElement as any;
+      const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+      if (requestFS) {
+        requestFS.call(docEl).catch((err: any) => {
+          console.log("Auto-fullscreen blocked by browser:", err);
+        });
+      }
+    } catch (err) {
+      console.log("Fullscreen API error:", err);
+    }
+    router.push("/operasional");
+  };
+
   const handleLogout = async () => {
     try {
       await fetch('/api/logout', { method: 'POST' });
@@ -62,15 +78,15 @@ export default function Navbar({ user, isMobileOpen, setIsMobileOpen, isDesktopO
 
         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
 
-        <Link
-          href="/operasional"
+        <button
+          onClick={handleOpenOperationalFullscreen}
           className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors cursor-pointer shadow-sm flex items-center justify-center"
-          title="Dasbor Operasional Harian"
+          title="Dasbor Operasional Harian (Otomatis TV Mode Fullscreen)"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
-        </Link>
+        </button>
 
         <button
           onClick={handleLogout}
