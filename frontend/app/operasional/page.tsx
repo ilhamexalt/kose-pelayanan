@@ -687,25 +687,45 @@ export default function OperasionalDashboardPage() {
               </div>
             ) : (
               <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5">
-                {todayJadwalPepk.map((j, i) => (
-                  <div key={i} className="p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#DA251C]/10 text-[#DA251C] dark:bg-red-900/30 dark:text-red-300 uppercase">
-                        {j.tipeJadwal || 'PEPK / LMST'}
-                      </span>
-                      <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-300">
-                        {j.jamMulai || '08:00'} - {j.jamSelesai || 'Selesai'}
-                      </span>
+                {todayJadwalPepk.map((j, i) => {
+                  const names = Array.isArray(j.nama) ? j.nama.join(', ') : j.nama;
+                  const currentTimeStr = dayjs().format('HH:mm');
+                  const hasTime = j.jamMulai && j.jamSelesai;
+                  
+                  const isPast = hasTime ? j.jamSelesai < currentTimeStr : false;
+                  const isUpcoming = hasTime ? j.jamMulai > currentTimeStr : false;
+                  const isOngoing = !isPast && !isUpcoming;
+
+                  return (
+                    <div key={j.id || i} className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        {isOngoing ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/60 animate-pulse">
+                            Sedang Berlangsung
+                          </span>
+                        ) : isPast ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase tracking-wide border border-slate-300 dark:border-slate-700">
+                            Selesai
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 uppercase tracking-wide border border-blue-200 dark:border-blue-800/60">
+                            Akan Datang
+                          </span>
+                        )}
+                        <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200">
+                          {j.jamMulai || '-'} - {j.jamSelesai || '-'}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1.5 leading-snug">
+                        {j.kegiatan || '-'}
+                      </h4>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span>● Pegawai: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{names || '-'}</strong></span>
+                        <span>● Tempat: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{j.tempat || '-'}</strong></span>
+                      </div>
                     </div>
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
-                      {j.namaKegiatan || 'Agenda Edukasi'}
-                    </h4>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                      <span>● Lokasi: {j.lokasi || 'OJK'}</span>
-                      {j.dihadiriOleh && <span>● Dihadiri: {j.dihadiriOleh}</span>}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
