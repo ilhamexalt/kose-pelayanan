@@ -84,12 +84,12 @@ export default function OperasionalDashboardPage() {
     const docEl = document.documentElement as any;
     const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
     if (requestFS && !document.fullscreenElement) {
-      requestFS.call(docEl).catch(() => {});
+      requestFS.call(docEl).catch(() => { });
     }
 
     const handleFirstTouch = () => {
       if (!document.fullscreenElement && requestFS) {
-        requestFS.call(docEl).catch(() => {});
+        requestFS.call(docEl).catch(() => { });
       }
     };
     window.addEventListener("click", handleFirstTouch, { once: true });
@@ -137,13 +137,12 @@ export default function OperasionalDashboardPage() {
 
   useEffect(() => {
     const now = dayjs();
-    const isAfterTargetTime = (now.hour() === 14 && now.minute() >= 50) || now.hour() > 14;
-    if (isAfterTargetTime && !hasTriggered1600 && !isTomorrowMode && !showCountdownModal) {
+    if (now.hour() >= 16 && !hasTriggered1600 && !isTomorrowMode && !showCountdownModal) {
       setHasTriggered1600(true);
       setShowCountdownModal(true);
       setCountdownSeconds(5);
     }
-    if (!isAfterTargetTime && hasTriggered1600) {
+    if (now.hour() < 16 && hasTriggered1600) {
       setHasTriggered1600(false);
       setIsTomorrowMode(false);
     }
@@ -176,8 +175,8 @@ export default function OperasionalDashboardPage() {
       if (!d1) return false;
       const d2Safe = d2 || d1;
       const target = dayjs(targetDateStr);
-      return (target.isSame(d1, 'day') || target.isAfter(d1, 'day')) && 
-             (target.isSame(d2Safe, 'day') || target.isBefore(d2Safe, 'day'));
+      return (target.isSame(d1, 'day') || target.isAfter(d1, 'day')) &&
+        (target.isSame(d2Safe, 'day') || target.isBefore(d2Safe, 'day'));
     });
 
     if (targetPepkList.length <= 1) return;
@@ -366,8 +365,8 @@ export default function OperasionalDashboardPage() {
       if (!d1) return false;
       const d2Safe = d2 || d1;
       const target = dayjs(targetDateStr);
-      return (target.isSame(d1, 'day') || target.isAfter(d1, 'day')) && 
-             (target.isSame(d2Safe, 'day') || target.isBefore(d2Safe, 'day'));
+      return (target.isSame(d1, 'day') || target.isAfter(d1, 'day')) &&
+        (target.isSame(d2Safe, 'day') || target.isBefore(d2Safe, 'day'));
     })
     .sort((a, b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''));
 
@@ -439,9 +438,9 @@ export default function OperasionalDashboardPage() {
             onClick={() => {
               try {
                 if (document.fullscreenElement && document.exitFullscreen) {
-                  document.exitFullscreen().catch(() => {});
+                  document.exitFullscreen().catch(() => { });
                 }
-              } catch (e) {}
+              } catch (e) { }
               router.push('/dashboard');
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
@@ -463,13 +462,12 @@ export default function OperasionalDashboardPage() {
                 } else {
                   if (document.exitFullscreen) document.exitFullscreen();
                 }
-              } catch (e) {}
+              } catch (e) { }
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border whitespace-nowrap shrink-0 ${
-              isFullscreen
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border whitespace-nowrap shrink-0 ${isFullscreen
                 ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
                 : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-            }`}
+              }`}
             title="Aktifkan / Nonaktifkan TV Mode Fullscreen (F11)"
           >
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -498,7 +496,7 @@ export default function OperasionalDashboardPage() {
 
       {/* KPI Summary Row - Compact & Full Width */}
       <div className="shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
-        
+
         {/* Total KPI */}
         <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between mb-1">
@@ -602,10 +600,10 @@ export default function OperasionalDashboardPage() {
 
       {/* Main Analytical Grid - Flex 1 to Fill Exactly Remaining Screen Height */}
       <div className="flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3.5">
-        
+
         {/* Left Column (7 cols): Room Occupancy & Meeting Schedule Table */}
         <div className="lg:col-span-7 flex flex-col gap-3.5 min-h-0">
-          
+
           {/* Room Occupancy Grid Card (Shrink-0 to fit 2 rows of rooms without scrolling) */}
           <div className="shrink-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 overflow-hidden">
             <div className="pb-2 mb-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
@@ -643,11 +641,10 @@ export default function OperasionalDashboardPage() {
                 return (
                   <div
                     key={roomName}
-                    className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
-                      isAvailable
+                    className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${isAvailable
                         ? "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/40"
                         : "bg-rose-50/60 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-800/40"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -773,7 +770,7 @@ export default function OperasionalDashboardPage() {
 
         {/* Right Column (5 cols): PEPK Agenda */}
         <div className="lg:col-span-5 flex flex-col gap-3.5 min-h-0">
-          
+
           {/* PEPK Agenda Card (Full Height - Auto Carousel) */}
           <div className="flex-1 min-h-[320px] lg:min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
             <div className="pb-2.5 mb-3 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-2">
@@ -814,7 +811,7 @@ export default function OperasionalDashboardPage() {
                     const names = Array.isArray(j.nama) ? j.nama.join(', ') : j.nama;
                     const currentTimeStr = dayjs().format('HH:mm');
                     const hasTime = j.jamMulai && j.jamSelesai;
-                    
+
                     const isPast = !isTomorrowMode && hasTime ? j.jamSelesai < currentTimeStr : false;
                     const isUpcoming = !isTomorrowMode && hasTime ? j.jamMulai > currentTimeStr : false;
                     const isOngoing = !isTomorrowMode && !isPast && !isUpcoming;
@@ -846,7 +843,7 @@ export default function OperasionalDashboardPage() {
                             {j.jamMulai || '-'} - {j.jamSelesai || '-'}
                           </span>
                         </div>
-                        <h4 className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 mb-2 leading-snug">
+                        <h4 className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 mb-2 leading-snug capitalize">
                           {j.kegiatan || '-'}
                         </h4>
                         <div className="text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t border-slate-200/60 dark:border-slate-700/50">
@@ -865,11 +862,10 @@ export default function OperasionalDashboardPage() {
                       <button
                         key={idx}
                         onClick={() => setPepkSlideIndex(idx)}
-                        className={`h-2 rounded-full transition-all duration-700 ease-out cursor-pointer ${
-                          idx === activePepkIndex
+                        className={`h-2 rounded-full transition-all duration-700 ease-out cursor-pointer ${idx === activePepkIndex
                             ? 'w-7 bg-[#DA251C] shadow-sm'
                             : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
-                        }`}
+                          }`}
                         title={`Slide ${idx + 1}`}
                       />
                     ))}
@@ -897,7 +893,7 @@ export default function OperasionalDashboardPage() {
               Pembaruan Jadwal Otomatis
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              Waktu menunjukkan pukul <strong className="text-slate-800 dark:text-slate-200">14.50 WIB</strong>. Sistem sedang memperbarui tampilan informasi <strong className="text-[#DA251C]">Jadwal Meeting & Agenda PEPK</strong> untuk <strong className="text-blue-600 dark:text-blue-400">Hari Besok</strong>.
+              Waktu menunjukkan pukul <strong className="text-slate-800 dark:text-slate-200">16.00 WIB</strong>. Sistem sedang memperbarui tampilan informasi <strong className="text-[#DA251C]">Jadwal Meeting & Agenda PEPK</strong> untuk <strong className="text-blue-600 dark:text-blue-400">Hari Besok</strong>.
             </p>
             <div className="py-2">
               <div className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
