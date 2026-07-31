@@ -51,6 +51,11 @@ export default function DashboardPage() {
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isMaintenanceLoading, setIsMaintenanceLoading] = useState(true);
 
+  const isAdmin = user && (
+    String(user.nip).toLowerCase() === 'admin' ||
+    String(user.role).toLowerCase() === 'admin'
+  );
+
   const isAdminOrPramusaji = user && (
     String(user.nip).toLowerCase() === 'admin' ||
     String(user.role).toLowerCase() === 'admin' ||
@@ -64,14 +69,25 @@ export default function DashboardPage() {
       return;
     }
 
-    fetchMeeting();
-    fetchJadwalPepk();
-
-      const unsubscribe = onSnapshot(collection(db, 'pelayanan'), () => {
+      const unsubscribePelayanan = onSnapshot(collection(db, 'pelayanan'), () => {
         fetchPelayanan();
       }, (error) => {
         console.error("Realtime fetch error:", error);
         fetchPelayanan();
+      });
+
+      const unsubscribeMeeting = onSnapshot(collection(db, 'meeting'), () => {
+        fetchMeeting();
+      }, (error) => {
+        console.error("Realtime fetch meeting error:", error);
+        fetchMeeting();
+      });
+
+      const unsubscribeJadwalPepk = onSnapshot(collection(db, 'jadwal_pepk_lmst'), () => {
+        fetchJadwalPepk();
+      }, (error) => {
+        console.error("Realtime fetch jadwal pepk error:", error);
+        fetchJadwalPepk();
       });
 
       const unsubscribeMaintenance = onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
@@ -82,7 +98,9 @@ export default function DashboardPage() {
       });
 
       return () => {
-        unsubscribe();
+        unsubscribePelayanan();
+        unsubscribeMeeting();
+        unsubscribeJadwalPepk();
         unsubscribeMaintenance();
       };
   }, [user, isAuthLoading, router]);
@@ -161,6 +179,7 @@ export default function DashboardPage() {
   const antreCount = todayPelayanan.filter(p => p.status === 'Antre' || !p.status).length;
   const prosesCount = todayPelayanan.filter(p => p.status === 'Diproses').length;
   const selesaiCount = todayPelayanan.filter(p => p.status === 'Selesai').length;
+  const batalCount = todayPelayanan.filter(p => p.status === 'Batal').length;
   const totalAntrean = todayPelayanan.length;
 
   // Hitung Data Meeting Hari Ini
@@ -239,7 +258,7 @@ export default function DashboardPage() {
             </p>
           </div>
           
-          {isAdminOrPramusaji && !isMaintenanceLoading && (
+          {isAdmin && !isMaintenanceLoading && (
             <div className="flex items-center gap-3 bg-white dark:bg-slate-800/50 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm w-fit">
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Maintenance Mode</span>
@@ -261,7 +280,7 @@ export default function DashboardPage() {
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Total Antrean Hari Ini</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
 
             {/* Total Card */}
             <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-transform hover:-translate-y-1 group">
@@ -308,6 +327,18 @@ export default function DashboardPage() {
               <div className="flex items-baseline gap-2">
                 <h3 className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">{isLoadingPelayanan ? '-' : selesaiCount}</h3>
                 <span className="text-sm font-medium text-emerald-700/60 dark:text-emerald-500/60">tuntas</span>
+              </div>
+            </div>
+
+            {/* Batal Card */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-rose-50 to-rose-100/50 dark:from-rose-950/40 dark:to-slate-900 rounded-2xl p-6 border border-rose-200/60 dark:border-rose-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-transform hover:-translate-y-1 group">
+              <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                <svg className="w-16 h-16 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <p className="text-sm font-semibold text-rose-700 dark:text-rose-500 uppercase tracking-wider mb-2">Batal</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-4xl font-bold text-rose-600 dark:text-rose-400">{isLoadingPelayanan ? '-' : batalCount}</h3>
+                <span className="text-sm font-medium text-rose-700/60 dark:text-rose-500/60">dibatalkan</span>
               </div>
             </div>
 

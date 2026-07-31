@@ -326,6 +326,29 @@ export default function DetailPelayananPage() {
                     </div>
                   </div>
                 )}
+                {selectedPelayanan.ibuKandung && (
+                  <div className="sm:col-span-2">
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Nama Ibu Kandung</p>
+                    <div className="flex items-center gap-2 group">
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedPelayanan.ibuKandung}</p>
+                      <button onClick={() => handleCopy(selectedPelayanan.ibuKandung, 'Nama Ibu Kandung')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Status Dinas</p>
+                  <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">
+                    {selectedPelayanan.status_dinas ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        Dinas Luar (Outsite)
+                      </span>
+                    ) : (
+                      'Kantor OJK (In-site)'
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -437,7 +460,7 @@ export default function DetailPelayananPage() {
             )}
 
             <div className="flex gap-3 flex-wrap">
-              {['Antre', 'Diproses', 'Selesai', 'Batal'].map(status => {
+              {['Antre', 'Diproses', 'Selesai'].map(status => {
                 const isThisStatusActive = selectedPelayanan.status === status || (!selectedPelayanan.status && status === 'Antre');
                 const isCannotGoBackToAntre = status === 'Antre' && selectedPelayanan.status !== 'Antre' && !!selectedPelayanan.status;
                 const isDisabled = isUpdatingStatus 

@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit, where } from 'firebase/firestore';
 import { encrypt, maskData, decrypt } from '@/lib/crypto';
+import { getReceptionistUser } from '@/lib/receptionist';
 
 export async function POST(request: Request) {
   try {
@@ -12,15 +13,15 @@ export async function POST(request: Request) {
     const { 
       nik, nama, alamat, phone, jenis, 
       instansi, keperluan, bertemu, keterangan, 
-      jenisDebitur, slikNikNpwp, email,
+      jenisDebitur, slikNikNpwp, email, ibuKandung, status_dinas,
       pengaduanNik, klasifikasi, sektor, perusahaan, produk, permasalahan, ringkasan 
     } = data;
 
-    if (!nik || !nama || !alamat || !phone || !jenis) {
+    if ((jenis !== 'umum' && !nik) || !nama || !alamat || !phone || !jenis) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    if (!/^\d{16}$/.test(nik)) {
+    if (jenis !== 'umum' && (!nik || !/^\d{16}$/.test(nik))) {
       return NextResponse.json({ error: 'NIK utama harus berupa 16 digit angka' }, { status: 400 });
     }
 
@@ -83,8 +84,8 @@ export async function POST(request: Request) {
     const queueNumber = `${prefix}-${nextNum.toString().padStart(3, '0')}`;
 
     const payload: any = {
-      nik: maskData(nik, 'nik'),
-      nik_encrypted: encrypt(nik),
+      nik: jenis === 'umum' ? '-' : maskData(nik, 'nik'),
+      nik_encrypted: jenis === 'umum' ? '-' : encrypt(nik),
       nama,
       alamat: maskData(alamat, 'alamat'),
       alamat_encrypted: encrypt(alamat),
@@ -103,14 +104,19 @@ export async function POST(request: Request) {
       payload.keperluan = keperluan;
       payload.bertemu = bertemu;
       payload.keterangan = keterangan;
-      payload.processedBy = { nip: 'sistem', nama: 'Sistem' };
+      payload.processedBy = await getReceptionistUser();
     }
 
     if (jenis === 'slik') {
       payload.jenisDebitur = jenisDebitur;
       payload.slikNikNpwp = maskData(slikNikNpwp, 'nik');
       payload.slikNikNpwp_encrypted = encrypt(slikNikNpwp);
+      if (ibuKandung) {
+        payload.ibuKandung = maskData(ibuKandung, 'ibu');
+        payload.ibuKandung_encrypted = encrypt(ibuKandung);
+      }
       payload.email = email;
+      payload.status_dinas = Boolean(status_dinas);
     }
 
     if (jenis === 'pengaduan') {
@@ -136,8 +142,15 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const pelayananRef = collection(db, 'pelayanan');
-    const q = query(pelayananRef, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(pelayananRef);
+
+    const getTimeValue = (val: any) => {
+      if (!val) return 0;
+      if (typeof val === 'number') return val;
+      if (val.toMillis && typeof val.toMillis === 'function') return val.toMillis();
+      if (val.seconds !== undefined) return val.seconds * 1000;
+      return new Date(val).getTime() || 0;
+    };
 
     const dataArray = snapshot.docs.map(doc => {
       const data = doc.data();
@@ -148,13 +161,17 @@ export async function GET() {
       if (data.queueNumber_encrypted) data.queueNumber = decrypt(data.queueNumber_encrypted);
       if (data.slikNikNpwp_encrypted) data.slikNikNpwp = decrypt(data.slikNikNpwp_encrypted);
       if (data.pengaduanNik_encrypted) data.pengaduanNik = decrypt(data.pengaduanNik_encrypted);
+      if (data.ibuKandung_encrypted) data.ibuKandung = decrypt(data.ibuKandung_encrypted);
 
       return {
         id: doc.id,
         ...data,
-        // Convert Firestore timestamp to milliseconds if it exists
-        createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : null
+        createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : getTimeValue(data.createdAt)
       };
+    });
+
+    dataArray.sort((a, b) => {
+      return getTimeValue(b.createdAt) - getTimeValue(a.createdAt);
     });
       
     return NextResponse.json({ success: true, data: dataArray });

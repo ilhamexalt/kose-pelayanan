@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterJenis, setFilterJenis] = useState('');
+  const [filterDinas, setFilterDinas] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -56,18 +57,29 @@ export default function DashboardPage() {
     return d.toLocaleString('id-ID').replace(/\./g, ':');
   };
 
+  const getTimeValue = (val: any) => {
+    if (!val) return 0;
+    if (typeof val === 'number') return val;
+    if (val.toDate && typeof val.toDate === 'function') return val.toDate().getTime();
+    if (val.seconds !== undefined) return val.seconds * 1000;
+    return new Date(val).getTime() || 0;
+  };
+
   const filteredAndSortedList = pelayananList
     .filter(p => p.status === 'Antre' || p.status === 'Diproses')
     .filter(p => {
       const matchesSearch = (p.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.nik || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesJenis = filterJenis ? p.jenis === filterJenis : true;
-      return matchesSearch && matchesJenis;
+      const matchesDinas = filterDinas ? (
+        filterDinas === 'outsite' ? Boolean(p.status_dinas) === true : Boolean(p.status_dinas) === false
+      ) : true;
+      return matchesSearch && matchesJenis && matchesDinas;
     })
     .sort((a, b) => {
-      const numA = parseInt((a.queueNumber || '').replace(/\D/g, ''), 10) || 0;
-      const numB = parseInt((b.queueNumber || '').replace(/\D/g, ''), 10) || 0;
-      return sortOrder === 'asc' ? numA - numB : numB - numA;
+      const timeA = getTimeValue(a.createdAt);
+      const timeB = getTimeValue(b.createdAt);
+      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
     });
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / itemsPerPage));
@@ -257,22 +269,42 @@ export default function DashboardPage() {
               </button>
             )}
           </div>
-          <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-2">
-            <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Jenis Pelayanan:</label>
-            <div className="w-full sm:w-60">
-              <CustomSelect
-                value={filterJenis}
-                onChange={(val) => {
-                  setFilterJenis(val);
-                  setCurrentPage(1);
-                }}
-                options={[
-                  { value: "", label: "Semua" },
-                  { value: "slik", label: "SLIK" },
-                  { value: "pengaduan", label: "Pengaduan" },
-                  { value: "umum", label: "Kunjungan Umum/Kedinasan" },
-                ]}
-              />
+          <div className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between md:justify-end gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Status Dinas:</label>
+              <div className="w-full sm:w-48">
+                <CustomSelect
+                  value={filterDinas}
+                  onChange={(val) => {
+                    setFilterDinas(val);
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: "", label: "Semua Status" },
+                    { value: "outsite", label: "Dinas Luar (Outsite)" },
+                    { value: "insite", label: "Kantor OJK (In-site)" },
+                  ]}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">Jenis Pelayanan:</label>
+              <div className="w-full sm:w-60">
+                <CustomSelect
+                  value={filterJenis}
+                  onChange={(val) => {
+                    setFilterJenis(val);
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: "", label: "Semua" },
+                    { value: "slik", label: "SLIK" },
+                    { value: "pengaduan", label: "Pengaduan" },
+                    { value: "umum", label: "Kunjungan Umum/Kedinasan" },
+                  ]}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -321,7 +353,14 @@ export default function DashboardPage() {
                           {formatDateTime(item.createdAt)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">{item.nama}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">{item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">
+                          {item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}
+                          {item.status_dinas && (
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                              Dinas Luar (Outsite)
+                            </span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 capitalize">
                           {item.processedBy ? item.processedBy.nama : '-'}
                         </td>
@@ -515,6 +554,29 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     )}
+                    {selectedDetail.ibuKandung && (
+                      <div className="md:col-span-2">
+                        <p className="text-[11px] font-semibold text-[#DA251C] dark:text-red-400 uppercase tracking-wider mb-1">Nama Ibu Kandung</p>
+                        <div className="flex items-center gap-2 group">
+                          <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.ibuKandung}</p>
+                          <button onClick={() => handleCopy(selectedDetail.ibuKandung, 'Nama Ibu Kandung')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Status Dinas</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">
+                        {selectedDetail.status_dinas ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                            Dinas Luar (Outsite)
+                          </span>
+                        ) : (
+                          'Kantor OJK (In-site)'
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -631,7 +693,7 @@ export default function DashboardPage() {
                       onClick={() => handleUpdateStatus(selectedDetail.id, 'Batal')}
                       className="px-5 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl text-sm font-bold transition-all disabled:opacity-50 cursor-pointer"
                     >
-                      Batalkan
+                      Tutup Antrean
                     </button>
                   )}
                 </div>

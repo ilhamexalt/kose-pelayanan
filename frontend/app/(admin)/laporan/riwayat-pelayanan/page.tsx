@@ -192,8 +192,27 @@ export default function LaporanRiwayatPelayananPage() {
       }));
     };
 
+    const generateSlikExport = (list: any[]) => {
+      return list.map((p, idx) => ({
+        'No': idx + 1,
+        'Tanggal': formatDateTime(p.createdAt),
+        'Nomor Antrean': p.queueNumber_raw || p.queueNumber || '-',
+        'Nomor Register': p.nomorRegister || '-',
+        'Jenis Debitur': p.jenisDebitur || '-',
+        'NIK / NPWP Debitur': p.slikNikNpwp || p.nik || '-',
+        'Nama Pemohon': p.nama || '-',
+        'Nama Ibu Kandung': p.ibuKandung || '-',
+        'Email': p.email || '-',
+        'Telepon': p.phone || '-',
+        'Status Dinas': p.status_dinas ? 'Dinas Luar (Outsite)' : 'Kantor OJK',
+        'Status': p.status || 'Antre',
+        'Diproses Oleh': p.processedBy?.nama || '-',
+        'Catatan': p.catatan || '-'
+      }));
+    };
+
     if (slikList.length > 0) {
-      const wsSlik = XLSX.utils.json_to_sheet(generateGeneralExport(slikList));
+      const wsSlik = XLSX.utils.json_to_sheet(generateSlikExport(slikList));
       XLSX.utils.book_append_sheet(workbook, wsSlik, "Layanan SLIK");
     }
 
@@ -207,7 +226,8 @@ export default function LaporanRiwayatPelayananPage() {
         'Nama Instansi/Perusahaan': p.instansi || '-',
         'Keperluan': p.keperluan || '-',
         'Bagian Yang Dituju': p.bertemu || '-',
-        'Jumlah Orang': p.keterangan || '-'
+        'Jumlah Orang': p.keterangan || '-',
+        'Diproses Oleh': p.processedBy?.nama || 'Reseptionis'
       }));
     };
 

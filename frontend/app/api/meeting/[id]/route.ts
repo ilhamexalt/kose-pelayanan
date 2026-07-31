@@ -38,6 +38,54 @@ export async function PUT(
     const existingDoc = await getDoc(docRef);
     const existingData = existingDoc.exists() ? existingDoc.data() : {};
 
+    const ruang = data.ruang || data.ruangan || existingData.ruangan;
+    const tanggal = data.tanggal || existingData.tanggal;
+    const waktuMulai = data.waktuMulai || existingData.waktuMulai;
+    const waktuSelesai = data.waktuSelesai || existingData.waktuSelesai;
+
+    if (ruang && tanggal && waktuMulai && waktuSelesai) {
+      const meetingRef = collection(db, 'meeting');
+      const qConflict = query(
+        meetingRef, 
+        where('ruangan', '==', ruang),
+        where('tanggal', '==', tanggal)
+      );
+      
+      const snapshot = await getDocs(qConflict);
+      let conflict = null;
+      
+      const newStartH = parseInt((waktuMulai || '').split(':')[0], 10);
+      const newEndH = parseInt((waktuSelesai || '').split(':')[0], 10);
+
+      snapshot.forEach((docItem) => {
+        if (docItem.id === id) return;
+        const d = docItem.data();
+        const existingStartH = parseInt((d.waktuMulai || '').split(':')[0], 10);
+        const existingEndH = parseInt((d.waktuSelesai || '').split(':')[0], 10);
+
+        if (!isNaN(newStartH) && !isNaN(newEndH) && !isNaN(existingStartH) && !isNaN(existingEndH)) {
+          if (newStartH <= existingEndH && newEndH >= existingStartH) {
+            conflict = d;
+          }
+        } else {
+          if (
+            (waktuMulai >= d.waktuMulai && waktuMulai < d.waktuSelesai) ||
+            (waktuSelesai > d.waktuMulai && waktuSelesai <= d.waktuSelesai) ||
+            (waktuMulai <= d.waktuMulai && waktuSelesai >= d.waktuSelesai)
+          ) {
+            conflict = d;
+          }
+        }
+      });
+
+      if (conflict) {
+        return NextResponse.json({ 
+          error: 'Conflict', 
+          message: `Ruangan ${ruang} pada jam ${(conflict as any).waktuMulai} - ${(conflict as any).waktuSelesai} sudah diisi oleh ${(conflict as any).instansi}.` 
+        }, { status: 409 });
+      }
+    }
+
     await updateDoc(docRef, {
       ...data,
       updatedAt: Date.now()

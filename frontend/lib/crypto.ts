@@ -63,7 +63,7 @@ export function decrypt(text: string): string {
 /**
  * Menyamarkan (masking) sebagian karakter untuk ditampilkan di UI
  */
-export function maskData(text: string, type: 'nik' | 'phone' | 'register' | 'alamat'): string {
+export function maskData(text: string, type: 'nik' | 'phone' | 'register' | 'alamat' | 'name' | 'ibu'): string {
   if (!text) return text;
   
   if (type === 'nik') {
@@ -85,8 +85,13 @@ export function maskData(text: string, type: 'nik' | 'phone' | 'register' | 'ala
     if (text.length > 5) {
       return text.substring(0, 5) + '*'.repeat(Math.min(text.length - 5, 10)) + '...';
     }
+  } else if (type === 'name' || type === 'ibu') {
+    if (text.length > 2) {
+      return text.substring(0, 2) + '*'.repeat(Math.min(text.length - 2, 10));
+    }
   }
   
   // Default masking
   return text.substring(0, Math.min(2, text.length)) + '***';
 }
+

@@ -28,6 +28,8 @@ export default function GuestPage() {
   const [jenisDebitur, setJenisDebitur] = useState("");
   const [slikNikNpwp, setSlikNikNpwp] = useState("");
   const [email, setEmail] = useState("");
+  const [ibuKandung, setIbuKandung] = useState("");
+  const [statusDinas, setStatusDinas] = useState(false);
   const [pengaduanNik, setPengaduanNik] = useState("");
   const [klasifikasi, setKlasifikasi] = useState("");
   const [sektors, setSektors] = useState<string[]>([]);
@@ -142,8 +144,15 @@ export default function GuestPage() {
         setIsSubmitting(false);
         return;
       }
+      if (!ibuKandung.trim()) {
+        messageApi.warning("Nama Ibu Kandung wajib diisi!");
+        setIsSubmitting(false);
+        return;
+      }
       data.jenisDebitur = jenisDebitur;
       data.slikNikNpwp = slikNikNpwp;
+      data.ibuKandung = ibuKandung.trim();
+      data.status_dinas = statusDinas;
       data.email = email;
     }
 
@@ -290,6 +299,8 @@ export default function GuestPage() {
                   setKeterangan("");
                   setJenisDebitur("");
                   setSlikNikNpwp("");
+                  setIbuKandung("");
+                  setStatusDinas(false);
                   setEmail("");
                   setPengaduanNik("");
                   setKlasifikasi("");
@@ -617,6 +628,41 @@ export default function GuestPage() {
                         className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
                         placeholder="Contoh: nama@domain.com"
                       />
+                    </div>
+
+                    <div>
+                      <label htmlFor="ibuKandung" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        4. Nama Ibu Kandung <span className="text-[#DA251C]">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="ibuKandung"
+                        name="ibuKandung"
+                        value={ibuKandung}
+                        onChange={(e) => setIbuKandung(e.target.value)}
+                        required={jenis === "slik"}
+                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
+                        placeholder="Masukkan nama ibu kandung"
+                      />
+                    </div>
+
+                    <div className="bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-4">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={statusDinas}
+                          onChange={(e) => setStatusDinas(e.target.checked)}
+                          className="mt-1 w-4 h-4 text-[#DA251C] bg-white border-slate-300 rounded focus:ring-[#DA251C]"
+                        />
+                        <div>
+                          <span className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            Pelayanan Dinas Luar / Outsite
+                          </span>
+                          <span className="block text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                            Centang apabila Anda mengajukan layanan melalui petugas SLIK di luar kantor (kegiatan dinas luar).
+                          </span>
+                        </div>
+                      </label>
                     </div>
                   </div>
                 )}

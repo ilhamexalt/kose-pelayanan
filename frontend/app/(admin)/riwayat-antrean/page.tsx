@@ -112,9 +112,17 @@ export default function HistoryPage() {
     return new Date(val).getTime() || 0;
   };
 
+  const isReceptionist = user && (
+    String(user.role).toLowerCase().includes('reseptionis') || 
+    String(user.role).toLowerCase().includes('receptionist')
+  );
+
   const filteredAndSortedList = pelayananList
     .filter(p => p.status === 'Selesai' || p.status === 'Batal')
     .filter(p => {
+      if (isReceptionist && p.jenis !== 'umum') {
+        return false;
+      }
       const matchesSearch = (p.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.nik || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesJenis = filterJenis ? p.jenis === filterJenis : true;
@@ -373,12 +381,16 @@ export default function HistoryPage() {
                     setFilterJenis(val);
                     setCurrentPage(1);
                   }}
-                  options={[
-                    { value: "", label: "Semua" },
-                    { value: "slik", label: "SLIK" },
-                    { value: "pengaduan", label: "Pengaduan" },
-                    { value: "umum", label: "Kunjungan Umum/Kedinasan" },
-                  ]}
+                  options={
+                    isReceptionist
+                      ? [{ value: "", label: "Kunjungan Umum/Kedinasan" }]
+                      : [
+                          { value: "", label: "Semua" },
+                          { value: "slik", label: "SLIK" },
+                          { value: "pengaduan", label: "Pengaduan" },
+                          { value: "umum", label: "Kunjungan Umum/Kedinasan" },
+                        ]
+                  }
                 />
               </div>
             </div>
@@ -452,7 +464,14 @@ export default function HistoryPage() {
                         {item.updatedAt ? formatDateTime(item.updatedAt) : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-medium">{item.nama}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">{item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 capitalize">
+                        {item.jenis === 'umum' ? 'Kunjungan Umum/Kedinasan' : item.jenis === 'slik' ? 'SLIK' : item.jenis === 'pengaduan' ? 'Pengaduan' : item.jenis}
+                        {item.status_dinas && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                            Dinas Luar (Outsite)
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 capitalize">
                         {item.processedBy ? item.processedBy.nama : '-'}
                       </td>
@@ -628,6 +647,29 @@ export default function HistoryPage() {
                         </div>
                       </div>
                     )}
+                    {selectedDetail.ibuKandung && (
+                      <div className="md:col-span-2">
+                        <p className="text-[11px] font-semibold text-[#DA251C] dark:text-red-400 uppercase tracking-wider mb-1">Nama Ibu Kandung</p>
+                        <div className="flex items-center gap-2 group">
+                          <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.ibuKandung}</p>
+                          <button onClick={() => handleCopy(selectedDetail.ibuKandung, 'Nama Ibu Kandung')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Status Dinas</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">
+                        {selectedDetail.status_dinas ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                            Dinas Luar (Outsite)
+                          </span>
+                        ) : (
+                          'Kantor OJK (In-site)'
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -733,7 +775,7 @@ export default function HistoryPage() {
                     )}
 
                     <div className="flex gap-2 flex-wrap">
-                      {['Antre', 'Diproses', 'Selesai', 'Batal'].map(status => {
+                      {['Antre', 'Diproses', 'Selesai'].map(status => {
                         const isThisStatusActive = selectedDetail.status === status || (!selectedDetail.status && status === 'Antre');
                         let isDisabled = isUpdatingStatus;
 

@@ -4,14 +4,17 @@ import { decryptSession } from './lib/session';
 
 // Define public routes that don't require authentication
 const publicRoutes = ['/', '/login', '/lupa-password', '/layar-antrean', '/guest'];
-// Also allow API routes related to login/auth and public assets
-const publicPrefixes = ['/api/login', '/api/lupa-password', '/api/auth/me', '/api/logout', '/_next', '/favicon', '/assets'];
+// Also allow API routes related to login/auth, pelayanan (public guest submission & check), and public assets
+const publicPrefixes = ['/api/login', '/api/lupa-password', '/api/auth/me', '/api/logout', '/api/pelayanan', '/_next', '/favicon', '/assets'];
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
-  // Skip middleware for public routes and static assets
-  if (publicRoutes.includes(pathname) || publicPrefixes.some(prefix => pathname.startsWith(prefix))) {
+  // Skip middleware for public routes (supporting trailing slash) and static assets/public APIs
+  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname === `${route}/`);
+  const isPublicPrefix = publicPrefixes.some(prefix => pathname.startsWith(prefix));
+  
+  if (isPublicRoute || isPublicPrefix) {
     return NextResponse.next();
   }
 

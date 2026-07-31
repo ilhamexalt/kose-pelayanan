@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, deleteField, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { getReceptionistUser } from '@/lib/receptionist';
 
 export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -51,7 +52,9 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     if (catatan !== undefined) updateData.catatan = catatan;
     if (nomorRegister !== undefined) updateData.nomorRegister = nomorRegister;
 
-    if (status === 'Antre') {
+    if (currentData.jenis === 'umum') {
+      updateData.processedBy = await getReceptionistUser();
+    } else if (status === 'Antre') {
       updateData.processedBy = deleteField();
     } else if (processedBy) {
       updateData.processedBy = processedBy;

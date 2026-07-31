@@ -21,6 +21,7 @@ export default function EditMeetingPage() {
   const [instansi, setInstansi] = useState<string>('');
   const [keterangan, setKeterangan] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [existingMeetings, setExistingMeetings] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -47,6 +48,75 @@ export default function EditMeetingPage() {
       fetchMeetingData();
     }
   }, [id, messageApi]);
+
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      try {
+        const res = await fetch('/api/meeting');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setExistingMeetings(json.data);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil jadwal existing:", err);
+      }
+    };
+    fetchMeetings();
+  }, []);
+
+  const isHourDisabled = (h: number, type: 'start' | 'end') => {
+    if (!ruang || !tanggal) return false;
+    const selectedDateStr = tanggal.format("YYYY-MM-DD");
+    const conflicts = existingMeetings.filter(m => m.ruangan === ruang && m.tanggal === selectedDateStr && m.id !== id);
+
+    if (type === 'end' && waktu?.[0]) {
+      const startH = waktu[0].hour();
+      if (h < startH) return true;
+    }
+
+    return conflicts.some(m => {
+      const startH = parseInt((m.waktuMulai || '').split(':')[0], 10);
+      const endH = parseInt((m.waktuSelesai || '').split(':')[0], 10);
+      if (isNaN(startH) || isNaN(endH)) return false;
+      return h >= startH && h <= endH;
+    });
+  };
+
+  const getDisabledTime = (date: Dayjs | null, type: 'start' | 'end') => {
+    const disabledHours = () => {
+      const hours: number[] = [];
+      for (let h = 0; h < 24; h++) {
+        if (isHourDisabled(h, type)) {
+          hours.push(h);
+        }
+      }
+      return hours;
+    };
+
+    const disabledMinutes = (selectedHour: number) => {
+      const minutes: number[] = [];
+      if (type === 'end' && waktu?.[0]) {
+        const startH = waktu[0].hour();
+        const startM = waktu[0].minute();
+        if (selectedHour === startH) {
+          for (let m = 0; m <= startM; m += 15) {
+            minutes.push(m);
+          }
+        }
+      }
+      return minutes;
+    };
+
+    return {
+      disabledHours,
+      disabledMinutes
+    };
+  };
+
+  const conflictsToday = existingMeetings.filter(m => {
+    if (!ruang || !tanggal) return false;
+    return m.ruangan === ruang && m.tanggal === tanggal.format("YYYY-MM-DD") && m.id !== id;
+  });
 
   const handleSave = async () => {
     if (!ruang || !waktu || !waktu[0] || !waktu[1] || !tanggal || !instansi) {
@@ -198,6 +268,7 @@ export default function EditMeetingPage() {
                     value={ruang}
                     onChange={(val) => setRuang(val)}
                     options={[
+                      { value: "Baduy", label: "Baduy" },
                       { value: "Pulau Sangiang", label: "Pulau Sangiang" },
                       { value: "Pulau Umang", label: "Pulau Umang" },
                       { value: "Tanjung Lesung", label: "Tanjung Lesung" },
@@ -219,10 +290,23 @@ export default function EditMeetingPage() {
                     size="large"
                     format="HH:mm"
                     minuteStep={15}
+                    disabledTime={(date, type) => getDisabledTime(date, type)}
+                    hideDisabledOptions
                     value={waktu as any}
                     onChange={(dates) => setWaktu(dates as any)}
                     placeholder={['Mulai', 'Selesai']}
                   />
+                  {ruang && tanggal && (
+                    <div className="mt-2.5 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200/80 dark:border-amber-800/40 flex items-start gap-2 shadow-sm">
+                      <svg className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <span>
+                        {conflictsToday.length > 0
+                          ? `Ruangan "${ruang}" pada tanggal ini sudah terpakai di jam: ${conflictsToday.map(c => `${c.waktuMulai} - ${c.waktuSelesai} (${c.instansi})`).join(', ')}. Jam yang terpakai otomatis disembunyikan dari pilihan waktu.`
+                          : `Ruangan "${ruang}" pada tanggal ini belum ada jadwal meeting lain (tersedia sepanjang hari).`
+                        }
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
