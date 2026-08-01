@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import { sendWhatsAppTemplate } from '@/lib/whatsapp';
+import { sendWhatsAppTemplate, sendWhatsAppMessage } from '@/lib/whatsapp';
 
 const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const MONTHS = [
@@ -80,8 +80,13 @@ export async function POST(request: Request) {
       content: `Cleansing data pelayanan di jam 16.40 WIB telah berhasil dilakukan. Total data dibersihkan: ${totalDeleted} antrean.`,
     };
 
-    // 5. Kirim notifikasi WhatsApp ke grup menggunakan template info-cleansing
-    const success = await sendWhatsAppTemplate(groupId, templateName, vars);
+    // 5. Kirim notifikasi WhatsApp ke grup menggunakan template info-cleansing (dengan fallback pesan teks biasa jika template gagal/belum aktif)
+    let success = await sendWhatsAppTemplate(groupId, templateName, vars);
+    if (!success) {
+      console.warn('Template WA info-cleansing gagal dikirim, mencoba fallback dengan pesan teks biasa...');
+      const fallbackText = `Selamat ${waktu},\n\nInformasi pembersihan (cleansing) data pelayanan OJK:\n- Hari/Tanggal: ${hari}, ${tanggal} ${bulan} ${tahun}\n- Waktu: 16.40 WIB\n- Total Data Dibersihkan: ${totalDeleted} antrean\n\nData pelayanan hari ini telah berhasil dibersihkan dari sistem antrean. Terima kasih.`;
+      success = await sendWhatsAppMessage(groupId, fallbackText);
+    }
 
     if (success) {
       return NextResponse.json({

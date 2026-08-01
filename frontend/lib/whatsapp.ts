@@ -11,7 +11,7 @@ export const sendWhatsAppMessage = async (phone: string, text: string) => {
 
     // Format phone number to WhatsApp format (append @c.us if not present)
     // Also change leading '0' to '62' (Indonesia code) as standard WA numbers need country code
-    let formattedPhone = phone.trim();
+    let formattedPhone = phone.trim().replace(/^['"]+|['"]+$/g, '');
     if (formattedPhone.startsWith('0')) {
       formattedPhone = '62' + formattedPhone.slice(1);
     }
@@ -62,7 +62,7 @@ export const sendWhatsAppTemplate = async (phone: string, templateName: string, 
       return false;
     }
 
-    let formattedPhone = phone.trim();
+    let formattedPhone = phone.trim().replace(/^['"]+|['"]+$/g, '');
     if (formattedPhone.startsWith('0')) {
       formattedPhone = '62' + formattedPhone.slice(1);
     }

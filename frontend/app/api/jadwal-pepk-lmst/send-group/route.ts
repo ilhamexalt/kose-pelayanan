@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { sendWhatsAppTemplate } from '@/lib/whatsapp';
+import { sendWhatsAppTemplate, sendWhatsAppMessage } from '@/lib/whatsapp';
 
 const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const MONTHS = [
@@ -121,8 +121,13 @@ export async function POST(request: Request) {
       content: kegiatanList // Maps to {{content}} in the OpenWA template
     };
 
-    // Send WhatsApp Template Message
-    const success = await sendWhatsAppTemplate(groupId, templateName, vars);
+    // Send WhatsApp Template Message (dengan fallback pesan teks biasa jika template gagal/belum terdaftar)
+    let success = await sendWhatsAppTemplate(groupId, templateName, vars);
+    if (!success) {
+      console.warn('Template WA info-kegiatan gagal dikirim, mencoba fallback pesan teks biasa...');
+      const fallbackText = `Selamat ${waktu},\n\nJadwal Kegiatan PEPK & LMST OJK untuk hari ${hari}, ${tanggal} ${bulan} ${tahun}:\n\n${kegiatanList}\n\nTerima kasih.`;
+      success = await sendWhatsAppMessage(groupId, fallbackText);
+    }
 
     if (success) {
       return NextResponse.json({ success: true, message: 'Pesan berhasil dikirim ke grup via template' });
