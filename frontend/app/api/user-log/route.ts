@@ -25,6 +25,7 @@ export async function GET(request: Request) {
         role: data.role,
         is_active: Boolean(data.is_active),
         last_login: data.last_login || null,
+        last_ip: data.last_ip || '-',
       };
     });
 

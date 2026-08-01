@@ -5,6 +5,19 @@ import { verifyPassword } from '@/lib/password';
 
 export async function POST(request: Request) {
   try {
+    const cfIp = request.headers.get('cf-connecting-ip');
+    const trueClientIp = request.headers.get('true-client-ip');
+    const realIp = request.headers.get('x-real-ip');
+    const forwardedFor = request.headers.get('x-forwarded-for');
+
+    let clientIp = cfIp || trueClientIp || realIp || '';
+    if (!clientIp && forwardedFor) {
+      clientIp = forwardedFor.split(',')[0].trim();
+    }
+    if (!clientIp) {
+      clientIp = (request as any).ip || '127.0.0.1';
+    }
+
     const data = await request.json();
     const identifier = String(data.identifier || data.email || data.username || data.nip || '').trim();
     const password = String(data.password || '');
@@ -71,6 +84,7 @@ export async function POST(request: Request) {
         await updateDoc(doc(db, 'users', userData.id), {
           is_active: true,
           last_login: new Date().toISOString(),
+          last_ip: clientIp,
           session_token: sessionToken
         });
         

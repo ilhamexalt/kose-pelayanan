@@ -80,7 +80,8 @@ export default function UserLogPage() {
         return (
             (log.nama || '').toLowerCase().includes(query) ||
             (log.nip || '').toString().toLowerCase().includes(query) ||
-            (log.role || '').toLowerCase().includes(query)
+            (log.role || '').toLowerCase().includes(query) ||
+            (log.last_ip || '').toLowerCase().includes(query)
         );
     }).sort((a, b) => {
         // Urutkan yang aktif di atas, lalu berdasarkan last_login terbaru
@@ -137,6 +138,15 @@ export default function UserLogPage() {
                             hour: '2-digit', minute: '2-digit', second: '2-digit'
                         })
                         : '-'}
+                </div>
+            )
+        },
+        {
+            title: 'IP Address',
+            key: 'last_ip',
+            render: (_, record) => (
+                <div className="text-sm font-mono text-slate-600 dark:text-slate-300">
+                    {record.last_ip || '-'}
                 </div>
             )
         },

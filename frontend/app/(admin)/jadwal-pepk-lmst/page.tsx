@@ -412,7 +412,7 @@ export default function JadwalPepkLmstPage() {
   return (
     <div className="w-full p-4 sm:p-6 lg:p-8 font-sans">
       {contextHolder}
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         <div className="flex flex-col mb-6 gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
             Jadwal PEPK & LMST
@@ -437,27 +437,28 @@ export default function JadwalPepkLmstPage() {
             className="text-sm"
           />
 
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full">
+            <div className="w-full sm:w-auto">
               <DatePicker.RangePicker
                 className="w-full sm:w-auto"
                 value={filterDate as any}
                 onChange={(dates) => setFilterDate(dates as any)}
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {(isAdmin || create) && (
                 <Button
                   onClick={handleSendToGroup}
                   loading={sending}
                   disabled={!hasTomorrowData}
+                  className="flex-1 sm:flex-none"
                   style={hasTomorrowData ? { backgroundColor: "#25D366", borderColor: "#25D366", color: "#fff" } : undefined}
                 >
                   Kirim ke Grup
                 </Button>
               )}
               {(isAdmin || create) && (
-                <Button type="primary" onClick={() => showModal()} style={{ backgroundColor: "#DA251C" }}>
+                <Button type="primary" onClick={() => showModal()} className="flex-1 sm:flex-none" style={{ backgroundColor: "#DA251C" }}>
                   Tambah Jadwal
                 </Button>
               )}
@@ -472,6 +473,7 @@ export default function JadwalPepkLmstPage() {
             rowKey="id"
             loading={loading}
             pagination={{ pageSize: 10 }}
+            scroll={{ x: 'max-content' }}
             className="[&_.ant-table-thead_th]:bg-slate-50 [&_.ant-table-thead_th]:dark:bg-slate-800 [&_.ant-table-thead_th]:text-slate-500 [&_.ant-table-thead_th]:dark:text-slate-400 [&_.ant-table-thead_th]:font-semibold [&_.ant-table-tbody_td]:border-b [&_.ant-table-tbody_td]:border-slate-100 [&_.ant-table-tbody_td]:dark:border-slate-800/50"
           />
         </div>

@@ -54,14 +54,17 @@ export default function OperasionalDashboardPage() {
   const [pelayananList, setPelayananList] = useState<Pelayanan[]>([]);
   const [meetingList, setMeetingList] = useState<Meeting[]>([]);
   const [jadwalPepkList, setJadwalPepkList] = useState<any[]>([]);
+  const [jadwalPimpinanList, setJadwalPimpinanList] = useState<any[]>([]);
 
   const [isLoadingPelayanan, setIsLoadingPelayanan] = useState(true);
   const [isLoadingMeeting, setIsLoadingMeeting] = useState(true);
   const [isLoadingJadwalPepk, setIsLoadingJadwalPepk] = useState(true);
+  const [isLoadingJadwalPimpinan, setIsLoadingJadwalPimpinan] = useState(true);
 
   const [currentTime, setCurrentTime] = useState(dayjs());
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pepkSlideIndex, setPepkSlideIndex] = useState(0);
+  const [pimpinanSlideIndex, setPimpinanSlideIndex] = useState(0);
   const [isTomorrowMode, setIsTomorrowMode] = useState(false);
   const [showCountdownModal, setShowCountdownModal] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(5);
@@ -130,10 +133,18 @@ export default function OperasionalDashboardPage() {
       fetchJadwalPepk();
     });
 
+    const unsubscribeJadwalPimpinan = onSnapshot(collection(db, 'jadwal_pimpinan'), () => {
+      fetchJadwalPimpinan();
+    }, (error) => {
+      console.error("Realtime fetch jadwal pimpinan error:", error);
+      fetchJadwalPimpinan();
+    });
+
     return () => {
       unsubscribePelayanan();
       unsubscribeMeeting();
       unsubscribeJadwalPepk();
+      unsubscribeJadwalPimpinan();
     };
   }, [user, isAuthLoading, router]);
 
@@ -188,6 +199,28 @@ export default function OperasionalDashboardPage() {
     return () => clearInterval(timer);
   }, [jadwalPepkList, isTomorrowMode]);
 
+  useEffect(() => {
+    const todayStr = dayjs().format('YYYY-MM-DD');
+    const targetDateStr = isTomorrowMode
+      ? dayjs().add(1, 'day').format('YYYY-MM-DD')
+      : todayStr;
+    const targetPimpinanList = jadwalPimpinanList.filter(j => {
+      const d1 = j.tanggalMulai ? dayjs(j.tanggalMulai) : (j.tanggal ? dayjs(j.tanggal) : null);
+      const d2 = j.tanggalSelesai ? dayjs(j.tanggalSelesai) : (j.tanggal ? dayjs(j.tanggal) : null);
+      if (!d1) return false;
+      const d2Safe = d2 || d1;
+      const target = dayjs(targetDateStr);
+      return (target.isSame(d1, 'day') || target.isAfter(d1, 'day')) &&
+        (target.isSame(d2Safe, 'day') || target.isBefore(d2Safe, 'day'));
+    });
+
+    if (targetPimpinanList.length <= 1) return;
+    const timer = setInterval(() => {
+      setPimpinanSlideIndex((prev) => (prev + 1) % targetPimpinanList.length);
+    }, 5000); // 5 detik per slide
+    return () => clearInterval(timer);
+  }, [jadwalPimpinanList, isTomorrowMode]);
+
   const fetchPelayanan = async () => {
     try {
       const res = await fetch('/api/pelayanan');
@@ -230,6 +263,20 @@ export default function OperasionalDashboardPage() {
     }
   };
 
+  const fetchJadwalPimpinan = async () => {
+    try {
+      const res = await fetch('/api/pimpinan');
+      const json = await res.json();
+      if (json.success) {
+        setJadwalPimpinanList(json.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch jadwal pimpinan", error);
+    } finally {
+      setIsLoadingJadwalPimpinan(false);
+    }
+  };
+
   // Soft-refresh sesi & data setiap 50 menit tanpa reload agar TETAP FULLSCREEN dan tidak kena session
   useEffect(() => {
     const refreshTimer = setInterval(() => {
@@ -239,11 +286,12 @@ export default function OperasionalDashboardPage() {
       fetchPelayanan();
       fetchMeeting();
       fetchJadwalPepk();
+      fetchJadwalPimpinan();
     }, 50 * 60 * 1000); // 50 menit
     return () => clearInterval(refreshTimer);
   }, [refreshSession]);
 
-  const isInitialDataLoading = isAuthLoading || isLoadingPelayanan || isLoadingMeeting || isLoadingJadwalPepk;
+  const isInitialDataLoading = isAuthLoading || isLoadingPelayanan || isLoadingMeeting || isLoadingJadwalPepk || isLoadingJadwalPimpinan;
 
   if (!user || isInitialDataLoading) {
     return (
@@ -371,6 +419,22 @@ export default function OperasionalDashboardPage() {
 
     return ranges.length > 0 ? ranges.join(", ") : "Penuh hari ini";
   };
+
+  // Jadwal Pimpinan Hari Ini / Besok
+  const todayJadwalPimpinan = jadwalPimpinanList
+    .filter(j => {
+      const d1 = j.tanggalMulai ? dayjs(j.tanggalMulai) : (j.tanggal ? dayjs(j.tanggal) : null);
+      const d2 = j.tanggalSelesai ? dayjs(j.tanggalSelesai) : (j.tanggal ? dayjs(j.tanggal) : null);
+      if (!d1) return false;
+      const d2Safe = d2 || d1;
+      const target = dayjs(targetDateStr);
+      return (target.isSame(d1, 'day') || target.isAfter(d1, 'day')) &&
+        (target.isSame(d2Safe, 'day') || target.isBefore(d2Safe, 'day'));
+    })
+    .sort((a, b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''));
+
+  const activePimpinanIndex = pimpinanSlideIndex >= todayJadwalPimpinan.length ? 0 : pimpinanSlideIndex;
+  const activeJadwalPimpinan = todayJadwalPimpinan[activePimpinanIndex];
 
   // Jadwal PEPK Hari Ini / Besok
   const todayJadwalPepk = jadwalPepkList
@@ -783,11 +847,113 @@ export default function OperasionalDashboardPage() {
 
         </div>
 
-        {/* Right Column (5 cols): PEPK Agenda */}
+        {/* Right Column (5 cols): Pimpinan & PEPK Agenda */}
         <div className="lg:col-span-5 flex flex-col gap-3.5 min-h-0">
 
-          {/* PEPK Agenda Card (Full Height - Auto Carousel) */}
-          <div className="flex-1 min-h-[320px] lg:min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
+          {/* Pimpinan Agenda Card (Top Half - Auto Carousel) */}
+          <div className="flex-1 min-h-[220px] lg:min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
+            <div className="pb-2.5 mb-3 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <span>Jadwal Pimpinan {isTomorrowMode ? "Besok" : "Hari Ini"}</span>
+                  {isTomorrowMode && (
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60">
+                      {dayjs(targetDateStr).locale('id').format('DD MMM YYYY')}
+                    </span>
+                  )}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                  Kegiatan Pimpinan OJK Provinsi Banten ({todayJadwalPimpinan.length} agenda untuk {isTomorrowMode ? "besok" : "hari ini"})
+                </p>
+              </div>
+              {todayJadwalPimpinan.length > 1 && (
+                <div className="text-xs font-mono font-bold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300">
+                  {activePimpinanIndex + 1} / {todayJadwalPimpinan.length}
+                </div>
+              )}
+            </div>
+
+            {isLoadingJadwalPimpinan ? (
+              <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">Memuat jadwal...</div>
+            ) : todayJadwalPimpinan.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
+                Tidak ada jadwal pimpinan untuk {isTomorrowMode ? "hari besok" : "hari ini"}.
+              </div>
+            ) : (
+              <div className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden">
+                <div>
+                  {(() => {
+                    const j = activeJadwalPimpinan;
+                    if (!j) return null;
+                    const names = Array.isArray(j.nama) ? j.nama.join(', ') : j.nama;
+                    const currentTimeStr = dayjs().format('HH:mm');
+                    const hasTime = j.jamMulai && j.jamSelesai;
+
+                    const isPast = !isTomorrowMode && hasTime ? j.jamSelesai < currentTimeStr : false;
+                    const isUpcoming = !isTomorrowMode && hasTime ? j.jamMulai > currentTimeStr : false;
+                    const isOngoing = !isTomorrowMode && !isPast && !isUpcoming;
+
+                    return (
+                      <div
+                        key={j.id || activePimpinanIndex}
+                        className="p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 flex flex-col justify-start shadow-inner animate-smoothSlide transition-all duration-700"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                          {isTomorrowMode ? (
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 uppercase tracking-wide border border-blue-200 dark:border-blue-800/60">
+                              JADWAL BESOK
+                            </span>
+                          ) : isOngoing ? (
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 uppercase tracking-wide border border-emerald-200 dark:border-emerald-800/60 animate-pulse">
+                              SEDANG BERLANGSUNG
+                            </span>
+                          ) : isPast ? (
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase tracking-wide border border-slate-300 dark:border-slate-700">
+                              SELESAI
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 uppercase tracking-wide border border-blue-200 dark:border-blue-800/60">
+                              AKAN DATANG
+                            </span>
+                          )}
+                          <span className="text-xs sm:text-sm font-mono font-extrabold text-slate-700 dark:text-slate-200">
+                            {j.jamMulai || '-'} - {j.jamSelesai || '-'}
+                          </span>
+                        </div>
+                        <h4 className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 mb-2 leading-snug capitalize">
+                          {j.kegiatan || '-'}
+                        </h4>
+                        <div className="text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t border-slate-200/60 dark:border-slate-700/50">
+                          <span>● Pimpinan: <strong className="text-slate-800 dark:text-slate-100 font-bold">{names || '-'}</strong></span>
+                          <span>● Tempat: <strong className="text-slate-800 dark:text-slate-100 font-bold">{j.tempat || '-'}</strong></span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {todayJadwalPimpinan.length > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 pt-3">
+                    {todayJadwalPimpinan.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setPimpinanSlideIndex(idx)}
+                        className={`h-2 rounded-full transition-all duration-700 ease-out cursor-pointer ${
+                          idx === activePimpinanIndex
+                            ? "w-7 bg-[#DA251C]"
+                            : "w-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300"
+                        }`}
+                        title={`Slide ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* PEPK Agenda Card (Bottom Half - Auto Carousel) */}
+          <div className="flex-1 min-h-[220px] lg:min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 overflow-hidden">
             <div className="pb-2.5 mb-3 border-b border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-2">
               <div>
                 <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
