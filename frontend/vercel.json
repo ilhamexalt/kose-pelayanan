@@ -3,6 +3,10 @@
     {
       "path": "/api/jadwal-pepk-lmst/send-group",
       "schedule": "5 9 * * *"
+    },
+    {
+      "path": "/api/pelayanan/clean-group",
+      "schedule": "40 9 * * *"
     }
   ]
 }

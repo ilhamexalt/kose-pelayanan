@@ -3,8 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import Link from "next/link";
-import * as XLSX from "xlsx";
 import { message, Pagination } from "antd";
 import { usePermissions } from "@/hooks/usePermissions";
 import { db } from "@/lib/firebase";
@@ -24,7 +22,6 @@ export default function DashboardPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showSurvey, setShowSurvey] = useState(false);
 
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterJenis, setFilterJenis] = useState('');
@@ -79,7 +76,7 @@ export default function DashboardPage() {
     .sort((a, b) => {
       const timeA = getTimeValue(a.createdAt);
       const timeB = getTimeValue(b.createdAt);
-      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+      return timeB - timeA;
     });
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / itemsPerPage));
@@ -114,15 +111,15 @@ export default function DashboardPage() {
       return;
     }
 
-      const unsubscribe = onSnapshot(collection(db, 'pelayanan'), () => {
-        // Fetch decrypted data from the secure server API instead of using raw encrypted client data
-        fetchPelayanan();
-      }, (error) => {
-        console.error("Realtime fetch error:", error);
-        fetchPelayanan();
-      });
+    const unsubscribe = onSnapshot(collection(db, 'pelayanan'), () => {
+      // Fetch decrypted data from the secure server API instead of using raw encrypted client data
+      fetchPelayanan();
+    }, (error) => {
+      console.error("Realtime fetch error:", error);
+      fetchPelayanan();
+    });
 
-      return () => unsubscribe();
+    return () => unsubscribe();
   }, [user, isAuthLoading, router]);
 
   const fetchPelayanan = async () => {
@@ -167,7 +164,7 @@ export default function DashboardPage() {
       if (json.success) {
         if (isSaveRegister) {
           messageApi.success('Data berhasil disimpan');
-          setPelayananList((prev: any[]) => prev.map(p => 
+          setPelayananList((prev: any[]) => prev.map(p =>
             p.id === statusId ? { ...p, nomorRegister: selectedDetail.nomorRegister, catatan: selectedDetail.catatan } : p
           ));
         } else {
@@ -187,7 +184,6 @@ export default function DashboardPage() {
       setIsUpdatingStatus(false);
     }
   };
-
 
 
   if (isLoading || !user) {
@@ -211,6 +207,21 @@ export default function DashboardPage() {
     <>
       {contextHolder}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Banner Informasi Pembersihan Data Pelayanan */}
+        <div className="flex items-center justify-between gap-3 px-4 py-3 mb-6 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/50 text-amber-900 dark:text-amber-200 shadow-2xs">
+          <div className="flex items-center gap-3 text-xs sm:text-sm">
+            <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            <p className="leading-relaxed">
+              <strong className="font-semibold text-amber-950 dark:text-amber-100">Informasi: </strong>
+              Pada pukul <strong className="font-semibold text-amber-950 dark:text-amber-100">16.40 WIB</strong> akan dilakukan pembersihan (<em className="not-italic font-medium">clean</em>) data pelayanan. Mohon ditarik terlebih dahulu datanya sebelum hilang. <span className="font-semibold text-[#DA251C] dark:text-red-400">Proses tarik Excel hanya dapat menggunakan jaringan OJK.</span>
+            </p>
+          </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">Daftar Antrean Pelayanan</h1>
@@ -314,30 +325,12 @@ export default function DashboardPage() {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
               <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors group"
-                    onClick={() => {
-                      setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <div className="flex items-center">
-                      No Antrean
-                      <span className="ml-1 text-slate-400 group-hover:text-[#DA251C] transition-colors">
-                        {sortOrder === 'asc' ? (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                        )}
-                      </span>
-                    </div>
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Waktu</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jenis</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Proses Oleh</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">No Antrean</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Waktu</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Nama</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Jenis</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Proses Oleh</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-200 dark:divide-slate-800">
@@ -676,8 +669,8 @@ export default function DashboardPage() {
                       </button>
                       <button
                         disabled={
-                          isUpdatingStatus || 
-                          selectedDetail.nomorRegister !== pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister || 
+                          isUpdatingStatus ||
+                          selectedDetail.nomorRegister !== pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister ||
                           ((selectedDetail.jenis?.toLowerCase() === 'slik' || selectedDetail.jenis?.toLowerCase() === 'pengaduan') && !pelayananList.find(p => p.id === selectedDetail.id)?.nomorRegister?.trim())
                         }
                         onClick={() => setShowSurvey(true)}

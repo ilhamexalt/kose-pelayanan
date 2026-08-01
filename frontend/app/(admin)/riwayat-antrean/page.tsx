@@ -71,7 +71,6 @@ export default function HistoryPage() {
     }
   };
 
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterJenis, setFilterJenis] = useState('');
@@ -132,7 +131,7 @@ export default function HistoryPage() {
     .sort((a, b) => {
       const timeA = getTimeValue(a.createdAt);
       const timeB = getTimeValue(b.createdAt);
-      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+      return timeB - timeA;
     });
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedList.length / itemsPerPage));
@@ -403,7 +402,7 @@ export default function HistoryPage() {
               <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   {del && (
-                    <th scope="col" className="px-6 py-4 text-left w-12">
+                    <th scope="col" className="px-6 py-4 text-left w-12 sticky left-0 z-20 bg-slate-50 dark:bg-[#131d33] border-r border-slate-200/80 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.08)]">
                       <input
                         type="checkbox"
                         onChange={handleSelectAll}
@@ -412,31 +411,13 @@ export default function HistoryPage() {
                       />
                     </th>
                   )}
-                  <th
-                    scope="col"
-                    className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors group"
-                    onClick={() => {
-                      setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <div className="flex items-center">
-                      No Antrean
-                      <span className="ml-1 text-slate-400 group-hover:text-[#DA251C] transition-colors">
-                        {sortOrder === 'asc' ? (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                        )}
-                      </span>
-                    </div>
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Waktu Daftar</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Waktu Selesai</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jenis</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Proses Oleh</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">No Antrean</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Waktu Daftar</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Waktu Selesai</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Nama</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Jenis</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Proses Oleh</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-[#0f172a] divide-y divide-slate-200 dark:divide-slate-800">
@@ -444,10 +425,10 @@ export default function HistoryPage() {
                   paginatedList.map((item) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors group"
                     >
                       {del && (
-                        <td className="px-6 py-4 whitespace-nowrap text-left">
+                        <td className="px-6 py-4 whitespace-nowrap text-left sticky left-0 z-10 bg-white dark:bg-[#0f172a] group-hover:bg-slate-50 dark:group-hover:bg-slate-800/60 border-r border-slate-200/80 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.08)] transition-colors">
                           <input
                             type="checkbox"
                             checked={selectedIds.includes(item.id)}

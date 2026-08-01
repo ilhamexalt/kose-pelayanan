@@ -144,9 +144,37 @@ export default function LaporanRiwayatPelayananPage() {
     },
   ];
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (filteredAndSortedList.length === 0) {
       messageApi.warning('Tidak ada data pelayanan untuk di-export.');
+      return;
+    }
+
+    try {
+      messageApi.loading({ content: 'Memverifikasi jaringan OJK...', key: 'ip_check', duration: 0 });
+      const res = await fetch('/api/check-ip');
+      const json = await res.json();
+
+      if (!res.ok || !json.allowed) {
+        messageApi.error({
+          content: json.message || 'Proses tarik Excel hanya dapat dilakukan menggunakan jaringan OJK.',
+          key: 'ip_check',
+          duration: 5
+        });
+        return;
+      }
+
+      messageApi.success({
+        content: 'Jaringan OJK terverifikasi. Mengunduh Excel...',
+        key: 'ip_check',
+        duration: 2
+      });
+    } catch (err) {
+      messageApi.error({
+        content: 'Gagal memverifikasi koneksi jaringan.',
+        key: 'ip_check',
+        duration: 3
+      });
       return;
     }
 
