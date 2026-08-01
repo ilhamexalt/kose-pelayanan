@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (!user || pathname === '/login' || pathname === '/lupa-password') return;
+    if (!user || pathname === '/login' || pathname === '/lupa-password' || pathname === '/operasional') return;
 
     let timeoutId: NodeJS.Timeout;
     

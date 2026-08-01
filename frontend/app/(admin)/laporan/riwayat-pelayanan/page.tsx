@@ -267,6 +267,112 @@ export default function LaporanRiwayatPelayananPage() {
     XLSX.writeFile(workbook, `Laporan_Pelayanan_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  const handleMergeExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      messageApi.loading({ content: 'Memverifikasi jaringan OJK...', key: 'merge_excel', duration: 0 });
+      const res = await fetch('/api/check-ip');
+      const json = await res.json();
+
+      if (!res.ok || !json.allowed) {
+        messageApi.error({
+          content: json.message || 'Proses merge & tarik Excel hanya dapat dilakukan menggunakan jaringan OJK.',
+          key: 'merge_excel',
+          duration: 5
+        });
+        e.target.value = '';
+        return;
+      }
+
+      messageApi.loading({
+        content: `Membaca dan menggabungkan ${files.length} file Excel...`,
+        key: 'merge_excel',
+        duration: 0
+      });
+
+      const mergedDataBySheet: Record<string, any[]> = {};
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const arrayBuffer = await file.arrayBuffer();
+        const wb = XLSX.read(arrayBuffer, { type: 'array' });
+
+        wb.SheetNames.forEach((sheetName) => {
+          const sheet = wb.Sheets[sheetName];
+          const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+          if (!mergedDataBySheet[sheetName]) {
+            mergedDataBySheet[sheetName] = [];
+          }
+          mergedDataBySheet[sheetName].push(...rows);
+        });
+      }
+
+      const workbook = XLSX.utils.book_new();
+
+      const parseIndoDateToTimestamp = (dateVal: any): number => {
+        if (!dateVal) return 0;
+        if (dateVal instanceof Date) return dateVal.getTime();
+        if (typeof dateVal === 'number') {
+          return (dateVal - 25569) * 86400 * 1000;
+        }
+        const str = String(dateVal).trim();
+        const indoMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:[\s,]+(\d{1,2})[:.](\d{1,2})(?:[:.](\d{1,2}))?)?/);
+        if (indoMatch) {
+          const day = parseInt(indoMatch[1], 10);
+          const month = parseInt(indoMatch[2], 10) - 1;
+          const year = parseInt(indoMatch[3], 10);
+          const hour = indoMatch[4] ? parseInt(indoMatch[4], 10) : 0;
+          const min = indoMatch[5] ? parseInt(indoMatch[5], 10) : 0;
+          const sec = indoMatch[6] ? parseInt(indoMatch[6], 10) : 0;
+          return new Date(year, month, day, hour, min, sec).getTime();
+        }
+        const parsed = new Date(str).getTime();
+        return isNaN(parsed) ? 0 : parsed;
+      };
+
+      Object.keys(mergedDataBySheet).forEach((sheetName) => {
+        const rows = mergedDataBySheet[sheetName];
+
+        // Urutkan berdasarkan tanggal ascending
+        rows.sort((a, b) => {
+          const dateA = parseIndoDateToTimestamp(a['Tanggal'] || a['TANGGAL PENGAJUAN'] || a['TANGGAL'] || 0);
+          const dateB = parseIndoDateToTimestamp(b['Tanggal'] || b['TANGGAL PENGAJUAN'] || b['TANGGAL'] || 0);
+          return dateA - dateB; // Ascending
+        });
+
+        // Urutkan kembali kolom No dari 1, 2, ...
+        rows.forEach((row, idx) => {
+          if ('No' in row) row['No'] = idx + 1;
+          else if ('NO' in row) row['NO'] = idx + 1;
+          else if ('no' in row) row['no'] = idx + 1;
+        });
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(workbook, ws, sheetName);
+      });
+
+      const yearMonthStr = new Date().toISOString().slice(0, 7);
+      XLSX.writeFile(workbook, `Laporan_Pelayanan_Gabungan_1_Bulan_${yearMonthStr}.xlsx`);
+
+      messageApi.success({
+        content: `Berhasil menggabungkan ${files.length} file Excel (diurutkan tanggal ascending)!`,
+        key: 'merge_excel',
+        duration: 4
+      });
+    } catch (err: any) {
+      console.error('Error merging excel files:', err);
+      messageApi.error({
+        content: 'Gagal menggabungkan file Excel. Pastikan file valid.',
+        key: 'merge_excel',
+        duration: 4
+      });
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   if (!isReady || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16]">
@@ -295,13 +401,26 @@ export default function LaporanRiwayatPelayananPage() {
             <p className="text-sm text-slate-500 dark:text-slate-400">Rekapitulasi seluruh riwayat antrean dan penanganan nasabah.</p>
           </div>
           {(isAdmin || canExport) && (
-            <button
-              onClick={handleExportExcel}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer border-none"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              Export ke Excel
-            </button>
+            <div className="flex items-center gap-3">
+              <label className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer border-none m-0">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                Merge Excel (1 Bulan)
+                <input
+                  type="file"
+                  multiple
+                  accept=".xlsx, .xls"
+                  onChange={handleMergeExcel}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={handleExportExcel}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-lg transition-all flex items-center shadow-sm text-sm cursor-pointer border-none"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Export ke Excel
+              </button>
+            </div>
           )}
         </div>
 

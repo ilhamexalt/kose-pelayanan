@@ -49,7 +49,7 @@ export default function OperasionalDashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [modalApi, modalContextHolder] = Modal.useModal();
   const router = useRouter();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, refreshSession } = useAuth();
 
   const [pelayananList, setPelayananList] = useState<Pelayanan[]>([]);
   const [meetingList, setMeetingList] = useState<Meeting[]>([]);
@@ -73,6 +73,8 @@ export default function OperasionalDashboardPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+
 
   useEffect(() => {
     const checkFS = () => {
@@ -227,6 +229,19 @@ export default function OperasionalDashboardPage() {
       setIsLoadingJadwalPepk(false);
     }
   };
+
+  // Soft-refresh sesi & data setiap 50 menit tanpa reload agar TETAP FULLSCREEN dan tidak kena session
+  useEffect(() => {
+    const refreshTimer = setInterval(() => {
+      if (refreshSession) {
+        refreshSession();
+      }
+      fetchPelayanan();
+      fetchMeeting();
+      fetchJadwalPepk();
+    }, 50 * 60 * 1000); // 50 menit
+    return () => clearInterval(refreshTimer);
+  }, [refreshSession]);
 
   const isInitialDataLoading = isAuthLoading || isLoadingPelayanan || isLoadingMeeting || isLoadingJadwalPepk;
 

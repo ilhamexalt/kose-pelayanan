@@ -131,7 +131,7 @@ export default function LupaPasswordPage() {
             {step === 1 ? (
               <form onSubmit={handleRequestOtp} className="space-y-4">
                 <div>
-                  <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 mb-1">NIP / Username <span className="text-red-500">*</span></label>
+                  <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 mb-1">Username <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     id="identifier"
@@ -140,7 +140,7 @@ export default function LupaPasswordPage() {
                     onChange={(e) => setIdentifier(e.target.value)}
                     required
                     className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F1B434] focus:border-transparent transition-all"
-                    placeholder="Masukkan NIP atau Username"
+                    placeholder="Masukkan Username"
                   />
                 </div>
 

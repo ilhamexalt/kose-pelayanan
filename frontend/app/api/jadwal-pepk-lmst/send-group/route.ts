@@ -12,7 +12,7 @@ const MONTHS = [
 export async function POST(request: Request) {
   try {
     const groupId = process.env.WA_GROUP_JID;
-    const templateName = process.env.WA_TEMPLATE_NAME || 'jadwal-pepk'; // Use env or fallback
+    const templateName = 'info-kegiatan';
 
     if (!groupId) {
       return NextResponse.json({ error: 'WA_GROUP_JID tidak dikonfigurasi di .env.local' }, { status: 500 });
