@@ -495,24 +495,24 @@ export default function OperasionalDashboardPage() {
       {modalContextHolder}
 
       {/* Header Bar - Compact & Full Width */}
-      <div className="shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 py-3 sm:py-2.5 px-4 sm:px-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2.5 min-w-0 overflow-hidden">
+      <div className="shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 py-3.5 sm:py-3 px-4 sm:px-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 min-w-0 overflow-hidden">
           <div className="flex items-center gap-2 shrink-0">
-            <span className="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full bg-[#DA251C] animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[#DA251C] whitespace-nowrap">
-              OPERASIONAL
+            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-[#DA251C] animate-pulse" />
+            <span className="text-sm sm:text-base font-extrabold uppercase tracking-wider text-[#DA251C] whitespace-nowrap">
+              SIPANDU
             </span>
           </div>
-          <span className="h-4 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block shrink-0" />
-          <h1 className="text-sm sm:text-base md:text-lg font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap shrink-0">
-            Dasbor Operasional Harian
+          <span className="h-5 sm:h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block shrink-0" />
+          <h1 className="text-base sm:text-lg md:text-xl font-extrabold text-slate-800 dark:text-slate-100 whitespace-nowrap shrink-0">
+            Sistem Pelayanan dan Penjadwalan Terpadu
           </h1>
-          <span className="text-xs text-slate-500 dark:text-slate-400 hidden xl:block truncate min-w-0">
-            — Pantauan realtime layanan antrean, ruangan meeting & agenda PEPK
-          </span>
+          {/* <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 hidden xl:block truncate min-w-0">
+            — Monitoring realtime layanan antrean, ruangan meeting & agenda PEPK
+          </span> */}
         </div>
 
-        <div className="flex items-center flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
+        <div className="flex items-center flex-wrap gap-2.5 shrink-0 w-full sm:w-auto justify-end">
           <button
             onClick={() => {
               try {
@@ -522,10 +522,10 @@ export default function OperasionalDashboardPage() {
               } catch (e) { }
               router.push('/dashboard');
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
             title="Kembali ke Dashboard"
           >
-            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>Kembali</span>
@@ -543,31 +543,31 @@ export default function OperasionalDashboardPage() {
                 }
               } catch (e) { }
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border whitespace-nowrap shrink-0 ${isFullscreen
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer border whitespace-nowrap shrink-0 ${isFullscreen
                 ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
                 : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
               }`}
             title="Aktifkan / Nonaktifkan TV Mode Fullscreen (F11)"
           >
-            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
             </svg>
             <span className="hidden sm:inline">{isFullscreen ? "TV Mode Aktif" : "Layar Penuh"}</span>
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl whitespace-nowrap shrink-0">
-            <svg className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl whitespace-nowrap shrink-0">
+            <svg className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <div className="text-xs flex items-center gap-2 whitespace-nowrap">
+            <div className="text-xs sm:text-sm flex items-center gap-2 whitespace-nowrap">
               <span className="font-semibold text-slate-800 dark:text-slate-200">{currentTime.locale('id').format('DD MMMM YYYY')}</span>
               <span className="text-slate-400">|</span>
               <span className="text-slate-600 dark:text-slate-300 font-mono font-bold">{currentTime.format('HH:mm:ss')} WIB</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-emerald-700 dark:text-emerald-400 text-xs font-semibold whitespace-nowrap shrink-0">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+          <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-emerald-700 dark:text-emerald-400 text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <span>Live Sync</span>
           </div>
         </div>
@@ -720,41 +720,60 @@ export default function OperasionalDashboardPage() {
                 return (
                   <div
                     key={roomName}
-                    className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${isAvailable
-                        ? "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/40"
-                        : "bg-rose-50/60 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-800/40"
+                    className={`p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between ${isAvailable
+                      ? "bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/40 text-slate-800 dark:text-slate-100"
+                      : "bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-800/40 text-slate-800 dark:text-slate-100"
                       }`}
                   >
                     <div>
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate" title={roomName}>
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="text-xs font-bold truncate text-slate-800 dark:text-slate-100" title={roomName}>
                           {roomName}
                         </span>
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${isAvailable ? "bg-emerald-500" : "bg-rose-500 animate-pulse"}`} />
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${isAvailable ? "bg-emerald-500" : "bg-[#DA251C] animate-pulse"
+                            }`}
+                        />
                       </div>
-                      <div className="text-[11px] font-semibold">
+
+                      <div className="text-[11px] font-semibold flex items-center gap-1">
                         {isAvailable ? (
-                          <span className="text-emerald-600 dark:text-emerald-400">● Tersedia</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">● Terjadwal</span>
                         ) : (
-                          <span className="text-rose-600 dark:text-rose-400">● Terpakai</span>
+                          <span className="text-[#DA251C] dark:text-red-400">● Terpakai</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="mt-1.5 pt-1.5 border-t border-slate-200/50 dark:border-slate-700/50 text-[10px] text-slate-500 dark:text-slate-400">
+                    <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/50 text-[11px]">
                       {currentMeeting ? (
-                        <div className="truncate" title={`s.d. ${currentMeeting.waktuSelesai} (${currentMeeting.instansi})`}>
-                          <span className="text-rose-600 dark:text-rose-400 font-medium">s.d. {currentMeeting.waktuSelesai}</span>
-                          <span className="text-slate-600 dark:text-slate-300 ml-1">({currentMeeting.instansi || 'Internal'})</span>
+                        <div>
+                          <div className="truncate text-[10px] text-[#DA251C] dark:text-red-400 font-medium mb-1" title={`s.d. ${currentMeeting.waktuSelesai} (${currentMeeting.instansi || 'Internal'})`}>
+                            s.d. {currentMeeting.waktuSelesai} ({currentMeeting.instansi || 'Internal'})
+                          </div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Avail:</div>
+                          <div className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] leading-tight break-words" title={availableSlotsStr}>
+                            {availableSlotsStr}
+                          </div>
                         </div>
                       ) : nextMeeting ? (
-                        <div className="truncate" title={`Jadwal: ${nextMeeting.waktuMulai}-${nextMeeting.waktuSelesai} (${nextMeeting.instansi})`}>
-                          <span className="text-blue-600 dark:text-blue-400 font-medium">Jadwal: {nextMeeting.waktuMulai}-{nextMeeting.waktuSelesai}</span>
-                          <span className="text-slate-600 dark:text-slate-300 ml-1">({nextMeeting.instansi || 'Internal'})</span>
+                        <div>
+                          <div className="truncate text-[10px] text-blue-600 dark:text-blue-400 font-medium mb-1" title={`Jadwal: ${nextMeeting.waktuMulai}-${nextMeeting.waktuSelesai} (${nextMeeting.instansi || 'Internal'})`}>
+                            {nextMeeting.waktuMulai}-{nextMeeting.waktuSelesai} ({nextMeeting.instansi || 'Internal'})
+                          </div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Avail:</div>
+                          <div className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] leading-tight break-words" title={availableSlotsStr}>
+                            {availableSlotsStr}
+                          </div>
                         </div>
                       ) : (
-                        <div className="font-medium text-emerald-700 dark:text-emerald-400 truncate" title={availableSlotsStr}>
-                          {availableSlotsStr}
+                        <div>
+                          <div className="text-slate-400 dark:text-slate-500 text-[10px] font-medium mb-0.5">
+                            Jam Available:
+                          </div>
+                          <div className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] leading-tight break-words" title={availableSlotsStr}>
+                            {availableSlotsStr}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -938,11 +957,10 @@ export default function OperasionalDashboardPage() {
                       <button
                         key={idx}
                         onClick={() => setPimpinanSlideIndex(idx)}
-                        className={`h-2 rounded-full transition-all duration-700 ease-out cursor-pointer ${
-                          idx === activePimpinanIndex
-                            ? "w-7 bg-[#DA251C]"
-                            : "w-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300"
-                        }`}
+                        className={`h-2 rounded-full transition-all duration-700 ease-out cursor-pointer ${idx === activePimpinanIndex
+                          ? "w-7 bg-[#DA251C]"
+                          : "w-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300"
+                          }`}
                         title={`Slide ${idx + 1}`}
                       />
                     ))}
@@ -1044,8 +1062,8 @@ export default function OperasionalDashboardPage() {
                         key={idx}
                         onClick={() => setPepkSlideIndex(idx)}
                         className={`h-2 rounded-full transition-all duration-700 ease-out cursor-pointer ${idx === activePepkIndex
-                            ? 'w-7 bg-[#DA251C] shadow-sm'
-                            : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
+                          ? 'w-7 bg-[#DA251C] shadow-sm'
+                          : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
                           }`}
                         title={`Slide ${idx + 1}`}
                       />
