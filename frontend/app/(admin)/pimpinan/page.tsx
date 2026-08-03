@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Table, Tag, Popconfirm, message, Button, Modal, Form, Input, Select, DatePicker, TimePicker, Alert } from "antd";
+import { Table, Tag, Popconfirm, message, Button, Modal, Form, Input, Select, DatePicker, TimePicker, Alert, AutoComplete } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
@@ -12,6 +12,7 @@ interface Jadwal {
   nama: string[];
   kegiatan: string;
   tempat: string;
+  linkZoom?: string;
   tanggal: string;
   tanggalMulai?: string;
   tanggalSelesai?: string;
@@ -50,6 +51,21 @@ export default function JadwalPimpinanPage() {
   const [messageApi, contextHolder] = message.useMessage();
 
   const [filterDate, setFilterDate] = useState<[Dayjs | null, Dayjs | null] | null>(null);
+  const [jadwalPepkList, setJadwalPepkList] = useState<any[]>([]);
+
+  const kegiatanPepkOptions = React.useMemo(() => {
+    const unique = Array.from(
+      new Set(
+        jadwalPepkList
+          .map((item) => item.kegiatan)
+          .filter((val): val is string => Boolean(val && val.trim() !== ""))
+      )
+    );
+    return unique.map((item) => ({
+      value: item,
+      label: item,
+    }));
+  }, [jadwalPepkList]);
 
   const fetchJadwal = async () => {
     setLoading(true);
@@ -66,8 +82,21 @@ export default function JadwalPimpinanPage() {
     }
   };
 
+  const fetchJadwalPepk = async () => {
+    try {
+      const res = await fetch('/api/jadwal-pepk-lmst');
+      const json = await res.json();
+      if (json.success) {
+        setJadwalPepkList(json.data);
+      }
+    } catch (e) {
+      console.error("Gagal mengambil data jadwal PEPK", e);
+    }
+  };
+
   useEffect(() => {
     fetchJadwal();
+    fetchJadwalPepk();
   }, []);
 
   const showModal = (record?: Jadwal) => {
@@ -78,6 +107,7 @@ export default function JadwalPimpinanPage() {
         nama: record.nama && record.nama.length > 0 ? record.nama : ["Adi Dharma"],
         kegiatan: record.kegiatan,
         tempat: record.tempat,
+        linkZoom: record.linkZoom || "",
         tanggalMulai: record.tanggalMulai ? dayjs(record.tanggalMulai) : (record.tanggal ? dayjs(record.tanggal) : null),
         tanggalSelesai: record.tanggalSelesai ? dayjs(record.tanggalSelesai) : (record.tanggal ? dayjs(record.tanggal) : null),
         jamMulai: record.jamMulai ? dayjs(record.jamMulai, 'HH:mm') : null,
@@ -153,7 +183,7 @@ export default function JadwalPimpinanPage() {
   const handleSendToGroup = async () => {
     setSending(true);
     try {
-      const res = await fetch('/api/pimpinan/send-group', { method: 'POST' });
+      const res = await fetch('/api/pimpinan/send-h1', { method: 'POST' });
       const json = await res.json();
       if (res.ok && json.success) {
         messageApi.success(json.message || "Pesan berhasil dikirim via WhatsApp ke Sekretaris");
@@ -545,7 +575,13 @@ export default function JadwalPimpinanPage() {
               label="Kegiatan / Acara"
               rules={[{ required: true, message: 'Harap isi nama kegiatan' }]}
             >
-              <Input placeholder="Contoh: Rapat Koordinasi internal" />
+              <AutoComplete
+                options={kegiatanPepkOptions}
+                placeholder="Pilih dari jadwal PEPK atau ketik kegiatan/acara"
+                filterOption={(inputValue, option) =>
+                  option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                }
+              />
             </Form.Item>
 
             <Form.Item
@@ -554,6 +590,15 @@ export default function JadwalPimpinanPage() {
               rules={[{ required: true, message: 'Harap isi tempat kegiatan' }]}
             >
               <Input placeholder="Contoh: Ruang Rapat lt. 2" />
+            </Form.Item>
+          </div>
+
+          <div className="grid grid-cols-1 gap-x-3.5">
+            <Form.Item
+              name="linkZoom"
+              label="Link Zoom / Online (Opsional)"
+            >
+              <Input placeholder="Contoh: https://zoom.us/j/123456789 atau ID/Passcode Zoom" />
             </Form.Item>
           </div>
 

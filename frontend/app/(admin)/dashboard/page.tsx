@@ -563,6 +563,19 @@ export default function DashboardPage() {
                           <p className="font-bold text-slate-700 dark:text-slate-200 mt-0.5 truncate">{jadwal.tempat || '-'}</p>
                         </div>
                       </div>
+                      {jadwal.linkZoom && (
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/50 flex items-center gap-1.5">
+                          <span className="text-xs text-slate-400 font-medium">Zoom/Online:</span>
+                          <a
+                            href={jadwal.linkZoom.startsWith('http') ? jadwal.linkZoom : `https://${jadwal.linkZoom}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline truncate"
+                          >
+                            {jadwal.linkZoom}
+                          </a>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

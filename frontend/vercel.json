@@ -7,6 +7,14 @@
     {
       "path": "/api/pelayanan/clean-group",
       "schedule": "40 9 * * *"
+    },
+    {
+      "path": "/api/pimpinan/send-h1",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/pimpinan/send-reminder",
+      "schedule": "0 * * * *"
     }
   ]
 }

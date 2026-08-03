@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { decryptSession } from './lib/session';
 
 // Define public routes that don't require authentication
-const publicRoutes = ['/', '/login', '/lupa-password', '/layar-antrean', '/guest'];
+const publicRoutes = ['/', '/login', '/lupa-password', '/layar-antrean', '/guest', '/operasional'];
 // Also allow API routes related to login/auth, pelayanan (public guest submission & check), and public assets
 const publicPrefixes = ['/api/login', '/api/lupa-password', '/api/auth/me', '/api/logout', '/api/pelayanan', '/_next', '/favicon', '/assets'];
 
@@ -13,8 +13,13 @@ export function proxy(request: NextRequest) {
   // Skip middleware for public routes (supporting trailing slash) and static assets/public APIs
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname === `${route}/`);
   const isPublicPrefix = publicPrefixes.some(prefix => pathname.startsWith(prefix));
+  const isPublicGetApi = request.method === 'GET' && (
+    pathname.startsWith('/api/meeting') ||
+    pathname.startsWith('/api/jadwal-pepk-lmst') ||
+    pathname.startsWith('/api/pimpinan')
+  );
   
-  if (isPublicRoute || isPublicPrefix) {
+  if (isPublicRoute || isPublicPrefix || isPublicGetApi) {
     return NextResponse.next();
   }
 

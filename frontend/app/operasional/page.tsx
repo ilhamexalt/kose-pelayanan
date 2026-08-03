@@ -106,8 +106,7 @@ export default function OperasionalDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (isAuthLoading || !user) return;
-    if (user.update_password === false) {
+    if (user && user.update_password === false) {
       router.push('/update-password');
       return;
     }
@@ -146,7 +145,7 @@ export default function OperasionalDashboardPage() {
       unsubscribeJadwalPepk();
       unsubscribeJadwalPimpinan();
     };
-  }, [user, isAuthLoading, router]);
+  }, [user, router]);
 
   useEffect(() => {
     const now = dayjs();
@@ -154,12 +153,23 @@ export default function OperasionalDashboardPage() {
       setHasTriggered1600(true);
       setShowCountdownModal(true);
       setCountdownSeconds(5);
+
+      // Otomasi WhatsApp Jadwal Pimpinan H+1 ke Sekretaris (sore hari jam 16.00 WIB)
+      fetch('/api/pimpinan/send-h1', { method: 'POST' }).catch(() => {});
     }
     if (now.hour() < 16 && hasTriggered1600) {
       setHasTriggered1600(false);
       setIsTomorrowMode(false);
     }
   }, [currentTime, hasTriggered1600, isTomorrowMode, showCountdownModal]);
+
+  // Otomasi WhatsApp Pengingat Jadwal Pimpinan H-1 Jam (diperiksa otomatis secara berkala di background)
+  useEffect(() => {
+    const reminderInterval = setInterval(() => {
+      fetch('/api/pimpinan/send-reminder', { method: 'POST' }).catch(() => {});
+    }, 5 * 60 * 1000); // setiap 5 menit
+    return () => clearInterval(reminderInterval);
+  }, []);
 
   useEffect(() => {
     if (!showCountdownModal) return;
@@ -277,23 +287,9 @@ export default function OperasionalDashboardPage() {
     }
   };
 
-  // Soft-refresh sesi & data setiap 50 menit tanpa reload agar TETAP FULLSCREEN dan tidak kena session
-  useEffect(() => {
-    const refreshTimer = setInterval(() => {
-      if (refreshSession) {
-        refreshSession();
-      }
-      fetchPelayanan();
-      fetchMeeting();
-      fetchJadwalPepk();
-      fetchJadwalPimpinan();
-    }, 50 * 60 * 1000); // 50 menit
-    return () => clearInterval(refreshTimer);
-  }, [refreshSession]);
+  const isInitialDataLoading = isLoadingPelayanan || isLoadingMeeting || isLoadingJadwalPepk || isLoadingJadwalPimpinan;
 
-  const isInitialDataLoading = isAuthLoading || isLoadingPelayanan || isLoadingMeeting || isLoadingJadwalPepk || isLoadingJadwalPimpinan;
-
-  if (!user || isInitialDataLoading) {
+  if (isInitialDataLoading) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0b0f19] p-4 text-center select-none">
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-xl flex flex-col items-center gap-4 animate-scaleUp">
@@ -885,7 +881,8 @@ export default function OperasionalDashboardPage() {
                     </span>
                   )}
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                {/* <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium"> */}
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Kegiatan Pimpinan OJK Provinsi Banten ({todayJadwalPimpinan.length} agenda untuk {isTomorrowMode ? "besok" : "hari ini"})
                 </p>
               </div>
@@ -949,6 +946,9 @@ export default function OperasionalDashboardPage() {
                         <div className="text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t border-slate-200/60 dark:border-slate-700/50">
                           <span>● Pimpinan: <strong className="text-slate-800 dark:text-slate-100 font-bold">{names || '-'}</strong></span>
                           <span>● Tempat: <strong className="text-slate-800 dark:text-slate-100 font-bold">{j.tempat || '-'}</strong></span>
+                          {j.linkZoom && (
+                            <span>● Zoom/Online: <strong className="text-blue-600 dark:text-blue-400 font-bold break-all">{j.linkZoom}</strong></span>
+                          )}
                         </div>
                       </div>
                     );
