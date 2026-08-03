@@ -355,6 +355,10 @@ export default function OperasionalDashboardPage() {
   const getAvailableTimeSlots = (roomMeetings: Meeting[]) => {
     if (!roomMeetings || roomMeetings.length === 0) return "Sepanjang hari";
 
+    const nowStr = dayjs().format('HH:mm');
+    const activeOrUpcoming = roomMeetings.filter(m => (m.waktuSelesai || '') > nowStr);
+    if (activeOrUpcoming.length === 0) return "Sepanjang hari";
+
     const blockedHours = new Set<number>();
     for (const m of roomMeetings) {
       const startH = parseInt((m.waktuMulai || '').split(':')[0], 10);
@@ -709,6 +713,7 @@ export default function OperasionalDashboardPage() {
                 const nextMeeting = roomMeetingsToday
                   .filter(m => m.waktuMulai > nowTimeStr)
                   .sort((a, b) => a.waktuMulai.localeCompare(b.waktuMulai))[0];
+                const hasUpcomingMeeting = roomMeetingsToday.some(m => (m.waktuMulai || '') > nowTimeStr);
 
                 const isAvailable = !currentMeeting;
                 const availableSlotsStr = getAvailableTimeSlots(roomMeetingsToday);
@@ -734,7 +739,7 @@ export default function OperasionalDashboardPage() {
 
                       <div className="text-[11px] font-semibold flex items-center gap-1">
                         {isAvailable ? (
-                          roomMeetingsToday.length === 0 ? (
+                          !hasUpcomingMeeting ? (
                             <span className="text-emerald-600 dark:text-emerald-400">● Tersedia</span>
                           ) : (
                             <span className="text-emerald-600 dark:text-emerald-400">● Terjadwal</span>

@@ -54,27 +54,11 @@ export async function PUT(
       const snapshot = await getDocs(qConflict);
       let conflict = null;
       
-      const newStartH = parseInt((waktuMulai || '').split(':')[0], 10);
-      const newEndH = parseInt((waktuSelesai || '').split(':')[0], 10);
-
       snapshot.forEach((docItem) => {
         if (docItem.id === id) return;
         const d = docItem.data();
-        const existingStartH = parseInt((d.waktuMulai || '').split(':')[0], 10);
-        const existingEndH = parseInt((d.waktuSelesai || '').split(':')[0], 10);
-
-        if (!isNaN(newStartH) && !isNaN(newEndH) && !isNaN(existingStartH) && !isNaN(existingEndH)) {
-          if (newStartH <= existingEndH && newEndH >= existingStartH) {
-            conflict = d;
-          }
-        } else {
-          if (
-            (waktuMulai >= d.waktuMulai && waktuMulai < d.waktuSelesai) ||
-            (waktuSelesai > d.waktuMulai && waktuSelesai <= d.waktuSelesai) ||
-            (waktuMulai <= d.waktuMulai && waktuSelesai >= d.waktuSelesai)
-          ) {
-            conflict = d;
-          }
+        if (waktuMulai < d.waktuSelesai && waktuSelesai > d.waktuMulai) {
+          conflict = d;
         }
       });
 

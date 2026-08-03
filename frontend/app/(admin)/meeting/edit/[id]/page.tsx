@@ -64,30 +64,21 @@ export default function EditMeetingPage() {
     fetchMeetings();
   }, []);
 
-  const isHourDisabled = (h: number, type: 'start' | 'end') => {
-    if (!ruang || !tanggal) return false;
-    const selectedDateStr = tanggal.format("YYYY-MM-DD");
-    const conflicts = existingMeetings.filter(m => m.ruangan === ruang && m.tanggal === selectedDateStr && m.id !== id);
-
-    if (type === 'end' && waktu?.[0]) {
-      const startH = waktu[0].hour();
-      if (h < startH) return true;
-    }
-
-    return conflicts.some(m => {
-      const startH = parseInt((m.waktuMulai || '').split(':')[0], 10);
-      const endH = parseInt((m.waktuSelesai || '').split(':')[0], 10);
-      if (isNaN(startH) || isNaN(endH)) return false;
-      return h >= startH && h <= endH;
-    });
-  };
-
   const getDisabledTime = (date: Dayjs | null, type: 'start' | 'end') => {
+    const isToday = (tanggal || dayjs()).isSame(dayjs(), 'day');
+    const nowH = dayjs().hour();
+    const nowM = dayjs().minute();
+
     const disabledHours = () => {
       const hours: number[] = [];
       for (let h = 0; h < 24; h++) {
-        if (isHourDisabled(h, type)) {
+        if (isToday && h < nowH) {
           hours.push(h);
+        } else if (type === 'end' && waktu?.[0]) {
+          const startH = waktu[0].hour();
+          if (h < startH && !hours.includes(h)) {
+            hours.push(h);
+          }
         }
       }
       return hours;
@@ -95,12 +86,16 @@ export default function EditMeetingPage() {
 
     const disabledMinutes = (selectedHour: number) => {
       const minutes: number[] = [];
-      if (type === 'end' && waktu?.[0]) {
-        const startH = waktu[0].hour();
-        const startM = waktu[0].minute();
-        if (selectedHour === startH) {
-          for (let m = 0; m <= startM; m += 15) {
-            minutes.push(m);
+      for (let m = 0; m < 60; m++) {
+        if (isToday && selectedHour === nowH && m < nowM) {
+          minutes.push(m);
+        } else if (type === 'end' && waktu?.[0]) {
+          const startH = waktu[0].hour();
+          const startM = waktu[0].minute();
+          if (selectedHour === startH && m <= startM) {
+            if (!minutes.includes(m)) {
+              minutes.push(m);
+            }
           }
         }
       }
@@ -218,6 +213,7 @@ export default function EditMeetingPage() {
                   <Calendar
                     fullscreen={false}
                     value={tanggal || dayjs()}
+                    disabledDate={(current) => current && current.isBefore(dayjs().startOf('day'))}
                     onChange={(date) => setTanggal(date)}
                     headerRender={({ value, onChange }) => {
                       return (
@@ -289,9 +285,7 @@ export default function EditMeetingPage() {
                     className="w-full"
                     size="large"
                     format="HH:mm"
-                    minuteStep={15}
                     disabledTime={(date, type) => getDisabledTime(date, type)}
-                    hideDisabledOptions
                     value={waktu as any}
                     onChange={(dates) => setWaktu(dates as any)}
                     placeholder={['Mulai', 'Selesai']}
@@ -301,7 +295,7 @@ export default function EditMeetingPage() {
                       <svg className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       <span>
                         {conflictsToday.length > 0
-                          ? `Ruangan "${ruang}" pada tanggal ini sudah terpakai di jam: ${conflictsToday.map(c => `${c.waktuMulai} - ${c.waktuSelesai} (${c.instansi})`).join(', ')}. Jam yang terpakai otomatis disembunyikan dari pilihan waktu.`
+                          ? `Ruangan "${ruang}" pada tanggal ini sudah terpakai di jam: ${conflictsToday.map(c => `${c.waktuMulai} - ${c.waktuSelesai} (${c.instansi})`).join(', ')}. Pastikan waktu yang Anda pilih tidak berbenturan.`
                           : `Ruangan "${ruang}" pada tanggal ini belum ada jadwal meeting lain (tersedia sepanjang hari).`
                         }
                       </span>
