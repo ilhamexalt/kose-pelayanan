@@ -50,9 +50,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (allowedIps.length > 0) {
-      const isAllowed = allowedIps.some(
-        (ip) => clientIp === ip || clientIp.includes(ip)
-      );
+      const isAllowed = allowedIps.some((ip) => {
+        const cleanIp = ip.replace(/\.\*$/, '').trim();
+        if (!cleanIp) return false;
+        // Cocokkan tepat (IP penuh) atau mencocokkan prefix subnet 3 oktet (misal: 151.186.185.78 diawali dengan 151.186.185.)
+        return clientIp === cleanIp || clientIp.startsWith(`${cleanIp}.`);
+      });
 
       if (!isAllowed) {
         return NextResponse.json(
