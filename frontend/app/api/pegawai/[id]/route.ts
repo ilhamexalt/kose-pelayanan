@@ -27,6 +27,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     if (body.nip !== undefined) updateData.nip = Number(body.nip) || body.nip;
     if (body.no_hp !== undefined && body.no_hp !== '') updateData.no_hp = encrypt(String(body.no_hp).trim());
     if (body.password !== undefined && body.password !== '') updateData.password = hashPassword(String(body.password));
+    if (body.update_password !== undefined) updateData.update_password = Boolean(body.update_password);
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ success: false, error: 'Tidak ada data yang diubah' }, { status: 400 });

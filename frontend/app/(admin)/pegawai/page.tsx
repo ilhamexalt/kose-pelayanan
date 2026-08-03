@@ -42,7 +42,7 @@ export default function PegawaiPage() {
 
   // Modal Edit
   const [selectedEditUser, setSelectedEditUser] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ nama: '', email: '', username: '', password: '', role: 'Pegawai', no_hp: '' });
+  const [editForm, setEditForm] = useState({ nama: '', email: '', username: '', password: '', role: 'Pegawai', no_hp: '', update_password: false });
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
@@ -220,7 +220,8 @@ export default function PegawaiPage() {
       username: userItem.username || '',
       password: '',
       role: userItem.role || 'Pegawai',
-      no_hp: userItem.no_hp || ''
+      no_hp: userItem.no_hp || '',
+      update_password: Boolean(userItem.update_password)
     });
   };
 
@@ -384,6 +385,25 @@ export default function PegawaiPage() {
       dataIndex: 'role',
       key: 'role',
       render: (text) => <div className="text-sm text-slate-500 dark:text-slate-400">{text || '-'}</div>,
+    },
+    {
+      title: 'Update Password',
+      dataIndex: 'update_password',
+      key: 'update_password',
+      render: (val: any) => {
+        const isTrue = Boolean(val);
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+              isTrue
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+            }`}
+          >
+            {isTrue ? 'true' : 'false'}
+          </span>
+        );
+      },
     },
     {
       title: 'Aksi',
@@ -625,6 +645,20 @@ export default function PegawaiPage() {
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 col-span-1">Update Password</span>
+                <span className="text-sm text-slate-900 dark:text-slate-100 col-span-2 font-medium">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                      Boolean(selectedDetailUser.update_password)
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                        : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                    }`}
+                  >
+                    {Boolean(selectedDetailUser.update_password) ? 'true' : 'false'}
+                  </span>
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                 <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 col-span-1">Dibuat Pada</span>
                 <span className="text-sm text-slate-900 dark:text-slate-100 col-span-2 font-medium">
                   {selectedDetailUser.created_at ? new Date(selectedDetailUser.created_at).toLocaleString('id-ID') : '-'}
@@ -841,6 +875,20 @@ export default function PegawaiPage() {
                       )}
                     </button>
                   </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1 block">Update Password (DB)</label>
+                  <select
+                    value={editForm.update_password ? "true" : "false"}
+                    onChange={e => setEditForm({ ...editForm, update_password: e.target.value === "true" })}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm focus:ring-2 focus:ring-[#DA251C] focus:outline-none"
+                  >
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                  </select>
                 </div>
               </div>
 

@@ -217,7 +217,7 @@ export default function MeetingPage() {
   return (
     <div className="w-full p-4 sm:p-6 lg:p-8 font-sans">
       {contextHolder}
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         {/* Box Informasi Ruangan Available */}
         <div className="mb-6 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
@@ -330,15 +330,13 @@ export default function MeetingPage() {
                 <div
                   key={roomName}
                   onClick={() => setFilterRuangan(filterRuangan === roomName ? "" : roomName)}
-                  className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
-                    filterRuangan === roomName
-                      ? "ring-2 ring-[#DA251C] border-[#DA251C] shadow-sm scale-[1.02]"
-                      : "hover:border-slate-300 dark:hover:border-slate-600"
-                  } ${
-                    isAvailable
+                  className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${filterRuangan === roomName
+                    ? "ring-2 ring-[#DA251C] border-[#DA251C] shadow-sm scale-[1.02]"
+                    : "hover:border-slate-300 dark:hover:border-slate-600"
+                    } ${isAvailable
                       ? "bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/40 text-slate-800 dark:text-slate-100"
                       : "bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-800/40 text-slate-800 dark:text-slate-100"
-                  }`}
+                    }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1.5">
@@ -346,15 +344,18 @@ export default function MeetingPage() {
                         {roomName}
                       </span>
                       <span
-                        className={`w-2 h-2 rounded-full shrink-0 ${
-                          isAvailable ? "bg-emerald-500" : "bg-[#DA251C] animate-pulse"
-                        }`}
+                        className={`w-2 h-2 rounded-full shrink-0 ${isAvailable ? "bg-emerald-500" : "bg-[#DA251C] animate-pulse"
+                          }`}
                       />
                     </div>
 
                     <div className="text-[11px] font-semibold flex items-center gap-1">
                       {isAvailable ? (
-                        <span className="text-emerald-600 dark:text-emerald-400">● Tersedia</span>
+                        roomMeetingsToday.length === 0 ? (
+                          <span className="text-emerald-600 dark:text-emerald-400">● Tersedia</span>
+                        ) : (
+                          <span className="text-emerald-600 dark:text-emerald-400">● Terjadwal</span>
+                        )
                       ) : (
                         <span className="text-[#DA251C] dark:text-red-400">● Terpakai</span>
                       )}
@@ -367,7 +368,7 @@ export default function MeetingPage() {
                         <div className="truncate text-[10px] text-[#DA251C] dark:text-red-400 font-medium mb-1" title={`s.d. ${currentMeeting.waktuSelesai} (${currentMeeting.instansi})`}>
                           s.d. {currentMeeting.waktuSelesai} ({currentMeeting.instansi})
                         </div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Avail:</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Available:</div>
                         <div className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] leading-tight break-words" title={availableSlotsStr}>
                           {availableSlotsStr}
                         </div>
@@ -375,7 +376,7 @@ export default function MeetingPage() {
                     ) : (
                       <div>
                         <div className="text-slate-400 dark:text-slate-500 text-[10px] font-medium mb-0.5">
-                          Jam Available:
+                          Available:
                         </div>
                         <div className="text-emerald-600 dark:text-emerald-400 font-bold leading-tight break-words" title={availableSlotsStr}>
                           {availableSlotsStr}

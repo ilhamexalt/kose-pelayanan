@@ -505,7 +505,7 @@ export default function OperasionalDashboardPage() {
           </div>
           <span className="h-5 sm:h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block shrink-0" />
           <h1 className="text-base sm:text-lg md:text-xl font-extrabold text-slate-800 dark:text-slate-100 whitespace-nowrap shrink-0">
-            Sistem Pelayanan dan Penjadwalan Terpadu
+            Sistem Pelayanan dan Penjadwalan Terpadu - KOSE
           </h1>
           {/* <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 hidden xl:block truncate min-w-0">
             — Monitoring realtime layanan antrean, ruangan meeting & agenda PEPK
@@ -544,8 +544,8 @@ export default function OperasionalDashboardPage() {
               } catch (e) { }
             }}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer border whitespace-nowrap shrink-0 ${isFullscreen
-                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
-                : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+              ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
+              : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
               }`}
             title="Aktifkan / Nonaktifkan TV Mode Fullscreen (F11)"
           >
@@ -738,7 +738,11 @@ export default function OperasionalDashboardPage() {
 
                       <div className="text-[11px] font-semibold flex items-center gap-1">
                         {isAvailable ? (
-                          <span className="text-emerald-600 dark:text-emerald-400">● Terjadwal</span>
+                          roomMeetingsToday.length === 0 ? (
+                            <span className="text-emerald-600 dark:text-emerald-400">● Tersedia</span>
+                          ) : (
+                            <span className="text-emerald-600 dark:text-emerald-400">● Terjadwal</span>
+                          )
                         ) : (
                           <span className="text-[#DA251C] dark:text-red-400">● Terpakai</span>
                         )}
@@ -751,7 +755,7 @@ export default function OperasionalDashboardPage() {
                           <div className="truncate text-[10px] text-[#DA251C] dark:text-red-400 font-medium mb-1" title={`s.d. ${currentMeeting.waktuSelesai} (${currentMeeting.instansi || 'Internal'})`}>
                             s.d. {currentMeeting.waktuSelesai} ({currentMeeting.instansi || 'Internal'})
                           </div>
-                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Avail:</div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Available:</div>
                           <div className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] leading-tight break-words" title={availableSlotsStr}>
                             {availableSlotsStr}
                           </div>
@@ -761,7 +765,7 @@ export default function OperasionalDashboardPage() {
                           <div className="truncate text-[10px] text-blue-600 dark:text-blue-400 font-medium mb-1" title={`Jadwal: ${nextMeeting.waktuMulai}-${nextMeeting.waktuSelesai} (${nextMeeting.instansi || 'Internal'})`}>
                             {nextMeeting.waktuMulai}-{nextMeeting.waktuSelesai} ({nextMeeting.instansi || 'Internal'})
                           </div>
-                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Avail:</div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Available:</div>
                           <div className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] leading-tight break-words" title={availableSlotsStr}>
                             {availableSlotsStr}
                           </div>
@@ -769,7 +773,7 @@ export default function OperasionalDashboardPage() {
                       ) : (
                         <div>
                           <div className="text-slate-400 dark:text-slate-500 text-[10px] font-medium mb-0.5">
-                            Jam Available:
+                            Available:
                           </div>
                           <div className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] leading-tight break-words" title={availableSlotsStr}>
                             {availableSlotsStr}
