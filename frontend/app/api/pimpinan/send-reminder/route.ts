@@ -97,15 +97,12 @@ export async function POST(request: Request) {
         const bulan = MONTHS[dateObj.getUTCMonth()];
         const tahun = dateObj.getUTCFullYear();
 
-        const jamStr = j.jamMulai ? ` (${j.jamMulai} - ${j.jamSelesai || 'Selesai'} WIB)` : '';
-        const waktuStr = `${hari}, ${tanggal} ${bulan} ${tahun}${jamStr}`;
-        const namaKegiatanStr = `[PENGINGAT 1 JAM LAGI] ${j.kegiatan}`;
-        const lokasiStr = j.tempat || '-';
+        const headerDateStr = `${hari}, ${tanggal} ${bulan} ${tahun}`;
+        const jamStr = j.jamMulai ? `(${j.jamMulai} - ${j.jamSelesai || 'Selesai'} WIB)` : '(Waktu belum ditentukan)';
+        const infoKegiatanStr = `[PENGINGAT 1 JAM LAGI]\n${headerDateStr}\n- Pukul ${jamStr}\n   ${j.kegiatan}\n   Lokasi: ${j.tempat || '-'}`;
 
         const vars = {
-          'nama-kegiatan': namaKegiatanStr,
-          'waktu': waktuStr,
-          'lokasi': lokasiStr
+          'info-kegiatan': infoKegiatanStr
         };
 
         let sentSuccessForSchedule = false;
@@ -116,7 +113,7 @@ export async function POST(request: Request) {
 
           if (!success) {
             const names = Array.isArray(j.nama) ? j.nama.join(', ') : (j.nama || '-');
-            const fallbackText = `*PENGINGAT (1 JAM LAGI): Jadwal Pimpinan OJK Provinsi Banten*\n\n*Kegiatan:*\n${j.kegiatan}\n\n*Waktu:*\n${waktuStr}\n\n*Lokasi:*\n${lokasiStr}\n\n*Pimpinan:*\n${names}\n\nTerima kasih.`;
+            const fallbackText = `*PENGINGAT (1 JAM LAGI): Jadwal Pimpinan OJK Provinsi Banten*\n\n${infoKegiatanStr}\n\n*Pimpinan:*\n${names}\n\nTerima kasih.`;
             success = await sendWhatsAppMessage(phone, fallbackText);
           }
 

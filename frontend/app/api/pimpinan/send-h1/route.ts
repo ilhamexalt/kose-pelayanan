@@ -12,13 +12,16 @@ const MONTHS = [
 
 export async function POST(request: Request) {
   try {
+    const url = new URL(request.url);
+    const force = url.searchParams.get('force') === 'true';
+
     const templateName = 'info-jadwal-pimpinan';
 
     // Cek duplikasi harian untuk pengiriman H+1 pimpinan
     const todayStr = new Date(Date.now() + (7 * 60 * 60 * 1000)).toISOString().split('T')[0];
     const logRef = doc(db, 'automation_logs', 'pimpinan_h1_sent');
     const logSnap = await getDoc(logRef);
-    if (logSnap.exists() && logSnap.data().lastSentDate === todayStr) {
+    if (!force && logSnap.exists() && logSnap.data().lastSentDate === todayStr) {
       return NextResponse.json({ success: true, message: 'Jadwal H+1 pimpinan sudah otomatis dikirim hari ini' });
     }
 
@@ -93,32 +96,23 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // 3. Format variabel template info-jadwal-pimpinan: {{nama-kegiatan}}, {{waktu}}, {{lokasi}}
+    // 3. Format variabel template info-jadwal-pimpinan: {{info-kegiatan}}
     const hari = DAYS[targetDate.getUTCDay()];
     const tanggal = targetDate.getUTCDate();
     const bulan = MONTHS[targetDate.getUTCMonth()];
     const tahun = targetDate.getUTCFullYear();
 
-    const namaKegiatanStr = jadwals.map((j, i) => {
-      const prefix = jadwals.length > 1 ? `${i + 1}. ` : '';
-      return `${prefix}${j.kegiatan}`;
+    const headerDateStr = `${hari}, ${tanggal} ${bulan} ${tahun}`;
+
+    const itemsStr = jadwals.map((j) => {
+      const jamStr = j.jamMulai ? `(${j.jamMulai} - ${j.jamSelesai || 'Selesai'} WIB)` : '(Waktu belum ditentukan)';
+      return `- Pukul ${jamStr}\n   ${j.kegiatan}\n   Lokasi: ${j.tempat || '-'}`;
     }).join('\n');
 
-    const waktuStr = jadwals.map((j, i) => {
-      const prefix = jadwals.length > 1 ? `${i + 1}. ` : '';
-      const jamStr = j.jamMulai ? ` (${j.jamMulai} - ${j.jamSelesai || 'Selesai'} WIB)` : '';
-      return `${prefix}${hari}, ${tanggal} ${bulan} ${tahun}${jamStr}`;
-    }).join('\n');
-
-    const lokasiStr = jadwals.map((j, i) => {
-      const prefix = jadwals.length > 1 ? `${i + 1}. ` : '';
-      return `${prefix}${j.tempat}`;
-    }).join('\n');
+    const infoKegiatanStr = `${headerDateStr}\n${itemsStr}`;
 
     const vars = {
-      'nama-kegiatan': namaKegiatanStr,
-      'waktu': waktuStr,
-      'lokasi': lokasiStr
+      'info-kegiatan': infoKegiatanStr
     };
 
     let sentCount = 0;
@@ -131,7 +125,7 @@ export async function POST(request: Request) {
 
       if (!success) {
         console.warn(`Template WA ${templateName} gagal dikirim ke ${phone}, mencoba fallback pesan teks biasa...`);
-        const fallbackText = `*Informasi Jadwal Pimpinan OJK Provinsi Banten*\n\n*Kegiatan:*\n${namaKegiatanStr}\n\n*Waktu:*\n${waktuStr}\n\n*Lokasi:*\n${lokasiStr}\n\nTerima kasih.`;
+        const fallbackText = `*Informasi Jadwal Pimpinan OJK Provinsi Banten*\n\n${infoKegiatanStr}\n\nTerima kasih.`;
         success = await sendWhatsAppMessage(phone, fallbackText);
       }
 

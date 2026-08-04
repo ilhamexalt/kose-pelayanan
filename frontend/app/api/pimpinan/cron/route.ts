@@ -5,8 +5,18 @@ import { POST as runSendReminder } from '../send-reminder/route';
 export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
-    const action = url.searchParams.get('action') || 'all'; // 'h1' | 'reminder' | 'all'
 
+    if (url.searchParams.get('reset') === 'true') {
+      const { db } = await import('@/lib/firebase');
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'automation_logs', 'pimpinan_h1_sent'));
+      return NextResponse.json({
+        success: true,
+        message: 'Log riwayat pengiriman H+1 berhasil direset! Sekarang Anda dapat mengetes pengiriman ulang.'
+      });
+    }
+
+    const action = url.searchParams.get('action') || 'all'; // 'h1' | 'reminder' | 'all'
     const results: any = {};
 
     // 1. Eksekusi pengingat H-1 Jam
