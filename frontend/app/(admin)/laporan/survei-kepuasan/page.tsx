@@ -57,12 +57,16 @@ export default function SurveiKepuasan() {
 
     const getEmojiAndText = (score: number) => {
         switch (score) {
+            case 5:
+                return <span className="flex items-center gap-2"><span>🥰</span> Sangat Baik</span>;
+            case 4:
+                return <span className="flex items-center gap-2"><span>😊</span> Baik</span>;
             case 3:
-                return <span className="flex items-center gap-2"><span>😄</span> Baik</span>;
-            case 2:
                 return <span className="flex items-center gap-2"><span>😐</span> Cukup</span>;
+            case 2:
+                return <span className="flex items-center gap-2"><span>😔</span> Kurang Puas</span>;
             case 1:
-                return <span className="flex items-center gap-2"><span>😞</span> Kurang</span>;
+                return <span className="flex items-center gap-2"><span>😢</span> Tidak Puas</span>;
             default:
                 return <span>-</span>;
         }
@@ -70,10 +74,11 @@ export default function SurveiKepuasan() {
 
     const getKepuasanEmoji = (totalScore: number) => {
         const avg = totalScore / 4;
-        if (avg >= 2.5) return <span className="text-2xl">😍</span>;
-        if (avg >= 2.0) return <span className="text-2xl">😊</span>;
-        if (avg >= 1.5) return <span className="text-2xl">😐</span>;
-        return <span className="text-2xl">😞</span>;
+        if (avg >= 4.5) return <span className="text-2xl">🥰</span>;
+        if (avg >= 3.5) return <span className="text-2xl">😊</span>;
+        if (avg >= 2.5) return <span className="text-2xl">😐</span>;
+        if (avg >= 1.5) return <span className="text-2xl">😔</span>;
+        return <span className="text-2xl">😢</span>;
     };
 
     const handlePegawaiChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -112,16 +117,25 @@ export default function SurveiKepuasan() {
     );
 
     const exportExcel = () => {
+        const getExportText = (score: number) => {
+            if (score === 5) return 'Sangat Baik';
+            if (score === 4) return 'Baik';
+            if (score === 3) return 'Cukup';
+            if (score === 2) return 'Kurang Puas';
+            if (score === 1) return 'Tidak Puas';
+            return '-';
+        };
+
         const dataToExport = filteredSurveys.map((s) => ({
             Tanggal: new Date(s.createdAt).toLocaleString('id-ID', {
                 day: '2-digit', month: '2-digit', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
             }).replace(/\./g, ':'),
             'Nama Pegawai': s.namaPegawai,
-            'Kebersihan Loket': s.kebersihan === 3 ? 'Baik' : s.kebersihan === 2 ? 'Cukup' : 'Kurang',
-            'Keramahan Petugas': s.keramahan === 3 ? 'Baik' : s.keramahan === 2 ? 'Cukup' : 'Kurang',
-            'Solusi Pelayanan': s.solusi === 3 ? 'Baik' : s.solusi === 2 ? 'Cukup' : 'Kurang',
-            'Informasi Pelayanan': s.informasi === 3 ? 'Baik' : s.informasi === 2 ? 'Cukup' : 'Kurang',
+            'Kebersihan Loket': getExportText(s.kebersihan),
+            'Keramahan Petugas': getExportText(s.keramahan),
+            'Informasi Pelayanan': getExportText(s.informasi),
+            'Kecepatan Pelayanan': getExportText(s.kecepatan),
         }));
 
         const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -135,7 +149,7 @@ export default function SurveiKepuasan() {
     const pegawaiCount: Record<string, number> = {};
 
     filteredSurveys.forEach(s => {
-        totalSkor += (s.kebersihan + s.keramahan + s.solusi + s.informasi);
+        totalSkor += ((s.kebersihan || 0) + (s.keramahan || 0) + (s.informasi || 0) + (s.kecepatan || 0));
         pegawaiCount[s.namaPegawai] = (pegawaiCount[s.namaPegawai] || 0) + 1;
     });
 
@@ -144,7 +158,7 @@ export default function SurveiKepuasan() {
     const top2 = sortedPegawai.length > 1 ? sortedPegawai[1] : ['-', 0];
 
     const totalSurvei = filteredSurveys.length;
-    const indeksKepuasan = totalSurvei > 0 ? Math.round((totalSkor / (totalSurvei * 12)) * 100) : 0;
+    const indeksKepuasan = totalSurvei > 0 ? Math.round((totalSkor / (totalSurvei * 20)) * 100) : 0;
 
     if (isLoading) {
         return <div className="p-8 text-center text-slate-600">Memuat data survei...</div>;
@@ -217,8 +231,8 @@ export default function SurveiKepuasan() {
                                     <th className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">Nama Pegawai</th>
                                     <th className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">Kebersihan Loket</th>
                                     <th className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">Keramahan Petugas</th>
-                                    <th className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">Solusi Pelayanan</th>
                                     <th className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">Informasi Pelayanan</th>
+                                    <th className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">Kecepatan Pelayanan</th>
                                     <th className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap text-center">Kepuasan</th>
                                 </tr>
                             </thead>
@@ -234,10 +248,10 @@ export default function SurveiKepuasan() {
                                         <td className="p-4 text-sm text-slate-700 font-medium">{s.namaPegawai}</td>
                                         <td className="p-4 text-sm text-slate-700">{getEmojiAndText(s.kebersihan)}</td>
                                         <td className="p-4 text-sm text-slate-700">{getEmojiAndText(s.keramahan)}</td>
-                                        <td className="p-4 text-sm text-slate-700">{getEmojiAndText(s.solusi)}</td>
                                         <td className="p-4 text-sm text-slate-700">{getEmojiAndText(s.informasi)}</td>
+                                        <td className="p-4 text-sm text-slate-700">{getEmojiAndText(s.kecepatan)}</td>
                                         <td className="p-4 text-center">
-                                            {getKepuasanEmoji(s.kebersihan + s.keramahan + s.solusi + s.informasi)}
+                                            {getKepuasanEmoji((s.kebersihan || 0) + (s.keramahan || 0) + (s.informasi || 0) + (s.kecepatan || 0))}
                                         </td>
                                     </tr>
                                 ))}

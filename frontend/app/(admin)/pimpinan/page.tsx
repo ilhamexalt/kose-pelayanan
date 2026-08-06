@@ -141,7 +141,7 @@ export default function JadwalPimpinanPage() {
         tanggalSelesai: values.tanggalSelesai ? values.tanggalSelesai.format('YYYY-MM-DD') : (values.tanggalMulai ? values.tanggalMulai.format('YYYY-MM-DD') : null),
         jamMulai: values.jamMulai ? values.jamMulai.format('HH:mm') : '',
         jamSelesai: values.jamSelesai ? values.jamSelesai.format('HH:mm') : '',
-        createdBy: user?.nama || '',
+        createdBy: user?.nama || user?.username || 'Admin',
       };
 
       const url = isEditing ? `/api/pimpinan/${editingId}` : '/api/pimpinan';
@@ -186,7 +186,7 @@ export default function JadwalPimpinanPage() {
   const handleSendToGroup = async () => {
     setSending(true);
     try {
-      const res = await fetch('/api/pimpinan/send-h1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderName: user?.nama }) });
+      const res = await fetch('/api/pimpinan/send-h1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderName: user?.nama || user?.username || 'Admin' }) });
       const json = await res.json();
       if (res.ok && json.success) {
         messageApi.success(json.message || "Pesan berhasil dikirim via WhatsApp ke Sekretaris");

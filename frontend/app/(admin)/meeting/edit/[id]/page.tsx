@@ -139,7 +139,8 @@ export default function EditMeetingPage() {
           instansi,
           pesertaInternal,
           pesertaEksternal,
-          keterangan
+          keterangan,
+          updatedBy: user?.nama || user?.username || 'Admin'
         })
       });
 
@@ -171,7 +172,7 @@ export default function EditMeetingPage() {
                 pesertaEksternal,
                 keterangan,
                 isUpdate: true,
-                updatedBy: user?.nama || ''
+                updatedBy: user?.nama || user?.username || 'Admin'
               })
             });
             messageApi.success({ content: "WhatsApp berhasil dikirim!", key: "wa" });

@@ -13,44 +13,70 @@ const RatingOptions = ({ label, value, onChange, disabled }: { label: string, va
   return (
     <div className="mb-6">
       <p className="font-semibold text-slate-800 mb-3 text-left">{label}</p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-5 gap-2">
         <button
           type="button"
           onClick={() => onChange(1)}
           disabled={disabled}
-          className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${value === 1
-              ? 'border-[#DA251C] bg-red-50'
-              : 'border-slate-200 hover:border-[#DA251C]/50 hover:bg-slate-50'
+          className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all ${value === 1
+              ? 'border-red-500 bg-red-50'
+              : 'border-slate-200 hover:border-red-500/50 hover:bg-slate-50'
             }`}
         >
-          <span className="text-4xl mb-2">😞</span>
-          <span className={`text-sm font-semibold ${value === 1 ? 'text-[#DA251C]' : 'text-slate-500'}`}>Kurang</span>
+          <span className="text-2xl sm:text-3xl mb-1">😢</span>
+          <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight ${value === 1 ? 'text-red-600' : 'text-slate-500'}`}>Tidak<br/>Puas</span>
         </button>
 
         <button
           type="button"
           onClick={() => onChange(2)}
           disabled={disabled}
-          className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${value === 2
-              ? 'border-amber-500 bg-amber-50'
-              : 'border-slate-200 hover:border-amber-500/50 hover:bg-slate-50'
+          className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all ${value === 2
+              ? 'border-orange-500 bg-orange-50'
+              : 'border-slate-200 hover:border-orange-500/50 hover:bg-slate-50'
             }`}
         >
-          <span className="text-4xl mb-2">😐</span>
-          <span className={`text-sm font-semibold ${value === 2 ? 'text-amber-600' : 'text-slate-500'}`}>Cukup</span>
+          <span className="text-2xl sm:text-3xl mb-1">😔</span>
+          <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight ${value === 2 ? 'text-orange-600' : 'text-slate-500'}`}>Kurang<br/>Puas</span>
         </button>
 
         <button
           type="button"
           onClick={() => onChange(3)}
           disabled={disabled}
-          className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${value === 3
+          className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all ${value === 3
+              ? 'border-amber-500 bg-amber-50'
+              : 'border-slate-200 hover:border-amber-500/50 hover:bg-slate-50'
+            }`}
+        >
+          <span className="text-2xl sm:text-3xl mb-1">😐</span>
+          <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight ${value === 3 ? 'text-amber-600' : 'text-slate-500'}`}>Cukup</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onChange(4)}
+          disabled={disabled}
+          className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all ${value === 4
               ? 'border-emerald-500 bg-emerald-50'
               : 'border-slate-200 hover:border-emerald-500/50 hover:bg-slate-50'
             }`}
         >
-          <span className="text-4xl mb-2">😄</span>
-          <span className={`text-sm font-semibold ${value === 3 ? 'text-emerald-600' : 'text-slate-500'}`}>Baik</span>
+          <span className="text-2xl sm:text-3xl mb-1">😊</span>
+          <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight ${value === 4 ? 'text-emerald-600' : 'text-slate-500'}`}>Baik</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onChange(5)}
+          disabled={disabled}
+          className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all ${value === 5
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-slate-200 hover:border-blue-500/50 hover:bg-slate-50'
+            }`}
+        >
+          <span className="text-2xl sm:text-3xl mb-1">🥰</span>
+          <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight ${value === 5 ? 'text-blue-600' : 'text-slate-500'}`}>Sangat<br/>Baik</span>
         </button>
       </div>
     </div>
@@ -60,8 +86,8 @@ const RatingOptions = ({ label, value, onChange, disabled }: { label: string, va
 export default function SurveyModal({ open, pelayananId, layananName, onSuccess }: SurveyModalProps) {
   const [kebersihan, setKebersihan] = useState<number | null>(null);
   const [keramahan, setKeramahan] = useState<number | null>(null);
-  const [solusi, setSolusi] = useState<number | null>(null);
   const [informasi, setInformasi] = useState<number | null>(null);
+  const [kecepatan, setKecepatan] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
@@ -73,14 +99,14 @@ export default function SurveyModal({ open, pelayananId, layananName, onSuccess 
         setIsSuccess(false);
         setKebersihan(null);
         setKeramahan(null);
-        setSolusi(null);
         setInformasi(null);
+        setKecepatan(null);
       }, 300);
     }
   };
 
   const handleSubmit = async () => {
-    if (!kebersihan || !keramahan || !solusi || !informasi) {
+    if (!kebersihan || !keramahan || !informasi || !kecepatan) {
       messageApi.error('Mohon isi semua penilaian sebelum mengirim');
       return;
     }
@@ -97,8 +123,8 @@ export default function SurveyModal({ open, pelayananId, layananName, onSuccess 
           layananName,
           kebersihan,
           keramahan,
-          solusi,
-          informasi
+          informasi,
+          kecepatan
         }),
       });
 
@@ -115,7 +141,7 @@ export default function SurveyModal({ open, pelayananId, layananName, onSuccess 
     }
   };
 
-  const isFormComplete = kebersihan && keramahan && solusi && informasi;
+  const isFormComplete = kebersihan && keramahan && informasi && kecepatan;
 
   return (
     <>
@@ -181,8 +207,8 @@ export default function SurveyModal({ open, pelayananId, layananName, onSuccess 
 
             <RatingOptions label="1. Kebersihan Ruangan Loket" value={kebersihan} onChange={setKebersihan} disabled={isLoading} />
             <RatingOptions label="2. Keramahan Petugas" value={keramahan} onChange={setKeramahan} disabled={isLoading} />
-            <RatingOptions label="3. Solusi yang Disampaikan Pelayanan" value={solusi} onChange={setSolusi} disabled={isLoading} />
-            <RatingOptions label="4. Informasi yang Disampaikan Pelayanan" value={informasi} onChange={setInformasi} disabled={isLoading} />
+            <RatingOptions label="3. Informasi dan Solusi yang disampaikan Pelayanan" value={informasi} onChange={setInformasi} disabled={isLoading} />
+            <RatingOptions label="4. Kecepatan Pelayanan" value={kecepatan} onChange={setKecepatan} disabled={isLoading} />
 
             <div className="mt-8 pt-6 border-t border-slate-100">
               <button

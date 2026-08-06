@@ -7,9 +7,9 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { pelayananId, layananName, kebersihan, keramahan, solusi, informasi } = body;
+    const { pelayananId, layananName, kebersihan, keramahan, informasi, kecepatan } = body;
 
-    if (!pelayananId || !kebersihan || !keramahan || !solusi || !informasi) {
+    if (!pelayananId || !kebersihan || !keramahan || !informasi || !kecepatan) {
       return NextResponse.json(
         { success: false, error: 'Data survei tidak lengkap' },
         { status: 400 }
@@ -21,8 +21,8 @@ export async function POST(request: Request) {
       layananName: layananName || 'Layanan Umum',
       kebersihan,
       keramahan,
-      solusi,
       informasi,
+      kecepatan,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });

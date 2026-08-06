@@ -128,7 +128,7 @@ export default function JadwalPepkLmstPage() {
         jamMulai: values.jamMulai ? values.jamMulai.format('HH:mm') : '',
         jamSelesai: values.jamSelesai ? values.jamSelesai.format('HH:mm') : '',
         status: values.status || 'Belum Mulai',
-        createdBy: user?.nama || '',
+        createdBy: user?.nama || user?.username || 'Admin',
       };
 
       const url = isEditing ? `/api/jadwal-pepk-lmst/${editingId}` : '/api/jadwal-pepk-lmst';
@@ -171,7 +171,7 @@ export default function JadwalPepkLmstPage() {
   const handleSendToGroup = async () => {
     setSending(true);
     try {
-      const res = await fetch('/api/jadwal-pepk-lmst/send-group', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderName: user?.nama }) });
+      const res = await fetch('/api/jadwal-pepk-lmst/send-group', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderName: user?.nama || user?.username || 'Admin' }) });
       const json = await res.json();
       if (res.ok && json.success) {
         messageApi.success(json.message || "Pesan berhasil dikirim ke grup");
