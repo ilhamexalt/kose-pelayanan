@@ -13,7 +13,7 @@ interface SurveyData {
     namaPegawai: string;
     kebersihan: number;
     keramahan: number;
-    solusi: number;
+    kecepatan: number;
     informasi: number;
     createdAt: number;
 }

@@ -71,48 +71,48 @@ export default function DashboardPage() {
       return;
     }
 
-      const unsubscribePelayanan = onSnapshot(collection(db, 'pelayanan'), () => {
-        fetchPelayanan();
-      }, (error) => {
-        console.error("Realtime fetch error:", error);
-        fetchPelayanan();
-      });
+    const unsubscribePelayanan = onSnapshot(collection(db, 'pelayanan'), () => {
+      fetchPelayanan();
+    }, (error) => {
+      console.error("Realtime fetch error:", error);
+      fetchPelayanan();
+    });
 
-      const unsubscribeMeeting = onSnapshot(collection(db, 'meeting'), () => {
-        fetchMeeting();
-      }, (error) => {
-        console.error("Realtime fetch meeting error:", error);
-        fetchMeeting();
-      });
+    const unsubscribeMeeting = onSnapshot(collection(db, 'meeting'), () => {
+      fetchMeeting();
+    }, (error) => {
+      console.error("Realtime fetch meeting error:", error);
+      fetchMeeting();
+    });
 
-      const unsubscribeJadwalPepk = onSnapshot(collection(db, 'jadwal_pepk_lmst'), () => {
-        fetchJadwalPepk();
-      }, (error) => {
-        console.error("Realtime fetch jadwal pepk error:", error);
-        fetchJadwalPepk();
-      });
+    const unsubscribeJadwalPepk = onSnapshot(collection(db, 'jadwal_pepk_lmst'), () => {
+      fetchJadwalPepk();
+    }, (error) => {
+      console.error("Realtime fetch jadwal pepk error:", error);
+      fetchJadwalPepk();
+    });
 
-      const unsubscribeJadwalPimpinan = onSnapshot(collection(db, 'jadwal_pimpinan'), () => {
-        fetchJadwalPimpinan();
-      }, (error) => {
-        console.error("Realtime fetch jadwal pimpinan error:", error);
-        fetchJadwalPimpinan();
-      });
+    const unsubscribeJadwalPimpinan = onSnapshot(collection(db, 'jadwal_pimpinan'), () => {
+      fetchJadwalPimpinan();
+    }, (error) => {
+      console.error("Realtime fetch jadwal pimpinan error:", error);
+      fetchJadwalPimpinan();
+    });
 
-      const unsubscribeMaintenance = onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
-        if (snapshot.exists()) {
-          setIsMaintenance(snapshot.data().maintenanceMode === true);
-        }
-        setIsMaintenanceLoading(false);
-      });
+    const unsubscribeMaintenance = onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
+      if (snapshot.exists()) {
+        setIsMaintenance(snapshot.data().maintenanceMode === true);
+      }
+      setIsMaintenanceLoading(false);
+    });
 
-      return () => {
-        unsubscribePelayanan();
-        unsubscribeMeeting();
-        unsubscribeJadwalPepk();
-        unsubscribeJadwalPimpinan();
-        unsubscribeMaintenance();
-      };
+    return () => {
+      unsubscribePelayanan();
+      unsubscribeMeeting();
+      unsubscribeJadwalPepk();
+      unsubscribeJadwalPimpinan();
+      unsubscribeMaintenance();
+    };
   }, [user, isAuthLoading, router]);
 
   const fetchPelayanan = async () => {
@@ -219,10 +219,10 @@ export default function DashboardPage() {
       const d2 = j.tanggalSelesai ? dayjs(j.tanggalSelesai) : (j.tanggal ? dayjs(j.tanggal) : null);
       if (!d1) return false;
       const d2Safe = d2 || d1;
-      
+
       const today = dayjs(todayStr);
-      return (today.isSame(d1, 'day') || today.isAfter(d1, 'day')) && 
-             (today.isSame(d2Safe, 'day') || today.isBefore(d2Safe, 'day'));
+      return (today.isSame(d1, 'day') || today.isAfter(d1, 'day')) &&
+        (today.isSame(d2Safe, 'day') || today.isBefore(d2Safe, 'day'));
     })
     .sort((a, b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''));
 
@@ -233,10 +233,10 @@ export default function DashboardPage() {
       const d2 = j.tanggalSelesai ? dayjs(j.tanggalSelesai) : (j.tanggal ? dayjs(j.tanggal) : null);
       if (!d1) return false;
       const d2Safe = d2 || d1;
-      
+
       const today = dayjs(todayStr);
-      return (today.isSame(d1, 'day') || today.isAfter(d1, 'day')) && 
-             (today.isSame(d2Safe, 'day') || today.isBefore(d2Safe, 'day'));
+      return (today.isSame(d1, 'day') || today.isAfter(d1, 'day')) &&
+        (today.isSame(d2Safe, 'day') || today.isBefore(d2Safe, 'day'));
     })
     .sort((a, b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''));
 
@@ -295,16 +295,16 @@ export default function DashboardPage() {
               Ringkasan antrean dan jadwal ruangan untuk hari ini: {dayjs().locale('id').format('dddd, DD MMMM YYYY')}
             </p>
           </div>
-          
+
           {isAdmin && !isMaintenanceLoading && (
             <div className="flex items-center gap-3 bg-white dark:bg-slate-800/50 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm w-fit">
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Maintenance Mode</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">{isMaintenance ? 'Aktif (Halaman publik dikunci)' : 'Nonaktif (Normal)'}</span>
               </div>
-              <Switch 
-                checked={isMaintenance} 
-                onChange={handleToggleMaintenance} 
+              <Switch
+                checked={isMaintenance}
+                onChange={handleToggleMaintenance}
                 className={isMaintenance ? 'bg-[#DA251C]' : 'bg-slate-300 dark:bg-slate-600'}
               />
             </div>
@@ -514,7 +514,7 @@ export default function DashboardPage() {
                   const names = Array.isArray(jadwal.nama) ? jadwal.nama.join(', ') : jadwal.nama;
                   const currentTime = dayjs().format('HH:mm');
                   const hasTime = jadwal.jamMulai && jadwal.jamSelesai;
-                  
+
                   const isPast = hasTime ? jadwal.jamSelesai < currentTime : false;
                   const isUpcoming = hasTime ? jadwal.jamMulai > currentTime : false;
                   const isOngoing = !isPast && !isUpcoming;
@@ -614,7 +614,7 @@ export default function DashboardPage() {
                   const names = Array.isArray(jadwal.nama) ? jadwal.nama.join(', ') : jadwal.nama;
                   const currentTime = dayjs().format('HH:mm');
                   const hasTime = jadwal.jamMulai && jadwal.jamSelesai;
-                  
+
                   const isPast = hasTime ? jadwal.jamSelesai < currentTime : false;
                   const isUpcoming = hasTime ? jadwal.jamMulai > currentTime : false;
                   const isOngoing = !isPast && !isUpcoming;
@@ -662,7 +662,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          <span className="line-clamp-1 max-w-[100px]">{jadwal.tempat || '-'}</span>
+                          <span className="line-clamp-1 max-w-[100px] uppercase">{jadwal.tempat || '-'}</span>
                         </div>
                       </div>
 
