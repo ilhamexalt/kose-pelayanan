@@ -6,6 +6,7 @@ import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Jadwal {
   id: string;
@@ -56,6 +57,7 @@ export default function JadwalPepkLmstPage() {
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/jadwal-pepk-lmst');
+  const { user } = useAuth();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -126,6 +128,7 @@ export default function JadwalPepkLmstPage() {
         jamMulai: values.jamMulai ? values.jamMulai.format('HH:mm') : '',
         jamSelesai: values.jamSelesai ? values.jamSelesai.format('HH:mm') : '',
         status: values.status || 'Belum Mulai',
+        createdBy: user?.nama || '',
       };
 
       const url = isEditing ? `/api/jadwal-pepk-lmst/${editingId}` : '/api/jadwal-pepk-lmst';
@@ -168,7 +171,7 @@ export default function JadwalPepkLmstPage() {
   const handleSendToGroup = async () => {
     setSending(true);
     try {
-      const res = await fetch('/api/jadwal-pepk-lmst/send-group', { method: 'POST' });
+      const res = await fetch('/api/jadwal-pepk-lmst/send-group', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderName: user?.nama }) });
       const json = await res.json();
       if (res.ok && json.success) {
         messageApi.success(json.message || "Pesan berhasil dikirim ke grup");

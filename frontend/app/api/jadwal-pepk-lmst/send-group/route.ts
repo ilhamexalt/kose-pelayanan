@@ -10,6 +10,12 @@ const MONTHS = [
 ];
 
 export async function POST(request: Request) {
+  let senderName = 'Admin';
+  try {
+    const data = await request.json();
+    if (data.senderName) senderName = data.senderName;
+  } catch (e) {}
+
   try {
     const groupId = process.env.WA_GROUP_JID;
     const templateName = 'info-kegiatan';
@@ -125,7 +131,7 @@ export async function POST(request: Request) {
     let success = await sendWhatsAppTemplate(groupId, templateName, vars);
     if (!success) {
       console.warn('Template WA info-kegiatan gagal dikirim, mencoba fallback pesan teks biasa...');
-      const fallbackText = `Selamat ${waktu},\n\nJadwal Kegiatan PEPK & LMST OJK untuk hari ${hari}, ${tanggal} ${bulan} ${tahun}:\n\n${kegiatanList}\n\nTerima kasih.`;
+      const fallbackText = `Selamat ${waktu},\n\nJadwal Kegiatan PEPK & LMST OJK untuk hari ${hari}, ${tanggal} ${bulan} ${tahun}:\n\n${kegiatanList}\n\nTerima kasih.\n\n👤 Dikirim oleh: ${senderName}`;
       success = await sendWhatsAppMessage(groupId, fallbackText);
     }
 

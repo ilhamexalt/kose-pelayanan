@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const data = await request.json();
     const { 
       ruang, tanggal, waktuMulai, waktuSelesai, instansi, 
-      pesertaInternal, pesertaEksternal, keterangan 
+      pesertaInternal, pesertaEksternal, keterangan, createdBy 
     } = data;
 
     if (!ruang || !tanggal || !waktuMulai || !waktuSelesai || !instansi) {
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
       pesertaInternal: pesertaInternal || [],
       pesertaEksternal: pesertaEksternal || [],
       keterangan: keterangan || '',
+      createdBy: createdBy || '',
       createdAt: serverTimestamp(),
     };
 

@@ -6,6 +6,7 @@ import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Jadwal {
   id: string;
@@ -41,6 +42,7 @@ export default function JadwalPimpinanPage() {
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/pimpinan');
+  const { user } = useAuth();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -139,6 +141,7 @@ export default function JadwalPimpinanPage() {
         tanggalSelesai: values.tanggalSelesai ? values.tanggalSelesai.format('YYYY-MM-DD') : (values.tanggalMulai ? values.tanggalMulai.format('YYYY-MM-DD') : null),
         jamMulai: values.jamMulai ? values.jamMulai.format('HH:mm') : '',
         jamSelesai: values.jamSelesai ? values.jamSelesai.format('HH:mm') : '',
+        createdBy: user?.nama || '',
       };
 
       const url = isEditing ? `/api/pimpinan/${editingId}` : '/api/pimpinan';
@@ -183,7 +186,7 @@ export default function JadwalPimpinanPage() {
   const handleSendToGroup = async () => {
     setSending(true);
     try {
-      const res = await fetch('/api/pimpinan/send-h1', { method: 'POST' });
+      const res = await fetch('/api/pimpinan/send-h1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderName: user?.nama }) });
       const json = await res.json();
       if (res.ok && json.success) {
         messageApi.success(json.message || "Pesan berhasil dikirim via WhatsApp ke Sekretaris");

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const data = await request.json();
     const { 
       ruangan, tanggal, waktuMulai, waktuSelesai, instansi, 
-      pesertaInternal, pesertaEksternal, keterangan, isUpdate 
+      pesertaInternal, pesertaEksternal, keterangan, isUpdate, createdBy, updatedBy 
     } = data;
 
     const usersRef = collection(db, 'users');
@@ -39,6 +39,7 @@ Berikut adalah detail jadwal meeting terbaru yang perlu dipersiapkan:
 ⏰ Waktu: ${waktuMulai} - ${waktuSelesai}
 👥 Jumlah Peserta: ${totalPeserta > 0 ? `${totalPeserta} Orang` : '-'}
 🆕 Status: ${status}
+👤 ${isUpdate ? 'Diperbarui' : 'Dibuat'} oleh: ${updatedBy || createdBy || '-'}
 
 📌 Keterangan:
 ${keterangan || 'Mohon bantuannya untuk menyiapkan ruangan beserta konsumsi sebelum waktu meeting dimulai.'}

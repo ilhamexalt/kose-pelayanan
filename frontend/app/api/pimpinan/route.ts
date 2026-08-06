@@ -5,7 +5,7 @@ import { collection, addDoc, getDocs, query, serverTimestamp } from 'firebase/fi
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { nama, kegiatan, tempat, linkZoom, tanggalMulai, tanggalSelesai, jamMulai, jamSelesai, status } = data;
+    const { nama, kegiatan, tempat, linkZoom, tanggalMulai, tanggalSelesai, jamMulai, jamSelesai, status, createdBy } = data;
 
     if (!nama || (Array.isArray(nama) && nama.length === 0) || !kegiatan || !tempat || !tanggalMulai || !tanggalSelesai) {
       return NextResponse.json({ error: 'Nama, kegiatan, tempat, dan tanggal wajib diisi' }, { status: 400 });
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       jamMulai: jamMulai || '',
       jamSelesai: jamSelesai || '',
       status: status || 'Belum Mulai',
+      createdBy: createdBy || '',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };

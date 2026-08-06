@@ -11,6 +11,12 @@ const MONTHS = [
 ];
 
 export async function POST(request: Request) {
+  let senderName = 'Admin';
+  try {
+    const data = await request.json();
+    if (data.senderName) senderName = data.senderName;
+  } catch (e) {}
+
   try {
     const url = new URL(request.url);
     const force = url.searchParams.get('force') === 'true';
@@ -125,7 +131,7 @@ export async function POST(request: Request) {
 
       if (!success) {
         console.warn(`Template WA ${templateName} gagal dikirim ke ${phone}, mencoba fallback pesan teks biasa...`);
-        const fallbackText = `*Informasi Jadwal Pimpinan OJK Provinsi Banten*\n\n${infoKegiatanStr}\n\nTerima kasih.`;
+        const fallbackText = `*Informasi Jadwal Pimpinan OJK Provinsi Banten*\n\n${infoKegiatanStr}\n\nTerima kasih.\n\n👤 Dikirim oleh: ${senderName}`;
         success = await sendWhatsAppMessage(phone, fallbackText);
       }
 

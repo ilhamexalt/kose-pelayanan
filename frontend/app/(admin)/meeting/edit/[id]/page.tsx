@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Select, TimePicker, Calendar, Input, InputNumber, Button, DatePicker, message, Modal } from "antd";
 import dayjs, { Dayjs } from "dayjs";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function EditMeetingPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function EditMeetingPage() {
   const { id } = params;
   const [messageApi, contextHolder] = message.useMessage();
   const [modalApi, modalContextHolder] = Modal.useModal();
+  const { user } = useAuth();
 
   const [pesertaInternal, setPesertaInternal] = useState<{ jumlah: number | null, jabatan: string }[]>([{ jumlah: 0, jabatan: '' }]);
   const [pesertaEksternal, setPesertaEksternal] = useState<{ jumlah: number | null, jabatan: string }[]>([{ jumlah: 0, jabatan: '' }]);
@@ -168,7 +170,8 @@ export default function EditMeetingPage() {
                 pesertaInternal,
                 pesertaEksternal,
                 keterangan,
-                isUpdate: true
+                isUpdate: true,
+                updatedBy: user?.nama || ''
               })
             });
             messageApi.success({ content: "WhatsApp berhasil dikirim!", key: "wa" });
