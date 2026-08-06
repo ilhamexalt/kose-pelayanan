@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { message, Modal, Switch } from "antd";
+import { message, Modal, Switch, Tooltip } from "antd";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, doc, setDoc } from "firebase/firestore";
 import dayjs from "dayjs";
@@ -534,7 +534,9 @@ export default function DashboardPage() {
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                           </div>
                           <div>
-                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight line-clamp-1">{jadwal.kegiatan}</h3>
+                            <Tooltip title={jadwal.kegiatan}>
+                              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight line-clamp-1">{jadwal.kegiatan}</h3>
+                            </Tooltip>
                             <p className="text-xs text-slate-500 font-medium mt-0.5">Pimpinan: <span className="font-semibold text-slate-700 dark:text-slate-300">{names || '-'}</span></p>
                           </div>
                         </div>
@@ -632,7 +634,9 @@ export default function DashboardPage() {
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                           </div>
                           <div>
-                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight line-clamp-1">{jadwal.kegiatan}</h3>
+                            <Tooltip title={jadwal.kegiatan}>
+                              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight line-clamp-1">{jadwal.kegiatan}</h3>
+                            </Tooltip>
                             <p className="text-xs text-slate-500 font-medium mt-0.5">Pegawai: <span className="font-semibold text-slate-700 dark:text-slate-300">{names || '-'}</span></p>
                           </div>
                         </div>

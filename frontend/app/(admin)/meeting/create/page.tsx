@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Select, TimePicker, Calendar, Input, InputNumber, Button, DatePicker, message } from "antd";
+import { Select, TimePicker, Calendar, Input, InputNumber, Button, DatePicker, message, Modal } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 
 export default function CreateMeetingPage() {
   const router = useRouter();
   const [messageApi, contextHolder] = message.useMessage();
+  const [modalApi, modalContextHolder] = Modal.useModal();
 
   const [pesertaInternal, setPesertaInternal] = useState<{ jumlah: number | null, jabatan: string }[]>([{ jumlah: 0, jabatan: '' }]);
   const [pesertaEksternal, setPesertaEksternal] = useState<{ jumlah: number | null, jabatan: string }[]>([{ jumlah: 0, jabatan: '' }]);
@@ -17,7 +18,7 @@ export default function CreateMeetingPage() {
   const [tanggal, setTanggal] = useState<Dayjs>(dayjs());
 
   const [instansi, setInstansi] = useState<string>('');
-  const [keterangan, setKeterangan] = useState<string>('');
+  const [keterangan, setKeterangan] = useState<string>('Siapkan Snack dan Minum');
   const [loading, setLoading] = useState(false);
   const [existingMeetings, setExistingMeetings] = useState<any[]>([]);
 
@@ -118,7 +119,41 @@ export default function CreateMeetingPage() {
       }
 
       messageApi.success("Jadwal berhasil disimpan!");
-      router.push("/meeting");
+      
+      modalApi.confirm({
+        title: "Kirim WhatsApp ke Pramusaji?",
+        content: "Apakah Anda ingin mengirimkan notifikasi jadwal meeting ini ke Pramusaji via WhatsApp?",
+        okText: "Kirim",
+        cancelText: "Tidak Perlu",
+        onOk: async () => {
+          try {
+            messageApi.loading({ content: "Mengirim WhatsApp...", key: "wa" });
+            await fetch("/api/meeting/send-wa", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ruangan: ruang,
+                tanggal: selectedDate,
+                waktuMulai: startTime,
+                waktuSelesai: endTime,
+                instansi,
+                pesertaInternal,
+                pesertaEksternal,
+                keterangan,
+                isUpdate: false
+              })
+            });
+            messageApi.success({ content: "WhatsApp berhasil dikirim!", key: "wa" });
+          } catch (e) {
+            messageApi.error({ content: "Gagal mengirim WhatsApp", key: "wa" });
+          } finally {
+            router.push("/meeting");
+          }
+        },
+        onCancel: () => {
+          router.push("/meeting");
+        }
+      });
     } catch (error: any) {
       messageApi.error(error.message);
     } finally {
@@ -153,6 +188,7 @@ export default function CreateMeetingPage() {
   return (
     <>
       {contextHolder}
+      {modalContextHolder}
       <div className="min-h-screen bg-slate-50 dark:bg-[#020817] p-4 sm:p-6 lg:p-8 transition-colors duration-300 font-sans">
         <div className="max-w-6xl mx-auto">
 
@@ -170,9 +206,9 @@ export default function CreateMeetingPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-col-reverse lg:flex-row">
+            {/* Sidebar Column */}
+            <div className="lg:col-span-4 flex flex-col gap-6 lg:order-last">
 
               {/* Tanggal */}
               <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 h-full">
@@ -216,6 +252,30 @@ export default function CreateMeetingPage() {
                         </div>
                       );
                     }}
+                  />
+                </div>
+              </div>
+
+                          </div>
+
+            {/* Main Form Column */}
+            <div className="lg:col-span-8 flex flex-col gap-6">
+
+              {/* Identitas Penyelenggara */}
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700">
+                <div className="flex items-center gap-2 mb-4 text-slate-800 dark:text-slate-100">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                  <h2 className="font-semibold text-lg">Identitas Penyelenggara</h2>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-600 dark:text-slate-300 mb-1.5">Perusahaan / Instansi / Perorangan <span className="text-red-500">*</span></label>
+                  <Input
+                    size="large"
+                    placeholder="Contoh: PT BPR XYZ"
+                    className="bg-red-50/30 hover:bg-red-50/50 focus:bg-white"
+                    value={instansi}
+                    onChange={(e) => setInstansi(e.target.value)}
                   />
                 </div>
               </div>
@@ -276,31 +336,7 @@ export default function CreateMeetingPage() {
                 </div>
               </div>
 
-            </div>
-
-            {/* Right Column */}
-            <div className="lg:col-span-8 flex flex-col gap-4">
-
-              {/* Identitas Penyelenggara */}
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700">
-                <div className="flex items-center gap-2 mb-4 text-slate-800 dark:text-slate-100">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                  <h2 className="font-semibold text-lg">Identitas Penyelenggara</h2>
-                </div>
-
-                <div>
-                  <label className="block text-sm text-slate-600 dark:text-slate-300 mb-1.5">Perusahaan / Instansi / Perorangan <span className="text-red-500">*</span></label>
-                  <Input
-                    size="large"
-                    placeholder="Contoh: PT BPR XYZ"
-                    className="bg-red-50/30 hover:bg-red-50/50 focus:bg-white"
-                    value={instansi}
-                    onChange={(e) => setInstansi(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Peserta Internal */}
+{/* Peserta Internal */}
               <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-2 mb-4 text-slate-800 dark:text-slate-100">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>

@@ -56,35 +56,7 @@ export async function POST(request: Request) {
 
     await addDoc(meetingRef, payload);
 
-    // Kirim notifikasi WA ke Pramusaji
-    try {
-      const usersRef = collection(db, 'users');
-      const qPramusaji = query(usersRef, where('role', 'in', ['Pramusaji', 'pramusaji', 'PRAMUSAJI']));
-      const pramusajiSnapshot = await getDocs(qPramusaji);
 
-      const sumInternal = (pesertaInternal || []).reduce((acc: number, curr: any) => acc + (Number(curr.jumlah) || 0), 0);
-      const sumEksternal = (pesertaEksternal || []).reduce((acc: number, curr: any) => acc + (Number(curr.jumlah) || 0), 0);
-      const totalPeserta = sumInternal + sumEksternal;
-      const messageText = `*Pemberitahuan Jadwal Meeting Baru*\n\n*Ruangan:* ${ruang}\n*Waktu:* ${tanggal} ${waktuMulai} - ${waktuSelesai}\n*Instansi:* ${instansi}\n*Status:* Baru\n*Peserta:* ${totalPeserta} Orang\n*Keterangan:* ${keterangan || '-'}`;
-
-      const waPromises = pramusajiSnapshot.docs.map(async (docSnap) => {
-        const userData = docSnap.data();
-        if (userData.no_hp) {
-          try {
-            const phone = decrypt(userData.no_hp);
-            if (phone) {
-              await sendWhatsAppMessage(phone, messageText);
-            }
-          } catch (e) {
-            console.error('Failed to decrypt phone or send WA for user:', docSnap.id, e);
-          }
-        }
-      });
-
-      await Promise.all(waPromises);
-    } catch (waError) {
-      console.error('Error retrieving Pramusaji users or sending WA:', waError);
-    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

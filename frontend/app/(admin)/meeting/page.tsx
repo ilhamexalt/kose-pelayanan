@@ -181,6 +181,7 @@ export default function MeetingPage() {
       title: 'Aksi',
       key: 'action',
       align: 'right' as const,
+      fixed: 'right' as const,
       render: (_: any, record: any) => (
         <div className="flex items-center justify-end gap-2">
           {(isAdmin || update) && (
@@ -448,13 +449,14 @@ export default function MeetingPage() {
         </div>
 
         {/* Table Container */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border-t-2 border-[#DA251C] overflow-x-auto">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border-t-2 border-[#DA251C]">
           <Table
             columns={columns}
             dataSource={filteredMeetings}
             rowKey="id"
             pagination={false}
             loading={loading}
+            scroll={{ x: 'max-content' }}
           />
         </div>
       </div>

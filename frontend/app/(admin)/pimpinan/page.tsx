@@ -364,6 +364,7 @@ export default function JadwalPimpinanPage() {
       title: 'Aksi',
       key: 'aksi',
       align: 'right' as const,
+      fixed: 'right' as const,
       render: (_: any, record: Jadwal) => {
         return (
           <div className="flex items-center justify-end gap-2">
@@ -517,7 +518,7 @@ export default function JadwalPimpinanPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border-t-2 border-[#DA251C] overflow-x-auto">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border-t-2 border-[#DA251C]">
           <Table
             columns={columns}
             dataSource={filteredJadwal}
