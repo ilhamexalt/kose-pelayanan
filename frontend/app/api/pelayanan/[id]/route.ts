@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, deleteField, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteField, deleteDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { getReceptionistUser } from '@/lib/receptionist';
 
 export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
@@ -82,6 +82,15 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
     }
 
     await deleteDoc(pelayananRef);
+
+    try {
+      const penilaianQ = query(collection(db, 'penilaian'), where('pelayananId', '==', id));
+      const penilaianSnap = await getDocs(penilaianQ);
+      const deletePromises = penilaianSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(deletePromises);
+    } catch (err) {
+      console.error('Error deleting associated penilaian:', err);
+    }
 
     return NextResponse.json({ success: true, message: 'Data berhasil dihapus' });
   } catch (error: any) {

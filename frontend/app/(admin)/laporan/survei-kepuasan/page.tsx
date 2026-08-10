@@ -22,7 +22,7 @@ export default function SurveiKepuasan() {
     const [surveys, setSurveys] = useState<SurveyData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [messageApi, contextHolder] = message.useMessage();
-    
+
     // Filters and pagination state
     const [selectedPegawai, setSelectedPegawai] = useState("Semua");
     const [dateRange, setDateRange] = useState<any>(null);
@@ -92,13 +92,13 @@ export default function SurveiKepuasan() {
     };
 
     const uniquePegawai = Array.from(new Set(surveys.map(s => s.namaPegawai))).sort();
-    
+
     // Apply filters
     const filteredSurveys = surveys.filter(s => {
         if (selectedPegawai !== "Semua" && s.namaPegawai !== selectedPegawai) {
             return false;
         }
-        
+
         if (dateRange && dateRange[0] && dateRange[1]) {
             const start = dateRange[0].startOf('day').valueOf();
             const end = dateRange[1].endOf('day').valueOf();
@@ -106,7 +106,7 @@ export default function SurveiKepuasan() {
                 return false;
             }
         }
-        
+
         return true;
     });
 
@@ -134,7 +134,7 @@ export default function SurveiKepuasan() {
             'Nama Pegawai': s.namaPegawai,
             'Kebersihan Loket': getExportText(s.kebersihan),
             'Keramahan Petugas': getExportText(s.keramahan),
-            'Informasi Pelayanan': getExportText(s.informasi),
+            'Informasi & Solusi Pelayanan': getExportText(s.informasi),
             'Kecepatan Pelayanan': getExportText(s.kecepatan),
         }));
 
@@ -204,8 +204,8 @@ export default function SurveiKepuasan() {
                             <option key={p} value={p}>{p}</option>
                         ))}
                     </select>
-                    
-                    <RangePicker 
+
+                    <RangePicker
                         onChange={handleDateRangeChange}
                         className="py-2 px-4 rounded-lg border-slate-300 w-64"
                     />
@@ -266,7 +266,7 @@ export default function SurveiKepuasan() {
                             </tbody>
                         </table>
                     </div>
-                    
+
                     {filteredSurveys.length > 0 && (
                         <div className="p-4 border-t border-slate-100 flex justify-end">
                             <Pagination

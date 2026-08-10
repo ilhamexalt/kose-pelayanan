@@ -178,6 +178,29 @@ export default function LaporanRiwayatPelayananPage() {
       return;
     }
 
+    const calculateDuration = (start: any, end: any) => {
+      if (!start || !end) return '-';
+      let startTime = new Date(start).getTime();
+      let endTime = new Date(end).getTime();
+      
+      if (isNaN(startTime) || isNaN(endTime) || startTime === 0 || endTime === 0) return '-';
+      
+      const diffInMs = endTime - startTime;
+      if (diffInMs < 0) return '-';
+
+      const diffInSec = Math.floor(diffInMs / 1000);
+      const hours = Math.floor(diffInSec / 3600);
+      const minutes = Math.floor((diffInSec % 3600) / 60);
+      const seconds = diffInSec % 60;
+      
+      let durationStr = [];
+      if (hours > 0) durationStr.push(`${hours} jam`);
+      if (minutes > 0) durationStr.push(`${minutes} menit`);
+      if (seconds > 0 || durationStr.length === 0) durationStr.push(`${seconds} detik`);
+      
+      return durationStr.join(' ');
+    };
+
     const workbook = XLSX.utils.book_new();
 
     const pengaduanList = filteredAndSortedList.filter(p => (p.jenis || '').toLowerCase() === 'pengaduan');
@@ -186,57 +209,72 @@ export default function LaporanRiwayatPelayananPage() {
     const lainnyaList = filteredAndSortedList.filter(p => !['pengaduan', 'slik', 'umum'].includes((p.jenis || '').toLowerCase()));
 
     if (pengaduanList.length > 0) {
-      const exportPengaduan = pengaduanList.map((p, idx) => ({
-        'NO': idx + 1,
-        'NAMA DEBITUR': p.nama || '-',
-        'TANGGAL PENGAJUAN': formatDateTime(p.createdAt),
-        'ALAMAT': p.alamat || '-',
-        'NO. HP': p.phone || '-',
-        'EMAIL': p.email || '-',
-        'JENIS LJK': p.klasifikasi || '-',
-        'SEKTOR LJK': Array.isArray(p.sektor) ? p.sektor.join(', ') : (p.sektor || '-'),
-        'PUJK YANG DIADUKAN': p.perusahaan || '-',
-        'PERMASALAHAN': p.permasalahan || '-',
-        'KETERANGAN': p.ringkasan || p.catatan || '-',
-        'NOMOR LAPORAN': p.nomorLaporan || p.nomorRegister || p.queueNumber_raw || p.queueNumber || '-'
-      }));
+      const exportPengaduan = pengaduanList.map((p, idx) => {
+        const selesaiTime = p.updatedAt || p.createdAt;
+        return {
+          'NO': idx + 1,
+          'NAMA DEBITUR': p.nama || '-',
+          'WAKTU KONSUMEN SUBMIT': formatDateTime(p.createdAt),
+          'WAKTU SELESAI DIPROSES': p.status === 'Selesai' ? formatDateTime(selesaiTime) : '-',
+          'DURASI PENYELESAIAN': p.status === 'Selesai' ? calculateDuration(p.createdAt, selesaiTime) : '-',
+          'ALAMAT': p.alamat || '-',
+          'NO. HP': p.phone || '-',
+          'EMAIL': p.email || '-',
+          'JENIS LJK': p.klasifikasi || '-',
+          'SEKTOR LJK': Array.isArray(p.sektor) ? p.sektor.join(', ') : (p.sektor || '-'),
+          'PUJK YANG DIADUKAN': p.perusahaan || '-',
+          'PERMASALAHAN': p.permasalahan || '-',
+          'KETERANGAN': p.ringkasan || p.catatan || '-',
+          'NOMOR LAPORAN': p.nomorLaporan || p.nomorRegister || p.queueNumber_raw || p.queueNumber || '-'
+        };
+      });
       const wsPengaduan = XLSX.utils.json_to_sheet(exportPengaduan);
       XLSX.utils.book_append_sheet(workbook, wsPengaduan, "Laporan Pengaduan");
     }
 
     const generateGeneralExport = (list: any[]) => {
-      return list.map((p, idx) => ({
-        'No': idx + 1,
-        'Tanggal': formatDateTime(p.createdAt),
-        'Nomor Antrean': p.queueNumber_raw || p.queueNumber || '-',
-        'Nomor Register': p.nomorRegister || '-',
-        'NIK': p.nik || '-',
-        'Nama Pemohon': p.nama || '-',
-        'Telepon': p.phone || '-',
-        'Jenis Layanan': p.jenis || '-',
-        'Status': p.status || 'Antre',
-        'Diproses Oleh': p.processedBy?.nama || '-',
-        'Catatan': p.catatan || '-'
-      }));
+      return list.map((p, idx) => {
+        const selesaiTime = p.updatedAt || p.createdAt;
+        return {
+          'No': idx + 1,
+          'Waktu Konsumen Submit': formatDateTime(p.createdAt),
+          'Waktu Selesai Diproses': p.status === 'Selesai' ? formatDateTime(selesaiTime) : '-',
+          'Durasi Penyelesaian': p.status === 'Selesai' ? calculateDuration(p.createdAt, selesaiTime) : '-',
+          'Nomor Antrean': p.queueNumber_raw || p.queueNumber || '-',
+          'Nomor Register': p.nomorRegister || '-',
+          'NIK': p.nik || '-',
+          'Nama Pemohon': p.nama || '-',
+          'Telepon': p.phone || '-',
+          'Jenis Layanan': p.jenis || '-',
+          'Status': p.status || 'Antre',
+          'Diproses Oleh': p.processedBy?.nama || '-',
+          'Catatan': p.catatan || '-'
+        };
+      });
     };
 
     const generateSlikExport = (list: any[]) => {
-      return list.map((p, idx) => ({
-        'No': idx + 1,
-        'Tanggal': formatDateTime(p.createdAt),
-        'Nomor Antrean': p.queueNumber_raw || p.queueNumber || '-',
-        'Nomor Register': p.nomorRegister || '-',
-        'Jenis Debitur': p.jenisDebitur || '-',
-        'NIK / NPWP Debitur': p.slikNikNpwp || p.nik || '-',
-        'Nama Pemohon': p.nama || '-',
-        'Nama Ibu Kandung': p.ibuKandung || '-',
-        'Email': p.email || '-',
-        'Telepon': p.phone || '-',
-        'Status Dinas': p.status_dinas ? 'Dinas Luar (Outsite)' : 'Kantor OJK',
-        'Status': p.status || 'Antre',
-        'Diproses Oleh': p.processedBy?.nama || '-',
-        'Catatan': p.catatan || '-'
-      }));
+      return list.map((p, idx) => {
+        const selesaiTime = p.updatedAt || p.createdAt;
+        return {
+          'No': idx + 1,
+          'Waktu Konsumen Submit': formatDateTime(p.createdAt),
+          'Waktu Selesai Diproses': p.status === 'Selesai' ? formatDateTime(selesaiTime) : '-',
+          'Durasi Penyelesaian': p.status === 'Selesai' ? calculateDuration(p.createdAt, selesaiTime) : '-',
+          'Nomor Antrean': p.queueNumber_raw || p.queueNumber || '-',
+          'Nomor Register': p.nomorRegister || '-',
+          'Jenis Debitur': p.jenisDebitur || '-',
+          'NIK / NPWP Debitur': p.slikNikNpwp || p.nik || '-',
+          'Nama Pemohon': p.nama || '-',
+          'Nama Ibu Kandung': p.ibuKandung || '-',
+          'Email': p.email || '-',
+          'Telepon': p.phone || '-',
+          'Status Dinas': p.status_dinas ? 'Dinas Luar (Outsite)' : 'Kantor OJK',
+          'Status': p.status || 'Antre',
+          'Diproses Oleh': p.processedBy?.nama || '-',
+          'Catatan': p.catatan || '-'
+        };
+      });
     };
 
     if (slikList.length > 0) {
@@ -245,18 +283,23 @@ export default function LaporanRiwayatPelayananPage() {
     }
 
     const generateKedinasanExport = (list: any[]) => {
-      return list.map((p, idx) => ({
-        'No': idx + 1,
-        'Tanggal': formatDateTime(p.createdAt),
-        'Nama Lengkap': p.nama || '-',
-        'Alamat Lengkap': p.alamat || '-',
-        'Nomor HP': p.phone || '-',
-        'Nama Instansi/Perusahaan': p.instansi || '-',
-        'Keperluan': p.keperluan || '-',
-        'Bagian Yang Dituju': p.bertemu || '-',
-        'Jumlah Orang': p.keterangan || '-',
-        'Diproses Oleh': p.processedBy?.nama || 'Reseptionis'
-      }));
+      return list.map((p, idx) => {
+        const selesaiTime = p.updatedAt || p.createdAt;
+        return {
+          'No': idx + 1,
+          'Waktu Konsumen Submit': formatDateTime(p.createdAt),
+          'Waktu Selesai Diproses': p.status === 'Selesai' ? formatDateTime(selesaiTime) : '-',
+          'Durasi Penyelesaian': p.status === 'Selesai' ? calculateDuration(p.createdAt, selesaiTime) : '-',
+          'Nama Lengkap': p.nama || '-',
+          'Alamat Lengkap': p.alamat || '-',
+          'Nomor HP': p.phone || '-',
+          'Nama Instansi/Perusahaan': p.instansi || '-',
+          'Keperluan': p.keperluan || '-',
+          'Bagian Yang Dituju': p.bertemu || '-',
+          'Jumlah Orang': p.keterangan || '-',
+          'Diproses Oleh': p.processedBy?.nama || 'Reseptionis'
+        };
+      });
     };
 
     if (umumList.length > 0) {

@@ -166,7 +166,8 @@ export async function GET() {
       return {
         id: doc.id,
         ...data,
-        createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : getTimeValue(data.createdAt)
+        createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : getTimeValue(data.createdAt),
+        updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : getTimeValue(data.updatedAt)
       };
     });
 
