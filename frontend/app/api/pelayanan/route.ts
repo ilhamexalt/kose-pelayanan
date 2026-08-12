@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     if (jenis === 'pengaduan') {
-      if (!pengaduanNik || !klasifikasi || !sektor || !perusahaan || !produk || !permasalahan || !ringkasan) {
+      if (!pengaduanNik || !email || !klasifikasi || !sektor || !perusahaan || !produk || !permasalahan || !ringkasan) {
         return NextResponse.json({ error: 'Formulir Pelayanan Pengaduan tidak lengkap' }, { status: 400 });
       }
       if (!/^\d{16}$/.test(pengaduanNik)) {
@@ -122,6 +122,7 @@ export async function POST(request: Request) {
     if (jenis === 'pengaduan') {
       payload.pengaduanNik = maskData(pengaduanNik, 'nik');
       payload.pengaduanNik_encrypted = encrypt(pengaduanNik);
+      payload.email = email;
       payload.klasifikasi = klasifikasi;
       payload.sektor = Array.isArray(sektor) ? sektor.join(', ') : (sektor || '');
       payload.perusahaan = perusahaan;

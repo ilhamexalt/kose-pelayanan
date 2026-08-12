@@ -3,16 +3,18 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { message, Pagination } from "antd";
+import { message, Pagination, Modal } from "antd";
 import { usePermissions } from "@/hooks/usePermissions";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 
 import CustomSelect from "@/components/CustomSelect";
 import SurveyModal from "@/components/SurveyModal";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
+  const [modal, modalContextHolder] = Modal.useModal();
   const router = useRouter();
   const { user, isLoading: isAuthLoading } = useAuth();
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/antrean');
@@ -206,6 +208,7 @@ export default function DashboardPage() {
   return (
     <>
       {contextHolder}
+      {modalContextHolder}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Banner Informasi Pembersihan Data Pelayanan */}
         <div className="flex items-center justify-between gap-3 px-4 py-3 mb-6 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/50 text-amber-900 dark:text-amber-200 shadow-2xs">
@@ -217,7 +220,7 @@ export default function DashboardPage() {
             </span>
             <p className="leading-relaxed">
               <strong className="font-semibold text-amber-950 dark:text-amber-100">Informasi: </strong>
-              Pada pukul <strong className="font-semibold text-amber-950 dark:text-amber-100">16.40 WIB</strong> akan dilakukan pembersihan (<em className="not-italic font-medium">clean</em>) data pelayanan. Mohon ditarik terlebih dahulu datanya sebelum hilang. <span className="font-semibold text-[#DA251C] dark:text-red-400">Proses tarik Excel hanya dapat menggunakan jaringan OJK.</span>
+              Pada pukul <strong className="font-semibold text-amber-950 dark:text-amber-100">16.40 WIB</strong> akan dilakukan pembersihan (<em className="not-italic font-medium">clean</em>) data pelayanan. Mohon ditarik terlebih dahulu <Link target="_blank" href={"https://oneportalkose.com/laporan/riwayat-pelayanan"} className="underline hover:text-[#DA251C] dark:hover:text-red-400 transition-colors duration-300 cursor-pointer">datanya</Link> sebelum hilang. <span className="font-semibold text-[#DA251C] dark:text-red-400">Proses tarik Excel hanya dapat menggunakan jaringan OJK.</span>
             </p>
           </div>
         </div>
@@ -606,6 +609,17 @@ export default function DashboardPage() {
                       <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Sektor</p>
                       <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.sektor || '-'}</p>
                     </div>
+                    {selectedDetail.email && (
+                      <div className="sm:col-span-2">
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Aktif</p>
+                        <div className="flex items-center gap-2 group">
+                          <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.email}</p>
+                          <button onClick={() => handleCopy(selectedDetail.email, 'Email')} className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div className="sm:col-span-2">
                       <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Ringkasan Pengaduan</p>
                       <p className="font-medium text-slate-900 dark:text-slate-100 text-sm">{selectedDetail.ringkasan || '-'}</p>
@@ -649,6 +663,25 @@ export default function DashboardPage() {
               {(isAdmin || update) ? (
                 <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
 
+                  {(selectedDetail.status === 'Diproses' || selectedDetail.status === 'Antre') && (
+                    <button
+                      disabled={isUpdatingStatus}
+                      onClick={() => {
+                        modal.confirm({
+                          title: 'Tutup Antrean',
+                          content: 'Apakah Anda yakin akan menutup antrean ini?',
+                          okText: 'Ya, Tutup',
+                          cancelText: 'Batal',
+                          okButtonProps: { danger: true },
+                          onOk: () => handleUpdateStatus(selectedDetail.id, 'Batal')
+                        });
+                      }}
+                      className="mr-auto px-5 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl text-sm font-bold transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      Tutup Antrean
+                    </button>
+                  )}
+
                   {selectedDetail.status === 'Antre' && (
                     <button
                       disabled={isUpdatingStatus}
@@ -658,12 +691,13 @@ export default function DashboardPage() {
                       {isUpdatingStatus ? 'Memproses...' : 'Mulai Proses'}
                     </button>
                   )}
+
                   {selectedDetail.status === 'Diproses' && (
                     <>
                       <button
                         disabled={isUpdatingStatus}
                         onClick={() => handleUpdateStatus(selectedDetail.id, 'Diproses', true)}
-                        className="px-5 py-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl text-sm font-bold transition-all disabled:opacity-50 cursor-pointer border border-blue-200 dark:border-blue-800/50"
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer"
                       >
                         {isUpdatingStatus ? 'Menyimpan...' : 'Simpan Data'}
                       </button>
@@ -679,15 +713,6 @@ export default function DashboardPage() {
                         {isUpdatingStatus ? 'Memproses...' : 'Selesai'}
                       </button>
                     </>
-                  )}
-                  {(selectedDetail.status === 'Diproses' || selectedDetail.status === 'Antre') && (
-                    <button
-                      disabled={isUpdatingStatus}
-                      onClick={() => handleUpdateStatus(selectedDetail.id, 'Batal')}
-                      className="px-5 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl text-sm font-bold transition-all disabled:opacity-50 cursor-pointer"
-                    >
-                      Tutup Antrean
-                    </button>
                   )}
                 </div>
               ) : (

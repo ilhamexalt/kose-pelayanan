@@ -174,6 +174,7 @@ export default function GuestPage() {
       }
       const formattedSektor = sektors.map(s => s === "Other:" ? (sektorOther ? `Other: ${sektorOther}` : "Other") : s);
       data.pengaduanNik = pengaduanNik;
+      data.email = email;
       data.klasifikasi = klasifikasi;
       data.sektor = formattedSektor;
       data.perusahaan = perusahaan;
@@ -695,6 +696,22 @@ export default function GuestPage() {
                         required={jenis === "pengaduan"}
                         className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
                         placeholder="Masukkan 16 digit NIK"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="emailPengaduan" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        Email Aktif (Pastikan penyimpanan tidak penuh) <span className="text-[#DA251C]">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        id="emailPengaduan"
+                        name="emailPengaduan"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required={jenis === "pengaduan"}
+                        className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#DA251C] focus:border-transparent transition-all"
+                        placeholder="Contoh: nama@domain.com"
                       />
                     </div>
 

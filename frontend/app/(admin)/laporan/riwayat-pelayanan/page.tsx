@@ -308,6 +308,77 @@ export default function LaporanRiwayatPelayananPage() {
     }
 
     XLSX.writeFile(workbook, `Laporan_Pelayanan_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    // Tambahan Export Survei
+    try {
+      messageApi.loading({ content: 'Mengunduh data survei...', key: 'export_survei', duration: 0 });
+      const surveyRes = await fetch('/api/penilaian');
+      const surveyData = await surveyRes.json();
+      
+      if (surveyData.success && surveyData.data && surveyData.data.length > 0) {
+        const getExportText = (score: number) => {
+            if (score === 5) return 'Sangat Baik';
+            if (score === 4) return 'Baik';
+            if (score === 3) return 'Cukup';
+            if (score === 2) return 'Kurang Puas';
+            if (score === 1) return 'Tidak Puas';
+            return '-';
+        };
+
+        const sortedSurveys = surveyData.data.sort((a: any, b: any) => b.createdAt - a.createdAt);
+
+        const exportSurveiData = sortedSurveys.map((s: any) => ({
+            Tanggal: new Date(s.createdAt).toLocaleString('id-ID', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            }).replace(/\./g, ':'),
+            'Nama Pegawai': s.namaPegawai,
+            'Kebersihan Loket': getExportText(s.kebersihan),
+            'Keramahan Petugas': getExportText(s.keramahan),
+            'Informasi & Solusi Pelayanan': getExportText(s.informasi),
+            'Kecepatan Pelayanan': getExportText(s.kecepatan),
+        }));
+
+        const wsSurvei = XLSX.utils.json_to_sheet(exportSurveiData);
+        const wbSurvei = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wbSurvei, wsSurvei, "Survei Kepuasan");
+
+        const excelBuffer = XLSX.write(wbSurvei, { bookType: 'xlsx', type: 'array' });
+
+        const encryptRes = await fetch('/api/encrypt-excel', {
+            method: 'POST',
+            headers: {
+                'x-password': 'Kose2026@#jawara',
+                'Content-Type': 'application/octet-stream'
+            },
+            body: excelBuffer
+        });
+
+        if (encryptRes.ok) {
+            const encryptedBlob = await encryptRes.blob();
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `Laporan_Survei_${dateStr}.xlsx`;
+            
+            const url = window.URL.createObjectURL(encryptedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            messageApi.success({ content: 'Berhasil mengunduh Laporan Pelayanan dan Survei', key: 'export_survei', duration: 3 });
+        } else {
+            messageApi.error({ content: 'Gagal mengenkripsi data survei', key: 'export_survei', duration: 3 });
+        }
+      } else {
+          messageApi.success({ content: 'Berhasil mengunduh Laporan Pelayanan (Data survei kosong)', key: 'export_survei', duration: 3 });
+      }
+    } catch (err) {
+        console.error("Error exporting survey:", err);
+        messageApi.error({ content: 'Gagal mengekspor data survei', key: 'export_survei', duration: 3 });
+    }
   };
 
   const handleMergeExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
