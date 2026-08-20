@@ -20,6 +20,16 @@ interface Jadwal {
   jamSelesai?: string;
   status: string;
   displayStatus?: string;
+  driverId?: string;
+  driverName?: string;
+  driverPlatNomor?: string;
+}
+
+interface Driver {
+  id: string;
+  nama: string;
+  platNomor: string;
+  nomorTelepon: string;
 }
 
 const PEGAWAI_OPTIONS = [
@@ -63,6 +73,7 @@ const STATUS_OPTIONS = [
 
 export default function JadwalPepkLmstPage() {
   const [jadwal, setJadwal] = useState<Jadwal[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const { create, read, update, delete: del, isAdmin, isReady } = usePermissions('/jadwal-pepk-lmst');
   const { user } = useAuth();
@@ -76,6 +87,18 @@ export default function JadwalPepkLmstPage() {
   const [messageApi, contextHolder] = message.useMessage();
 
   const [filterDate, setFilterDate] = useState<[Dayjs | null, Dayjs | null] | null>(null);
+  const selectedDates = Form.useWatch(['tanggalMulai', 'tanggalSelesai'], form);
+  const selectedTimes = Form.useWatch(['jamMulai', 'jamSelesai'], form);
+
+  const fetchDrivers = async () => {
+    try {
+      const res = await fetch('/api/driver');
+      const json = await res.json();
+      if (json.success) setDrivers(json.data);
+    } catch (e) {
+      messageApi.error('Gagal mengambil data driver');
+    }
+  };
 
   const fetchJadwal = async () => {
     setLoading(true);
@@ -94,7 +117,25 @@ export default function JadwalPepkLmstPage() {
 
   useEffect(() => {
     fetchJadwal();
+    fetchDrivers();
   }, []);
+
+  const isDriverBooked = (driverId: string) => {
+    const [startDate, endDate] = selectedDates || [];
+    if (!startDate || !endDate) return false;
+    const [startTime, endTime] = selectedTimes || [];
+    const candidateStart = startDate.format('YYYY-MM-DD');
+    const candidateEnd = endDate.format('YYYY-MM-DD');
+    return jadwal.some((item) => {
+      if (item.id === editingId || item.driverId !== driverId) return false;
+      const itemStart = item.tanggalMulai || item.tanggal;
+      const itemEnd = item.tanggalSelesai || item.tanggalMulai || item.tanggal;
+      const datesOverlap = candidateStart <= itemEnd && itemStart <= candidateEnd;
+      const timesOverlap = !startTime || !endTime || !item.jamMulai || !item.jamSelesai ||
+        (startTime.format('HH:mm') < item.jamSelesai && item.jamMulai < endTime.format('HH:mm'));
+      return datesOverlap && timesOverlap;
+    });
+  };
 
   const showModal = (record?: Jadwal) => {
     if (record) {
@@ -109,6 +150,7 @@ export default function JadwalPepkLmstPage() {
         jamMulai: record.jamMulai ? dayjs(record.jamMulai, 'HH:mm') : null,
         jamSelesai: record.jamSelesai ? dayjs(record.jamSelesai, 'HH:mm') : null,
         status: record.status,
+        driverId: record.driverId,
       });
     } else {
       setIsEditing(false);
@@ -136,6 +178,9 @@ export default function JadwalPepkLmstPage() {
         jamMulai: values.jamMulai ? values.jamMulai.format('HH:mm') : '',
         jamSelesai: values.jamSelesai ? values.jamSelesai.format('HH:mm') : '',
         status: values.status || 'Belum Mulai',
+        driverId: values.driverId || '',
+        driverName: drivers.find((driver) => driver.id === values.driverId)?.nama || '',
+        driverPlatNomor: drivers.find((driver) => driver.id === values.driverId)?.platNomor || '',
         createdBy: user?.nama || user?.username || 'Admin',
       };
 
@@ -289,6 +334,11 @@ export default function JadwalPepkLmstPage() {
       dataIndex: 'tempat',
       key: 'tempat',
       className: 'text-slate-600 dark:text-slate-400'
+    },
+    {
+      title: 'Driver',
+      key: 'driver',
+      render: (_: any, record: Jadwal) => record.driverName ? `${record.driverName} (${record.driverPlatNomor || '-'})` : '-',
     },
     {
       title: 'Waktu',
@@ -580,6 +630,22 @@ export default function JadwalPepkLmstPage() {
               <TimePicker className="w-full" format="HH:mm" />
             </Form.Item>
           </div>
+
+          <Form.Item
+            name="driverId"
+            label="Driver"
+            rules={[{ required: true, message: 'Harap pilih driver' }]}
+          >
+            <Select
+              allowClear
+              placeholder="Pilih driver"
+              options={drivers.map((driver) => ({
+                value: driver.id,
+                label: `${driver.nama} - ${driver.platNomor}`,
+                disabled: isDriverBooked(driver.id),
+              }))}
+            />
+          </Form.Item>
 
           <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
             <Button onClick={handleCancel}>Batal</Button>

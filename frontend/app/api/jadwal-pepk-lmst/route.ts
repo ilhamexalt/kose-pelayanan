@@ -1,15 +1,37 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+
+const hasDriverConflict = (candidate: any, existing: any) => {
+  if (!candidate.driverId || candidate.driverId !== existing.driverId) return false;
+  const candidateStart = candidate.tanggalMulai || candidate.tanggal;
+  const candidateEnd = candidate.tanggalSelesai || candidate.tanggalMulai || candidate.tanggal;
+  const existingStart = existing.tanggalMulai || existing.tanggal;
+  const existingEnd = existing.tanggalSelesai || existing.tanggalMulai || existing.tanggal;
+  const datesOverlap = candidateStart <= existingEnd && existingStart <= candidateEnd;
+  const timesOverlap = !candidate.jamMulai || !candidate.jamSelesai || !existing.jamMulai || !existing.jamSelesai ||
+    (candidate.jamMulai < existing.jamSelesai && existing.jamMulai < candidate.jamSelesai);
+  return datesOverlap && timesOverlap;
+};
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { nama, kegiatan, tempat, tanggalMulai, tanggalSelesai, jamMulai, jamSelesai, status, createdBy } = data;
+    const { nama, kegiatan, tempat, tanggalMulai, tanggalSelesai, jamMulai, jamSelesai, status, createdBy, driverId } = data;
 
-    if (!nama || (Array.isArray(nama) && nama.length === 0) || !kegiatan || !tempat || !tanggalMulai || !tanggalSelesai) {
-      return NextResponse.json({ error: 'Nama, kegiatan, tempat, dan tanggal wajib diisi' }, { status: 400 });
+    if (!nama || (Array.isArray(nama) && nama.length === 0) || !kegiatan || !tempat || !tanggalMulai || !tanggalSelesai || !driverId) {
+      return NextResponse.json({ error: 'Nama, kegiatan, tempat, tanggal, dan driver wajib diisi' }, { status: 400 });
     }
+
+    const driverSnapshot = await getDoc(doc(db, 'drivers', driverId));
+    if (!driverSnapshot.exists()) {
+      return NextResponse.json({ error: 'Driver tidak ditemukan' }, { status: 400 });
+    }
+    const jadwalSnapshot = await getDocs(collection(db, 'jadwal_pepk_lmst'));
+    if (jadwalSnapshot.docs.some((jadwalDoc) => hasDriverConflict(data, jadwalDoc.data()))) {
+      return NextResponse.json({ error: 'Driver sudah dibooking pada waktu tersebut' }, { status: 409 });
+    }
+    const driverData = driverSnapshot.data();
 
     const payload = {
       nama,
@@ -19,6 +41,9 @@ export async function POST(request: Request) {
       tanggalSelesai,
       jamMulai: jamMulai || '',
       jamSelesai: jamSelesai || '',
+      driverId: driverId || '',
+      driverName: driverData.nama || '',
+      driverPlatNomor: driverData.platNomor || '',
       status: status || 'Belum Mulai',
       createdBy: createdBy || '',
       createdAt: serverTimestamp(),
