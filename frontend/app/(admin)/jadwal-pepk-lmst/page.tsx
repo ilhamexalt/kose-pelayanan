@@ -32,6 +32,10 @@ const PEGAWAI_OPTIONS = [
   { value: "RE", label: "RE - Reni Endriana" },
   { value: "AR", label: "AR - Audi Rumpoko" },
   { value: "MFF", label: "MFF - M. Fikri Fauzan" },
+  { value: "EWN", label: "EWN - Eka Widya Ningrum" },
+  { value: "AA", label: "AA - Atarik" },
+  { value: "IMW", label: "IMW - Ilham Maulana Wahyudin" },
+  { value: "RH", label: "RH - Reza Hakiki" },
 ];
 
 const PEGAWAI_EMAILS: Record<string, string> = {
@@ -44,6 +48,10 @@ const PEGAWAI_EMAILS: Record<string, string> = {
   "RE": "Reni.Erdiana@ojk.go.id",
   "AR": "Audi.Rumpoko@ojk.go.id",
   "MFF": "muhammad.fikri@ojk.go.id",
+  "EWN": "eka.Widya@ojk.go.id",
+  "AA": "atarik.atarik@ojk.go.id",
+  "IMW": "ilham.maulana@ojk.go.id",
+  "RH": "reza.hakiki@ojk.go.id"
 };
 
 const STATUS_OPTIONS = [
